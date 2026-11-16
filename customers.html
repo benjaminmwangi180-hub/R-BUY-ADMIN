@@ -9,87 +9,308 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --ink: #17191f;
+      --muted: #777d89;
+      --blue: #3b82f6;
+      --orange: #f59e0b;
+      --paper: #f5f5f2;
+      --line: #e9e9e5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: #0b0d12;
-      color: #f3f4f6;
-      font-family: Arial, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "DM Sans", sans-serif;
+      margin: 0;
     }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .mono {
+      font-family: "DM Mono", monospace;
+    }
+
+    .sidebar {
+      background: #17191f;
+      color: white;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: #a6a9b2;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      transition: .2s ease;
+    }
+
+    .nav-link:hover {
+      background: #252934;
+      color: white;
+    }
+
+    .nav-active {
+      background: #293b5a;
+      color: white;
+      position: relative;
+    }
+
+    .nav-active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 25%;
+      height: 50%;
+      width: 3px;
+      background: var(--blue);
+      border-radius: 5px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: white;
+      color: #17191f;
+      font-weight: 800;
+      font-size: 17px;
+    }
+
     .panel {
-      background: #131720;
-      border: 1px solid #252b38;
-      border-radius: 14px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 3px 12px rgba(20, 25, 35, .025);
     }
+
+    .stat-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(20, 25, 35, .06);
+    }
+
+    .stat-icon {
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      font-size: 17px;
+    }
+
     .field {
       width: 100%;
-      background: #0c1018;
-      border: 1px solid #303746;
-      border-radius: 8px;
-      padding: 11px 12px;
-      color: white;
+      background: #fafaf9;
+      border: 1px solid #e7e7e3;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--ink);
       outline: none;
+      font-size: 13px;
+      transition: .2s ease;
     }
+
     .field:focus {
-      border-color: #3b82f6;
+      border-color: var(--blue);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .09);
     }
-    .nav-link {
-      display: block;
-      padding: 11px 14px;
-      border-radius: 8px;
-      color: #aeb6c5;
-      margin-bottom: 5px;
+
+    .field::placeholder {
+      color: #a2a5ad;
     }
-    .nav-link:hover, .nav-active {
-      background: #202a3a;
-      color: white;
-    }
-    .stat-card {
-      background: #131720;
-      border: 1px solid #252b38;
-      border-radius: 12px;
-      padding: 18px;
-    }
+
     .table-wrap {
       overflow-x: auto;
+      width: 100%;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       min-width: 850px;
     }
+
     th {
       text-align: left;
-      color: #8993a4;
-      font-size: 11px;
+      color: #858a95;
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: .06em;
-      padding: 14px;
-      border-bottom: 1px solid #293140;
+      letter-spacing: .09em;
+      font-weight: 700;
+      padding: 15px 17px;
+      border-bottom: 1px solid #eeeeea;
       white-space: nowrap;
+      background: #fafaf8;
     }
+
     td {
-      padding: 15px 14px;
-      border-bottom: 1px solid #222936;
-      font-size: 13px;
+      padding: 16px 17px;
+      border-bottom: 1px solid #f0f0ed;
+      font-size: 12px;
       vertical-align: middle;
     }
+
+    tbody tr {
+      transition: background .15s ease;
+    }
+
     tbody tr:hover {
-      background: #191f2b;
+      background: #fafbfc;
     }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .avatar {
+      width: 39px;
+      height: 39px;
+      min-width: 39px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: #eaf1ff;
+      color: #3268c5;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
     .status {
-      display: inline-block;
-      padding: 5px 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 9px;
       border-radius: 20px;
-      font-size: 11px;
-      background: #253044;
-      color: #cbd5e1;
+      font-size: 10px;
+      font-weight: 700;
       white-space: nowrap;
+      background: #f0f1f3;
+      color: #616774;
     }
+
     .btn {
-      padding: 9px 13px;
-      border-radius: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
+      transition: .2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .btn-primary {
+      background: #2869d7;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1e55b5;
+    }
+
+    .btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .action-link {
+      color: #3272dc;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .action-link:hover {
+      text-decoration: underline;
+    }
+
+    .history-overlay {
+      backdrop-filter: blur(5px);
+      animation: fadeIn .2s ease;
+    }
+
+    .history-modal {
+      animation: riseIn .25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-box {
+      border-radius: 11px;
+      padding: 13px 16px;
+      font-size: 12px;
+    }
+
+    .mobile-nav {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .desktop-nav {
+        display: none;
+      }
+
+      .mobile-nav {
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding: 12px 0 2px;
+      }
+
+      .mobile-nav a {
+        white-space: nowrap;
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #c4c7ce;
+        background: #252934;
+      }
+
+      .mobile-nav a.nav-active {
+        background: #293b5a;
+        color: white;
+      }
+
+      .mobile-nav a.nav-active::before {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -99,108 +320,197 @@
 <div class="min-h-screen flex flex-col md:flex-row">
 
   <!-- SIDEBAR -->
-  <aside class="w-full md:w-64 bg-[#10141c] border-b md:border-b-0 md:border-r border-gray-800 p-5 md:min-h-screen">
+  <aside class="sidebar w-full md:w-64 md:min-h-screen md:sticky md:top-0 md:h-screen p-5 flex flex-col">
 
-    <div class="mb-9">
-      <h1 class="text-2xl font-bold tracking-tight">
-        R<span class="text-blue-500">-</span>BUY
-      </h1>
-      <p class="text-xs text-gray-500 mt-1">Administration Panel</p>
+    <div class="flex items-center gap-3 mb-9">
+      <div class="brand-mark">R</div>
+      <div>
+        <h1 class="text-xl font-extrabold tracking-tight">
+          R<span class="text-blue-400">-</span>BUY
+        </h1>
+        <p class="text-[10px] text-gray-500 tracking-widest uppercase mt-0.5">
+          Administration
+        </p>
+      </div>
     </div>
 
-    <nav>
-      <a href="index.html" class="nav-link">Dashboard</a>
-      <a href="orders.html" class="nav-link">Orders</a>
-      <a href="customers.html" class="nav-link nav-active">Customers</a>
-    </nav>
+    <div class="desktop-nav">
+      <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 px-3">
+        Workspace
+      </p>
 
-    <div class="mt-10 border-t border-gray-800 pt-5">
-      <button id="logoutBtn" class="text-sm text-red-400 hover:text-red-300">
-        Log out
+      <nav>
+        <a href="index.html" class="nav-link">
+          <span>▦</span> Dashboard
+        </a>
+
+        <a href="orders.html" class="nav-link">
+          <span>▤</span> Orders
+        </a>
+
+        <a href="customers.html" class="nav-link nav-active">
+          <span>♙</span> Customers
+        </a>
+      </nav>
+    </div>
+
+    <div class="mobile-nav">
+      <a href="index.html">▦ Dashboard</a>
+      <a href="orders.html">▤ Orders</a>
+      <a href="customers.html" class="nav-active">♙ Customers</a>
+    </div>
+
+    <div class="mt-auto pt-6 border-t border-white/10 hidden md:block">
+      <div class="bg-white/5 rounded-xl p-4 mb-4">
+        <p class="text-xs font-semibold text-white">R-BUY Admin</p>
+        <p class="text-[10px] text-gray-500 mt-1">
+          Manage the business, one order at a time.
+        </p>
+      </div>
+
+      <button id="logoutBtn"
+        class="w-full text-left text-xs font-semibold text-red-300 hover:text-red-200 py-2">
+        ↗ &nbsp; Log out
       </button>
     </div>
+
+    <button id="mobileLogoutBtn"
+      class="md:hidden text-left text-xs font-semibold text-red-300 py-3">
+      ↗ &nbsp; Log out
+    </button>
 
   </aside>
 
   <!-- MAIN -->
-  <main class="flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full">
+  <main class="flex-1 min-w-0 p-5 md:p-8 lg:p-10 max-w-[1600px] mx-auto w-full">
 
-    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+    <!-- HEADER -->
+    <header class="flex flex-wrap justify-between items-center gap-5 mb-8">
 
       <div>
-        <h2 class="text-2xl md:text-3xl font-bold">Customers</h2>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-[10px] uppercase tracking-widest font-bold text-blue-600">
+            Workspace
+          </span>
+          <span class="text-gray-300">/</span>
+          <span class="text-[10px] uppercase tracking-widest font-bold text-gray-400">
+            Customers
+          </span>
+        </div>
+
+        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+          Customer directory<span class="text-blue-500">.</span>
+        </h2>
+
         <p class="text-sm text-gray-500 mt-2">
-          Manage customer information and view their order history.
+          Every customer relationship starts with a good experience.
         </p>
       </div>
 
-      <button id="refreshBtn"
-        class="btn bg-blue-600 hover:bg-blue-700 text-white">
-        Refresh Customers
+      <button id="refreshBtn" class="btn btn-primary">
+        <span>↻</span>
+        <span>Refresh customers</span>
       </button>
 
-    </div>
+    </header>
 
-    <div id="messageBox" class="hidden mb-5 p-4 rounded-lg text-sm"></div>
+    <div id="messageBox" class="hidden mb-6 message-box"></div>
 
     <!-- STATISTICS -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
 
       <div class="stat-card">
-        <p class="text-sm text-gray-500">Total customers</p>
-        <h3 id="totalCustomers" class="text-3xl font-bold mt-3">0</h3>
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-semibold text-gray-500">Total customers</p>
+            <h3 id="totalCustomers" class="text-3xl font-extrabold mt-3 tracking-tight">0</h3>
+          </div>
+          <div class="stat-icon bg-blue-50 text-blue-600">♙</div>
+        </div>
+        <p class="text-[10px] text-gray-400 mt-4">Unique customer records</p>
       </div>
 
       <div class="stat-card">
-        <p class="text-sm text-gray-500">Repeat customers</p>
-        <h3 id="repeatCustomers" class="text-3xl font-bold mt-3">0</h3>
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-semibold text-gray-500">Repeat customers</p>
+            <h3 id="repeatCustomers" class="text-3xl font-extrabold mt-3 tracking-tight">0</h3>
+          </div>
+          <div class="stat-icon bg-green-50 text-green-600">↻</div>
+        </div>
+        <p class="text-[10px] text-gray-400 mt-4">Customers with multiple orders</p>
       </div>
 
       <div class="stat-card">
-        <p class="text-sm text-gray-500">Single-order customers</p>
-        <h3 id="singleCustomers" class="text-3xl font-bold mt-3">0</h3>
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-semibold text-gray-500">Single-order customers</p>
+            <h3 id="singleCustomers" class="text-3xl font-extrabold mt-3 tracking-tight">0</h3>
+          </div>
+          <div class="stat-icon bg-orange-50 text-orange-600">＋</div>
+        </div>
+        <p class="text-[10px] text-gray-400 mt-4">Customers with one order</p>
       </div>
 
       <div class="stat-card">
-        <p class="text-sm text-gray-500">Total orders</p>
-        <h3 id="totalOrders" class="text-3xl font-bold mt-3">0</h3>
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-semibold text-gray-500">Total orders</p>
+            <h3 id="totalOrders" class="text-3xl font-extrabold mt-3 tracking-tight">0</h3>
+          </div>
+          <div class="stat-icon bg-purple-50 text-purple-600">▤</div>
+        </div>
+        <p class="text-[10px] text-gray-400 mt-4">Orders across all customers</p>
       </div>
 
     </section>
 
-    <!-- CUSTOMER LIST -->
-    <section class="panel p-5">
+    <!-- DIRECTORY -->
+    <section class="panel overflow-hidden">
 
-      <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+      <div class="p-5 md:p-6 border-b border-gray-100">
 
-        <div>
-          <h3 class="text-lg font-semibold">Customer Directory</h3>
-          <p class="text-xs text-gray-500 mt-1">
-            Customer records are generated from submitted orders.
-          </p>
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+
+          <div>
+            <h3 class="text-lg font-extrabold tracking-tight">
+              Customer directory
+            </h3>
+            <p class="text-xs text-gray-400 mt-1">
+              Customer profiles are automatically created from submitted orders.
+            </p>
+          </div>
+
+          <span id="resultCount"
+            class="text-[11px] font-bold text-gray-500 bg-gray-100 px-3 py-2 rounded-full">
+            0 customers
+          </span>
+
         </div>
 
-        <span id="resultCount" class="text-xs text-gray-400">
-          0 customers
-        </span>
+        <!-- SEARCH AND FILTERS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
 
-      </div>
+          <div class="md:col-span-2 relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+              ⌕
+            </span>
 
-      <!-- SEARCH -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+            <input
+              id="searchInput"
+              type="text"
+              class="field pl-10"
+              placeholder="Search by customer name, WhatsApp or email..."
+            >
+          </div>
 
-        <input
-          id="searchInput"
-          type="text"
-          class="field md:col-span-2"
-          placeholder="Search name, WhatsApp or email..."
-        >
+          <select id="customerFilter" class="field">
+            <option value="all">All customers</option>
+            <option value="repeat">Repeat customers</option>
+            <option value="single">Single-order customers</option>
+          </select>
 
-        <select id="customerFilter" class="field">
-          <option value="all">All customers</option>
-          <option value="repeat">Repeat customers</option>
-          <option value="single">Single-order customers</option>
-        </select>
+        </div>
 
       </div>
 
@@ -222,44 +532,56 @@
           </thead>
 
           <tbody id="customersTable">
-
             <tr>
-              <td colspan="7" class="text-center text-gray-500 py-10">
+              <td colspan="7" class="text-center text-gray-400 py-12">
                 Loading customers...
               </td>
             </tr>
-
           </tbody>
 
         </table>
 
       </div>
 
-      <div id="emptyState" class="hidden text-center py-12">
+      <div id="emptyState" class="hidden text-center py-16 px-5">
 
-        <div class="text-4xl mb-3">👥</div>
+        <div class="text-4xl mb-4">👥</div>
 
-        <h3 class="font-semibold">No customers found</h3>
+        <h3 class="font-extrabold text-lg">
+          No customers found
+        </h3>
 
-        <p class="text-sm text-gray-500 mt-2">
-          Customers will appear here once orders have been submitted.
+        <p class="text-sm text-gray-400 mt-2">
+          Try adjusting your search or filters. Customers will appear here once orders are submitted.
         </p>
 
       </div>
 
+      <div class="px-5 py-4 border-t border-gray-100 flex flex-wrap justify-between gap-2">
+        <p class="text-[10px] text-gray-400">
+          R-BUY CUSTOMER MANAGEMENT
+        </p>
+        <p class="text-[10px] text-gray-400">
+          Records are generated from orders
+        </p>
+      </div>
+
     </section>
+
+    <footer class="mt-8 flex flex-wrap justify-between gap-3 text-[10px] text-gray-400">
+      <span>R-BUY Administration Panel</span>
+      <span>Retail made easier.</span>
+    </footer>
 
   </main>
 </div>
 
 <script>
-
   // --------------------------------------------------
   // SUPABASE CONFIGURATION
   // --------------------------------------------------
 
   const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
-
   const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
 
   const supabaseClient = window.supabase.createClient(
@@ -318,20 +640,64 @@
     return number;
   }
 
+  function initials(name) {
+    const words = String(name || "Customer")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    return words.slice(0, 2).map(word => word[0].toUpperCase()).join("");
+  }
+
   function showMessage(message, type = "error") {
     const box = $("messageBox");
 
     box.classList.remove("hidden");
-
-    box.className = "mb-5 p-4 rounded-lg text-sm";
+    box.className = "mb-6 message-box";
 
     if (type === "success") {
-      box.classList.add("bg-green-500/10", "text-green-400");
+      box.classList.add("bg-green-50", "text-green-700", "border", "border-green-100");
     } else {
-      box.classList.add("bg-red-500/10", "text-red-400");
+      box.classList.add("bg-red-50", "text-red-700", "border", "border-red-100");
     }
 
     box.textContent = message;
+  }
+
+  function orderReference(id) {
+    return "RBUY-" + String(id).replace(/-/g, "").substring(0, 8).toUpperCase();
+  }
+
+  function formatStatus(status) {
+    const labels = {
+      pending_review: "Pending review",
+      under_investigation: "Under investigation",
+      awaiting_customer: "Awaiting customer",
+      awaiting_payment: "Awaiting payment",
+      procurement: "Procurement",
+      in_transit: "In transit",
+      completed: "Completed",
+      cancelled: "Cancelled",
+      unavailable: "Unavailable"
+    };
+
+    return labels[status] || String(status || "Pending review").replace(/_/g, " ");
+  }
+
+  function statusClasses(status) {
+    const styles = {
+      pending_review: "bg-amber-50 text-amber-700",
+      under_investigation: "bg-blue-50 text-blue-700",
+      awaiting_customer: "bg-purple-50 text-purple-700",
+      awaiting_payment: "bg-orange-50 text-orange-700",
+      procurement: "bg-cyan-50 text-cyan-700",
+      in_transit: "bg-indigo-50 text-indigo-700",
+      completed: "bg-green-50 text-green-700",
+      cancelled: "bg-gray-100 text-gray-600",
+      unavailable: "bg-gray-100 text-gray-600"
+    };
+
+    return styles[status] || "bg-gray-100 text-gray-600";
   }
 
   // --------------------------------------------------
@@ -339,7 +705,6 @@
   // --------------------------------------------------
 
   async function checkAdmin() {
-
     const { data: sessionData, error: sessionError } =
       await supabaseClient.auth.getSession();
 
@@ -366,17 +731,19 @@
     return true;
   }
 
-  $("logoutBtn").addEventListener("click", async () => {
+  async function logout() {
     await supabaseClient.auth.signOut();
     window.location.href = "login.html";
-  });
+  }
+
+  $("logoutBtn").addEventListener("click", logout);
+  $("mobileLogoutBtn").addEventListener("click", logout);
 
   // --------------------------------------------------
   // CUSTOMER IDENTIFICATION
   // --------------------------------------------------
 
   function getCustomerKey(order) {
-
     const phone = normalizePhone(order.whatsapp);
 
     if (phone) return "phone:" + phone;
@@ -393,15 +760,12 @@
   }
 
   function groupCustomers(orders) {
-
     const groups = new Map();
 
     orders.forEach(order => {
-
       const key = getCustomerKey(order);
 
       if (!groups.has(key)) {
-
         groups.set(key, {
           key,
           name: order.customer_name || "Unnamed customer",
@@ -410,7 +774,6 @@
           orders: [],
           lastOrder: order
         });
-
       }
 
       const customer = groups.get(key);
@@ -425,10 +788,7 @@
         customer.email = order.email;
       }
 
-      if (
-        !customer.name ||
-        customer.name === "Unnamed customer"
-      ) {
+      if (!customer.name || customer.name === "Unnamed customer") {
         customer.name = order.customer_name || customer.name;
       }
 
@@ -442,7 +802,6 @@
           customer.name = order.customer_name;
         }
       }
-
     });
 
     return Array.from(groups.values()).sort((a, b) =>
@@ -456,20 +815,20 @@
   // --------------------------------------------------
 
   async function loadCustomers() {
-
     $("customersTable").innerHTML = `
       <tr>
-        <td colspan="7" class="text-center text-gray-500 py-10">
-          Loading customers...
+        <td colspan="7" class="text-center text-gray-400 py-12">
+          Loading customer records...
         </td>
       </tr>
     `;
 
+    $("emptyState").classList.add("hidden");
+
     $("refreshBtn").disabled = true;
-    $("refreshBtn").textContent = "Loading...";
+    $("refreshBtn").innerHTML = "<span>↻</span> Loading...";
 
     try {
-
       const { data, error } = await supabaseClient
         .from("orders")
         .select(`
@@ -489,22 +848,19 @@
       if (error) throw error;
 
       allOrders = data || [];
-
       customers = groupCustomers(allOrders);
 
       updateStatistics();
-
       renderCustomers();
 
       $("messageBox").classList.add("hidden");
 
     } catch (error) {
-
       console.error("Customer loading error:", error);
 
       $("customersTable").innerHTML = `
         <tr>
-          <td colspan="7" class="text-center text-red-400 py-10">
+          <td colspan="7" class="text-center text-red-500 py-12">
             Unable to load customer records.
           </td>
         </tr>
@@ -513,10 +869,8 @@
       showMessage(error.message || "Unable to load customers.");
 
     } finally {
-
       $("refreshBtn").disabled = false;
-      $("refreshBtn").textContent = "Refresh Customers";
-
+      $("refreshBtn").innerHTML = "<span>↻</span> Refresh customers";
     }
   }
 
@@ -525,7 +879,6 @@
   // --------------------------------------------------
 
   function updateStatistics() {
-
     const repeat = customers.filter(customer =>
       customer.orders.length > 1
     ).length;
@@ -535,13 +888,9 @@
     ).length;
 
     $("totalCustomers").textContent = customers.length;
-
     $("repeatCustomers").textContent = repeat;
-
     $("singleCustomers").textContent = single;
-
     $("totalOrders").textContent = allOrders.length;
-
   }
 
   // --------------------------------------------------
@@ -549,15 +898,10 @@
   // --------------------------------------------------
 
   function renderCustomers() {
-
-    const search = $("searchInput").value
-      .trim()
-      .toLowerCase();
-
+    const search = $("searchInput").value.trim().toLowerCase();
     const filter = $("customerFilter").value;
 
-    let filtered = customers.filter(customer => {
-
+    const filtered = customers.filter(customer => {
       const searchable = [
         customer.name,
         customer.whatsapp,
@@ -573,7 +917,6 @@
         (filter === "single" && customer.orders.length === 1);
 
       return matchesSearch && matchesFilter;
-
     });
 
     $("resultCount").textContent =
@@ -583,116 +926,118 @@
     const empty = $("emptyState");
 
     if (!filtered.length) {
-
       table.innerHTML = "";
       empty.classList.remove("hidden");
       return;
-
     }
 
     empty.classList.add("hidden");
 
     table.innerHTML = filtered.map(customer => {
-
       const lastOrder = customer.lastOrder;
-
-      const reference =
-        "RBUY-" + lastOrder.id.substring(0, 8).toUpperCase();
-
       const phone = normalizePhone(customer.whatsapp);
+      const whatsappLink = phone ? "https://wa.me/" + phone : "";
 
-      const whatsappLink = phone
-        ? "https://wa.me/" + phone
-        : "";
+      const repeatLabel = customer.orders.length > 1
+        ? "Repeat customer"
+        : "Customer";
 
       return `
-
         <tr>
 
           <td>
-            <div class="font-semibold text-white">
-              ${escapeHTML(customer.name)}
-            </div>
+            <div class="flex items-center gap-3">
+              <div class="avatar">
+                ${escapeHTML(initials(customer.name))}
+              </div>
 
-            <div class="text-xs text-gray-500 mt-1">
-              Customer
+              <div class="min-w-0">
+                <p class="font-bold text-gray-800 text-xs">
+                  ${escapeHTML(customer.name)}
+                </p>
+                <p class="text-[10px] text-gray-400 mt-1">
+                  ${repeatLabel}
+                </p>
+              </div>
             </div>
           </td>
 
           <td>
             ${
               customer.whatsapp
-                ? `<a class="text-green-400 hover:underline"
+                ? `<a class="text-green-700 hover:text-green-800 font-semibold"
                      href="${whatsappLink}"
                      target="_blank"
                      rel="noopener noreferrer">
                      ${escapeHTML(customer.whatsapp)}
                    </a>`
-                : `<span class="text-gray-500">Not provided</span>`
+                : `<span class="text-gray-400">Not provided</span>`
             }
           </td>
 
           <td>
             ${
               customer.email
-                ? `<a class="text-blue-400 hover:underline"
+                ? `<a class="text-blue-600 hover:underline"
                      href="mailto:${encodeURIComponent(customer.email)}">
                      ${escapeHTML(customer.email)}
                    </a>`
-                : `<span class="text-gray-500">Not provided</span>`
+                : `<span class="text-gray-400">Not provided</span>`
             }
           </td>
 
           <td>
-            <span class="status">
+            <span class="status ${
+              customer.orders.length > 1
+                ? "bg-blue-50 text-blue-700"
+                : "bg-gray-100 text-gray-600"
+            }">
               ${customer.orders.length}
               ${customer.orders.length === 1 ? "order" : "orders"}
             </span>
           </td>
 
           <td>
-            ${formatDate(lastOrder.created_at)}
+            <p class="font-semibold text-gray-700">
+              ${formatDate(lastOrder.created_at)}
+            </p>
+            <p class="text-[10px] text-gray-400 mt-1">
+              ${escapeHTML(orderReference(lastOrder.id))}
+            </p>
           </td>
 
           <td>
-            ${escapeHTML(lastOrder.delivery_location || "Not provided")}
+            <span class="text-gray-600">
+              ${escapeHTML(lastOrder.delivery_location || "Not provided")}
+            </span>
           </td>
 
           <td>
             <a
               href="order-details.html?id=${encodeURIComponent(lastOrder.id)}"
-              class="text-blue-400 hover:underline font-semibold">
-              Latest order
+              class="action-link">
+              Latest order ↗
             </a>
 
             <button
-              class="block text-gray-400 hover:text-white mt-2 text-xs"
+              class="block text-gray-400 hover:text-gray-800 mt-2 text-[10px] font-semibold"
               data-customer-key="${encodeURIComponent(customer.key)}">
-              View history
+              View order history
             </button>
           </td>
 
         </tr>
-
       `;
-
     }).join("");
 
-    // Attach history actions after rendering.
     table.querySelectorAll("[data-customer-key]").forEach(button => {
-
       button.addEventListener("click", () => {
-
         const key = decodeURIComponent(button.dataset.customerKey);
-
         const customer = customers.find(item => item.key === key);
 
         if (customer) showCustomerHistory(customer);
-
       });
-
     });
-
   }
 
   // --------------------------------------------------
@@ -700,7 +1045,6 @@
   // --------------------------------------------------
 
   function showCustomerHistory(customer) {
-
     const history = customer.orders
       .slice()
       .sort((a, b) =>
@@ -708,34 +1052,34 @@
       );
 
     const historyHTML = history.map(order => {
-
-      const reference =
-        "RBUY-" + order.id.substring(0, 8).toUpperCase();
-
       return `
-        <div class="border-b border-gray-700 py-4">
+        <div class="border-b border-gray-100 py-4 last:border-0">
 
-          <div class="flex flex-wrap justify-between gap-3">
+          <div class="flex flex-wrap justify-between gap-4">
 
             <div>
-              <p class="font-semibold">
+              <p class="font-bold text-gray-800 text-sm">
                 ${escapeHTML(order.product_name || "Unnamed product")}
               </p>
 
-              <p class="text-xs text-gray-500 mt-1">
-                ${reference} · ${formatDate(order.created_at)}
+              <p class="text-[10px] text-gray-400 mt-2 mono">
+                ${escapeHTML(orderReference(order.id))}
+              </p>
+
+              <p class="text-[10px] text-gray-400 mt-1">
+                ${formatDate(order.created_at)}
               </p>
             </div>
 
             <div class="text-right">
-              <span class="status">
-                ${escapeHTML(order.status || "pending_review")}
+              <span class="status ${statusClasses(order.status)}">
+                ${escapeHTML(formatStatus(order.status))}
               </span>
 
               <a
                 href="order-details.html?id=${encodeURIComponent(order.id)}"
-                class="block text-blue-400 hover:underline text-xs mt-2">
-                Open order
+                class="block text-blue-600 hover:underline text-xs font-bold mt-3">
+                Open order ↗
               </a>
             </div>
 
@@ -743,45 +1087,78 @@
 
         </div>
       `;
-
     }).join("");
 
     const overlay = document.createElement("div");
 
     overlay.id = "historyOverlay";
-
     overlay.className =
-      "fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4";
+      "history-overlay fixed inset-0 z-50 bg-gray-950/60 flex items-center justify-center p-4";
 
     overlay.innerHTML = `
+      <div class="history-modal bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl">
 
-      <div class="panel w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6">
+        <div class="p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
 
-        <div class="flex justify-between items-start gap-4 mb-5">
+          <div class="flex justify-between items-start gap-4">
 
-          <div>
-            <h3 class="text-xl font-bold">
-              ${escapeHTML(customer.name)}
-            </h3>
+            <div class="flex items-center gap-3">
+              <div class="avatar">
+                ${escapeHTML(initials(customer.name))}
+              </div>
 
-            <p class="text-sm text-gray-500 mt-1">
-              ${customer.orders.length} order(s) on record
-            </p>
+              <div>
+                <h3 class="text-xl font-extrabold text-gray-900">
+                  ${escapeHTML(customer.name)}
+                </h3>
+
+                <p class="text-xs text-gray-400 mt-1">
+                  ${customer.orders.length} order(s) on record
+                </p>
+              </div>
+            </div>
+
+            <button id="closeHistory"
+              class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xl">
+              ×
+            </button>
+
           </div>
 
-          <button id="closeHistory"
-            class="text-gray-400 hover:text-white text-xl">
-            ×
-          </button>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">
+                WhatsApp
+              </p>
+              <p class="text-xs font-semibold text-gray-700 mt-1">
+                ${escapeHTML(customer.whatsapp || "Not provided")}
+              </p>
+            </div>
+
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">
+                Email
+              </p>
+              <p class="text-xs font-semibold text-gray-700 mt-1 break-all">
+                ${escapeHTML(customer.email || "Not provided")}
+              </p>
+            </div>
+
+          </div>
 
         </div>
 
-        <div>
+        <div class="px-6 py-5">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-extrabold text-sm">Order history</h4>
+            <span class="text-[10px] text-gray-400">Newest first</span>
+          </div>
+
           ${historyHTML}
         </div>
 
       </div>
-
     `;
 
     document.body.appendChild(overlay);
@@ -794,6 +1171,12 @@
       if (event.target === overlay) overlay.remove();
     });
 
+    document.addEventListener("keydown", function closeOnEscape(event) {
+      if (event.key === "Escape") {
+        overlay.remove();
+        document.removeEventListener("keydown", closeOnEscape);
+      }
+    });
   }
 
   // --------------------------------------------------
@@ -801,9 +1184,7 @@
   // --------------------------------------------------
 
   $("searchInput").addEventListener("input", renderCustomers);
-
   $("customerFilter").addEventListener("change", renderCustomers);
-
   $("refreshBtn").addEventListener("click", loadCustomers);
 
   // --------------------------------------------------
@@ -811,13 +1192,11 @@
   // --------------------------------------------------
 
   async function initializePage() {
-
     const authorized = await checkAdmin();
 
     if (!authorized) return;
 
     await loadCustomers();
-
   }
 
   initializePage();
