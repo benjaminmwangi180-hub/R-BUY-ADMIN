@@ -1,0 +1,828 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers | R-Buy Admin</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      background: #0b0d12;
+      color: #f3f4f6;
+      font-family: Arial, sans-serif;
+    }
+    .panel {
+      background: #131720;
+      border: 1px solid #252b38;
+      border-radius: 14px;
+    }
+    .field {
+      width: 100%;
+      background: #0c1018;
+      border: 1px solid #303746;
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: white;
+      outline: none;
+    }
+    .field:focus {
+      border-color: #3b82f6;
+    }
+    .nav-link {
+      display: block;
+      padding: 11px 14px;
+      border-radius: 8px;
+      color: #aeb6c5;
+      margin-bottom: 5px;
+    }
+    .nav-link:hover, .nav-active {
+      background: #202a3a;
+      color: white;
+    }
+    .stat-card {
+      background: #131720;
+      border: 1px solid #252b38;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 850px;
+    }
+    th {
+      text-align: left;
+      color: #8993a4;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 14px;
+      border-bottom: 1px solid #293140;
+      white-space: nowrap;
+    }
+    td {
+      padding: 15px 14px;
+      border-bottom: 1px solid #222936;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    tbody tr:hover {
+      background: #191f2b;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      background: #253044;
+      color: #cbd5e1;
+      white-space: nowrap;
+    }
+    .btn {
+      padding: 9px 13px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="min-h-screen flex flex-col md:flex-row">
+
+  <!-- SIDEBAR -->
+  <aside class="w-full md:w-64 bg-[#10141c] border-b md:border-b-0 md:border-r border-gray-800 p-5 md:min-h-screen">
+
+    <div class="mb-9">
+      <h1 class="text-2xl font-bold tracking-tight">
+        R<span class="text-blue-500">-</span>BUY
+      </h1>
+      <p class="text-xs text-gray-500 mt-1">Administration Panel</p>
+    </div>
+
+    <nav>
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="orders.html" class="nav-link">Orders</a>
+      <a href="customers.html" class="nav-link nav-active">Customers</a>
+    </nav>
+
+    <div class="mt-10 border-t border-gray-800 pt-5">
+      <button id="logoutBtn" class="text-sm text-red-400 hover:text-red-300">
+        Log out
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full">
+
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold">Customers</h2>
+        <p class="text-sm text-gray-500 mt-2">
+          Manage customer information and view their order history.
+        </p>
+      </div>
+
+      <button id="refreshBtn"
+        class="btn bg-blue-600 hover:bg-blue-700 text-white">
+        Refresh Customers
+      </button>
+
+    </div>
+
+    <div id="messageBox" class="hidden mb-5 p-4 rounded-lg text-sm"></div>
+
+    <!-- STATISTICS -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Total customers</p>
+        <h3 id="totalCustomers" class="text-3xl font-bold mt-3">0</h3>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Repeat customers</p>
+        <h3 id="repeatCustomers" class="text-3xl font-bold mt-3">0</h3>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Single-order customers</p>
+        <h3 id="singleCustomers" class="text-3xl font-bold mt-3">0</h3>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Total orders</p>
+        <h3 id="totalOrders" class="text-3xl font-bold mt-3">0</h3>
+      </div>
+
+    </section>
+
+    <!-- CUSTOMER LIST -->
+    <section class="panel p-5">
+
+      <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+
+        <div>
+          <h3 class="text-lg font-semibold">Customer Directory</h3>
+          <p class="text-xs text-gray-500 mt-1">
+            Customer records are generated from submitted orders.
+          </p>
+        </div>
+
+        <span id="resultCount" class="text-xs text-gray-400">
+          0 customers
+        </span>
+
+      </div>
+
+      <!-- SEARCH -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+
+        <input
+          id="searchInput"
+          type="text"
+          class="field md:col-span-2"
+          placeholder="Search name, WhatsApp or email..."
+        >
+
+        <select id="customerFilter" class="field">
+          <option value="all">All customers</option>
+          <option value="repeat">Repeat customers</option>
+          <option value="single">Single-order customers</option>
+        </select>
+
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>WhatsApp</th>
+              <th>Email</th>
+              <th>Orders</th>
+              <th>Last order</th>
+              <th>Last delivery location</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="customersTable">
+
+            <tr>
+              <td colspan="7" class="text-center text-gray-500 py-10">
+                Loading customers...
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <div id="emptyState" class="hidden text-center py-12">
+
+        <div class="text-4xl mb-3">👥</div>
+
+        <h3 class="font-semibold">No customers found</h3>
+
+        <p class="text-sm text-gray-500 mt-2">
+          Customers will appear here once orders have been submitted.
+        </p>
+
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+
+  // --------------------------------------------------
+  // SUPABASE CONFIGURATION
+  // --------------------------------------------------
+
+  const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
+
+  const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  // --------------------------------------------------
+  // STATE
+  // --------------------------------------------------
+
+  const $ = id => document.getElementById(id);
+
+  let customers = [];
+  let allOrders = [];
+
+  // --------------------------------------------------
+  // UTILITIES
+  // --------------------------------------------------
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[char]);
+  }
+
+  function formatDate(value) {
+    if (!value) return "Not available";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "Not available";
+
+    return date.toLocaleDateString("en-KE", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+  }
+
+  function normalizePhone(phone) {
+    let number = String(phone || "").replace(/\D/g, "");
+
+    if (number.startsWith("0")) {
+      number = "254" + number.substring(1);
+    }
+
+    if (number.startsWith("7") || number.startsWith("1")) {
+      number = "254" + number;
+    }
+
+    return number;
+  }
+
+  function showMessage(message, type = "error") {
+    const box = $("messageBox");
+
+    box.classList.remove("hidden");
+
+    box.className = "mb-5 p-4 rounded-lg text-sm";
+
+    if (type === "success") {
+      box.classList.add("bg-green-500/10", "text-green-400");
+    } else {
+      box.classList.add("bg-red-500/10", "text-red-400");
+    }
+
+    box.textContent = message;
+  }
+
+  // --------------------------------------------------
+  // AUTHENTICATION
+  // --------------------------------------------------
+
+  async function checkAdmin() {
+
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    const user = sessionData.session.user;
+
+    const { data: adminRecord, error: adminError } =
+      await supabaseClient
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+    if (adminError || !adminRecord) {
+      await supabaseClient.auth.signOut();
+      window.location.href = "login.html";
+      return false;
+    }
+
+    return true;
+  }
+
+  $("logoutBtn").addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+  });
+
+  // --------------------------------------------------
+  // CUSTOMER IDENTIFICATION
+  // --------------------------------------------------
+
+  function getCustomerKey(order) {
+
+    const phone = normalizePhone(order.whatsapp);
+
+    if (phone) return "phone:" + phone;
+
+    const email = String(order.email || "").trim().toLowerCase();
+
+    if (email) return "email:" + email;
+
+    const name = String(order.customer_name || "").trim().toLowerCase();
+
+    if (name) return "name:" + name;
+
+    return "order:" + order.id;
+  }
+
+  function groupCustomers(orders) {
+
+    const groups = new Map();
+
+    orders.forEach(order => {
+
+      const key = getCustomerKey(order);
+
+      if (!groups.has(key)) {
+
+        groups.set(key, {
+          key,
+          name: order.customer_name || "Unnamed customer",
+          whatsapp: order.whatsapp || "",
+          email: order.email || "",
+          orders: [],
+          lastOrder: order
+        });
+
+      }
+
+      const customer = groups.get(key);
+
+      customer.orders.push(order);
+
+      if (!customer.whatsapp && order.whatsapp) {
+        customer.whatsapp = order.whatsapp;
+      }
+
+      if (!customer.email && order.email) {
+        customer.email = order.email;
+      }
+
+      if (
+        !customer.name ||
+        customer.name === "Unnamed customer"
+      ) {
+        customer.name = order.customer_name || customer.name;
+      }
+
+      if (
+        new Date(order.created_at) >
+        new Date(customer.lastOrder.created_at)
+      ) {
+        customer.lastOrder = order;
+
+        if (order.customer_name) {
+          customer.name = order.customer_name;
+        }
+      }
+
+    });
+
+    return Array.from(groups.values()).sort((a, b) =>
+      new Date(b.lastOrder.created_at) -
+      new Date(a.lastOrder.created_at)
+    );
+  }
+
+  // --------------------------------------------------
+  // LOAD ORDERS AND BUILD CUSTOMER DIRECTORY
+  // --------------------------------------------------
+
+  async function loadCustomers() {
+
+    $("customersTable").innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center text-gray-500 py-10">
+          Loading customers...
+        </td>
+      </tr>
+    `;
+
+    $("refreshBtn").disabled = true;
+    $("refreshBtn").textContent = "Loading...";
+
+    try {
+
+      const { data, error } = await supabaseClient
+        .from("orders")
+        .select(`
+          id,
+          order_number,
+          customer_name,
+          email,
+          whatsapp,
+          delivery_location,
+          product_name,
+          status,
+          payment_status,
+          created_at
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      allOrders = data || [];
+
+      customers = groupCustomers(allOrders);
+
+      updateStatistics();
+
+      renderCustomers();
+
+      $("messageBox").classList.add("hidden");
+
+    } catch (error) {
+
+      console.error("Customer loading error:", error);
+
+      $("customersTable").innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center text-red-400 py-10">
+            Unable to load customer records.
+          </td>
+        </tr>
+      `;
+
+      showMessage(error.message || "Unable to load customers.");
+
+    } finally {
+
+      $("refreshBtn").disabled = false;
+      $("refreshBtn").textContent = "Refresh Customers";
+
+    }
+  }
+
+  // --------------------------------------------------
+  // STATISTICS
+  // --------------------------------------------------
+
+  function updateStatistics() {
+
+    const repeat = customers.filter(customer =>
+      customer.orders.length > 1
+    ).length;
+
+    const single = customers.filter(customer =>
+      customer.orders.length === 1
+    ).length;
+
+    $("totalCustomers").textContent = customers.length;
+
+    $("repeatCustomers").textContent = repeat;
+
+    $("singleCustomers").textContent = single;
+
+    $("totalOrders").textContent = allOrders.length;
+
+  }
+
+  // --------------------------------------------------
+  // CUSTOMER TABLE
+  // --------------------------------------------------
+
+  function renderCustomers() {
+
+    const search = $("searchInput").value
+      .trim()
+      .toLowerCase();
+
+    const filter = $("customerFilter").value;
+
+    let filtered = customers.filter(customer => {
+
+      const searchable = [
+        customer.name,
+        customer.whatsapp,
+        customer.email,
+        customer.lastOrder.delivery_location
+      ].join(" ").toLowerCase();
+
+      const matchesSearch = searchable.includes(search);
+
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "repeat" && customer.orders.length > 1) ||
+        (filter === "single" && customer.orders.length === 1);
+
+      return matchesSearch && matchesFilter;
+
+    });
+
+    $("resultCount").textContent =
+      filtered.length + " customer" + (filtered.length === 1 ? "" : "s");
+
+    const table = $("customersTable");
+    const empty = $("emptyState");
+
+    if (!filtered.length) {
+
+      table.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+
+    }
+
+    empty.classList.add("hidden");
+
+    table.innerHTML = filtered.map(customer => {
+
+      const lastOrder = customer.lastOrder;
+
+      const reference =
+        "RBUY-" + lastOrder.id.substring(0, 8).toUpperCase();
+
+      const phone = normalizePhone(customer.whatsapp);
+
+      const whatsappLink = phone
+        ? "https://wa.me/" + phone
+        : "";
+
+      return `
+
+        <tr>
+
+          <td>
+            <div class="font-semibold text-white">
+              ${escapeHTML(customer.name)}
+            </div>
+
+            <div class="text-xs text-gray-500 mt-1">
+              Customer
+            </div>
+          </td>
+
+          <td>
+            ${
+              customer.whatsapp
+                ? `<a class="text-green-400 hover:underline"
+                     href="${whatsappLink}"
+                     target="_blank"
+                     rel="noopener noreferrer">
+                     ${escapeHTML(customer.whatsapp)}
+                   </a>`
+                : `<span class="text-gray-500">Not provided</span>`
+            }
+          </td>
+
+          <td>
+            ${
+              customer.email
+                ? `<a class="text-blue-400 hover:underline"
+                     href="mailto:${encodeURIComponent(customer.email)}">
+                     ${escapeHTML(customer.email)}
+                   </a>`
+                : `<span class="text-gray-500">Not provided</span>`
+            }
+          </td>
+
+          <td>
+            <span class="status">
+              ${customer.orders.length}
+              ${customer.orders.length === 1 ? "order" : "orders"}
+            </span>
+          </td>
+
+          <td>
+            ${formatDate(lastOrder.created_at)}
+          </td>
+
+          <td>
+            ${escapeHTML(lastOrder.delivery_location || "Not provided")}
+          </td>
+
+          <td>
+            <a
+              href="order-details.html?id=${encodeURIComponent(lastOrder.id)}"
+              class="text-blue-400 hover:underline font-semibold">
+              Latest order
+            </a>
+
+            <button
+              class="block text-gray-400 hover:text-white mt-2 text-xs"
+              data-customer-key="${encodeURIComponent(customer.key)}">
+              View history
+            </button>
+          </td>
+
+        </tr>
+
+      `;
+
+    }).join("");
+
+    // Attach history actions after rendering.
+    table.querySelectorAll("[data-customer-key]").forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const key = decodeURIComponent(button.dataset.customerKey);
+
+        const customer = customers.find(item => item.key === key);
+
+        if (customer) showCustomerHistory(customer);
+
+      });
+
+    });
+
+  }
+
+  // --------------------------------------------------
+  // CUSTOMER ORDER HISTORY
+  // --------------------------------------------------
+
+  function showCustomerHistory(customer) {
+
+    const history = customer.orders
+      .slice()
+      .sort((a, b) =>
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+
+    const historyHTML = history.map(order => {
+
+      const reference =
+        "RBUY-" + order.id.substring(0, 8).toUpperCase();
+
+      return `
+        <div class="border-b border-gray-700 py-4">
+
+          <div class="flex flex-wrap justify-between gap-3">
+
+            <div>
+              <p class="font-semibold">
+                ${escapeHTML(order.product_name || "Unnamed product")}
+              </p>
+
+              <p class="text-xs text-gray-500 mt-1">
+                ${reference} · ${formatDate(order.created_at)}
+              </p>
+            </div>
+
+            <div class="text-right">
+              <span class="status">
+                ${escapeHTML(order.status || "pending_review")}
+              </span>
+
+              <a
+                href="order-details.html?id=${encodeURIComponent(order.id)}"
+                class="block text-blue-400 hover:underline text-xs mt-2">
+                Open order
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+    const overlay = document.createElement("div");
+
+    overlay.id = "historyOverlay";
+
+    overlay.className =
+      "fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4";
+
+    overlay.innerHTML = `
+
+      <div class="panel w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6">
+
+        <div class="flex justify-between items-start gap-4 mb-5">
+
+          <div>
+            <h3 class="text-xl font-bold">
+              ${escapeHTML(customer.name)}
+            </h3>
+
+            <p class="text-sm text-gray-500 mt-1">
+              ${customer.orders.length} order(s) on record
+            </p>
+          </div>
+
+          <button id="closeHistory"
+            class="text-gray-400 hover:text-white text-xl">
+            ×
+          </button>
+
+        </div>
+
+        <div>
+          ${historyHTML}
+        </div>
+
+      </div>
+
+    `;
+
+    document.body.appendChild(overlay);
+
+    $("closeHistory").addEventListener("click", () => {
+      overlay.remove();
+    });
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) overlay.remove();
+    });
+
+  }
+
+  // --------------------------------------------------
+  // FILTERS AND REFRESH
+  // --------------------------------------------------
+
+  $("searchInput").addEventListener("input", renderCustomers);
+
+  $("customerFilter").addEventListener("change", renderCustomers);
+
+  $("refreshBtn").addEventListener("click", loadCustomers);
+
+  // --------------------------------------------------
+  // INITIALIZE
+  // --------------------------------------------------
+
+  async function initializePage() {
+
+    const authorized = await checkAdmin();
+
+    if (!authorized) return;
+
+    await loadCustomers();
+
+  }
+
+  initializePage();
+
+</script>
+
+</body>
+</html>
