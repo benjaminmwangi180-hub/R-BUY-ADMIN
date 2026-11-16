@@ -1,0 +1,413 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suppliers | R-BUY Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-[#090909] text-white min-h-screen">
+
+<div class="flex min-h-screen">
+
+  <aside class="hidden md:flex w-64 bg-[#111] border-r border-white/10 p-6 flex-col">
+    <h1 class="text-2xl font-bold text-blue-500 mb-10">R-BUY</h1>
+
+    <nav class="space-y-3 text-sm">
+      <a href="index.html" class="block p-3 rounded-lg hover:bg-white/10">Dashboard</a>
+      <a href="orders.html" class="block p-3 rounded-lg hover:bg-white/10">Orders</a>
+      <a href="customers.html" class="block p-3 rounded-lg hover:bg-white/10">Customers</a>
+      <a href="quotations.html" class="block p-3 rounded-lg hover:bg-white/10">Quotations</a>
+      <a href="payments.html" class="block p-3 rounded-lg hover:bg-white/10">Payments</a>
+      <a href="procurement.html" class="block p-3 rounded-lg hover:bg-white/10">Procurement</a>
+      <a href="suppliers.html" class="block p-3 rounded-lg bg-blue-600">Suppliers</a>
+    </nav>
+
+    <button onclick="logout()" class="mt-auto text-red-400 text-left p-3 hover:bg-white/10 rounded-lg">
+      Sign out
+    </button>
+  </aside>
+
+  <main class="flex-1 p-5 md:p-8 overflow-x-hidden">
+
+    <div class="flex flex-col md:flex-row justify-between gap-4 mb-8">
+      <div>
+        <p class="text-blue-400 text-sm">R-BUY MANAGEMENT</p>
+        <h2 class="text-3xl font-bold mt-1">Suppliers</h2>
+        <p class="text-gray-400 text-sm mt-2">Manage your product sourcing partners.</p>
+      </div>
+
+      <button onclick="openModal()"
+        class="bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-xl font-semibold h-fit">
+        + Add Supplier
+      </button>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4 mb-8">
+      <div class="bg-[#111] border border-white/10 p-5 rounded-2xl">
+        <p class="text-gray-400 text-sm">Total Suppliers</p>
+        <h3 id="totalSuppliers" class="text-3xl font-bold mt-2">0</h3>
+      </div>
+      <div class="bg-[#111] border border-white/10 p-5 rounded-2xl">
+        <p class="text-gray-400 text-sm">Active Suppliers</p>
+        <h3 id="activeSuppliers" class="text-3xl font-bold mt-2 text-green-400">0</h3>
+      </div>
+      <div class="bg-[#111] border border-white/10 p-5 rounded-2xl">
+        <p class="text-gray-400 text-sm">Inactive Suppliers</p>
+        <h3 id="inactiveSuppliers" class="text-3xl font-bold mt-2 text-red-400">0</h3>
+      </div>
+    </div>
+
+    <div class="bg-[#111] border border-white/10 rounded-2xl p-5">
+      <div class="flex flex-col sm:flex-row gap-3 justify-between mb-5">
+        <h3 class="text-xl font-semibold">Supplier Directory</h3>
+        <input id="searchInput" oninput="renderSuppliers()"
+          placeholder="Search supplier, contact or location..."
+          class="bg-[#090909] border border-white/10 rounded-xl px-4 py-3 text-sm w-full sm:max-w-sm outline-none focus:border-blue-500">
+      </div>
+
+      <div id="supplierList" class="space-y-3">
+        <p class="text-gray-500">Loading suppliers...</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- SUPPLIER MODAL -->
+<div id="supplierModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+  <div class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h3 id="modalTitle" class="text-xl font-bold">Add Supplier</h3>
+      <button onclick="closeModal()" class="text-gray-400 text-2xl">&times;</button>
+    </div>
+
+    <form id="supplierForm" class="space-y-4">
+      <input type="hidden" id="supplierId">
+
+      <div>
+        <label class="text-sm text-gray-400">Supplier / Business Name *</label>
+        <input id="supplierName" required
+          class="mt-2 w-full bg-[#090909] border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500">
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-400">Contact Person</label>
+        <input id="contactPerson"
+          class="mt-2 w-full bg-[#090909] border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500">
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400">Phone Number</label>
+          <input id="supplierPhone" type="tel"
+            class="mt-2 w-full bg-[#090909] border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="text-sm text-gray-400">Email Address</label>
+          <input id="supplierEmail" type="email"
+            class="mt-2 w-full bg-[#090909] border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500">
+        </div>
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-400">Location</label>
+        <input id="supplierLocation" placeholder="e.g. Nairobi, Kenya"
+          class="mt-2 w-full bg-[#090909] border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500">
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-400">Supplier Category</label>
+        <select id="supplierType"
+          class="mt-2 w-full bg-[#090909] border border-white/10 rounded-xl p-3 outline-none">
+          <option value="general">General</option>
+          <option value="electronics">Electronics</option>
+          <option value="fashion">Fashion</option>
+          <option value="home">Home & Living</option>
+          <option value="construction">Construction</option>
+          <option value="wholesale">Wholesale</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-400">Notes</label>
+        <textarea id="supplierNotes" rows="3"
+          class="mt-2 w-full bg-[#090909] border border-white/10 rounded-xl p-3 outline-none"></textarea>
+      </div>
+
+      <label id="activeWrapper" class="hidden flex items-center gap-2 text-sm text-gray-300">
+        <input id="supplierActive" type="checkbox" checked>
+        Supplier is active
+      </label>
+
+      <div class="flex gap-3 pt-3">
+        <button type="button" onclick="closeModal()"
+          class="flex-1 bg-white/10 hover:bg-white/20 rounded-xl py-3">Cancel</button>
+        <button id="saveButton" type="submit"
+          class="flex-1 bg-blue-600 hover:bg-blue-500 rounded-xl py-3 font-semibold">Save Supplier</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-5 right-5 hidden bg-[#222] border border-white/10 px-5 py-3 rounded-xl shadow-xl text-sm z-[60]"></div>
+
+<script>
+const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
+const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let suppliers = [];
+
+function toast(message) {
+  const el = document.getElementById("toast");
+  el.textContent = message;
+  el.classList.remove("hidden");
+  setTimeout(() => el.classList.add("hidden"), 3500);
+}
+
+async function authenticate() {
+  const { data: { session } } = await db.auth.getSession();
+
+  if (!session) {
+    location.href = "login.html";
+    return false;
+  }
+
+  const { data: { user }, error: userError } = await db.auth.getUser();
+
+  if (userError || !user) {
+    await db.auth.signOut();
+    location.href = "login.html";
+    return false;
+  }
+
+  const { data: admin, error } = await db
+    .from("admin_users")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error || !admin) {
+    await db.auth.signOut();
+    location.href = "login.html";
+    return false;
+  }
+
+  return true;
+}
+
+async function logout() {
+  await db.auth.signOut();
+  location.href = "login.html";
+}
+
+async function loadSuppliers() {
+  const { data, error } = await db
+    .from("suppliers")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    toast("Could not load suppliers.");
+    return;
+  }
+
+  suppliers = data || [];
+  updateStats();
+  renderSuppliers();
+}
+
+function updateStats() {
+  document.getElementById("totalSuppliers").textContent = suppliers.length;
+  document.getElementById("activeSuppliers").textContent =
+    suppliers.filter(s => s.is_active).length;
+  document.getElementById("inactiveSuppliers").textContent =
+    suppliers.filter(s => !s.is_active).length;
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function renderSuppliers() {
+  const query = document.getElementById("searchInput").value.toLowerCase();
+
+  const filtered = suppliers.filter(s =>
+    [s.supplier_name, s.contact_person, s.phone, s.email, s.location, s.supplier_type]
+      .some(v => String(v || "").toLowerCase().includes(query))
+  );
+
+  const container = document.getElementById("supplierList");
+
+  if (!filtered.length) {
+    container.innerHTML = `
+      <div class="text-center py-12 text-gray-500">
+        No suppliers found. Add your first supplier to get started.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(s => `
+    <div class="bg-[#090909] border border-white/10 rounded-xl p-4 flex flex-col lg:flex-row justify-between gap-4">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <h4 class="font-semibold text-lg">${escapeHTML(s.supplier_name)}</h4>
+          <span class="text-xs px-2 py-1 rounded-full ${s.is_active ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}">
+            ${s.is_active ? "Active" : "Inactive"}
+          </span>
+        </div>
+        <p class="text-sm text-gray-400 mt-1">${escapeHTML(s.contact_person || "No contact person")}</p>
+        <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-500 mt-3">
+          <span>☎ ${escapeHTML(s.phone || "No phone")}</span>
+          <span>✉ ${escapeHTML(s.email || "No email")}</span>
+          <span>⌖ ${escapeHTML(s.location || "No location")}</span>
+          <span>Category: ${escapeHTML(s.supplier_type || "general")}</span>
+        </div>
+        ${s.notes ? `<p class="text-xs text-gray-500 mt-3">${escapeHTML(s.notes)}</p>` : ""}
+      </div>
+
+      <div class="flex gap-2 items-start shrink-0">
+        <button onclick="editSupplier('${s.id}')"
+          class="px-4 py-2 rounded-lg bg-blue-600/15 text-blue-400 hover:bg-blue-600/30 text-sm">
+          Edit
+        </button>
+        <button onclick="toggleSupplier('${s.id}')"
+          class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm">
+          ${s.is_active ? "Deactivate" : "Activate"}
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openModal() {
+  document.getElementById("supplierForm").reset();
+  document.getElementById("supplierId").value = "";
+  document.getElementById("supplierActive").checked = true;
+  document.getElementById("activeWrapper").classList.add("hidden");
+  document.getElementById("modalTitle").textContent = "Add Supplier";
+  document.getElementById("saveButton").textContent = "Save Supplier";
+  document.getElementById("supplierModal").classList.remove("hidden");
+}
+
+function closeModal() {
+  document.getElementById("supplierModal").classList.add("hidden");
+}
+
+function editSupplier(id) {
+  const s = suppliers.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById("supplierId").value = s.id;
+  document.getElementById("supplierName").value = s.supplier_name || "";
+  document.getElementById("contactPerson").value = s.contact_person || "";
+  document.getElementById("supplierPhone").value = s.phone || "";
+  document.getElementById("supplierEmail").value = s.email || "";
+  document.getElementById("supplierLocation").value = s.location || "";
+  document.getElementById("supplierType").value = s.supplier_type || "general";
+  document.getElementById("supplierNotes").value = s.notes || "";
+  document.getElementById("supplierActive").checked = s.is_active;
+
+  document.getElementById("activeWrapper").classList.remove("hidden");
+  document.getElementById("modalTitle").textContent = "Edit Supplier";
+  document.getElementById("saveButton").textContent = "Update Supplier";
+  document.getElementById("supplierModal").classList.remove("hidden");
+}
+
+document.getElementById("supplierForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const id = document.getElementById("supplierId").value;
+
+  const record = {
+    supplier_name: document.getElementById("supplierName").value.trim(),
+    contact_person: document.getElementById("contactPerson").value.trim() || null,
+    phone: document.getElementById("supplierPhone").value.trim() || null,
+    email: document.getElementById("supplierEmail").value.trim() || null,
+    location: document.getElementById("supplierLocation").value.trim() || null,
+    supplier_type: document.getElementById("supplierType").value,
+    notes: document.getElementById("supplierNotes").value.trim() || null,
+    updated_at: new Date().toISOString()
+  };
+
+  if (!record.supplier_name) {
+    toast("Supplier name is required.");
+    return;
+  }
+
+  if (id) {
+    record.is_active = document.getElementById("supplierActive").checked;
+  }
+
+  const button = document.getElementById("saveButton");
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  const result = id
+    ? await db.from("suppliers").update(record).eq("id", id)
+    : await db.from("suppliers").insert(record);
+
+  button.disabled = false;
+  button.textContent = id ? "Update Supplier" : "Save Supplier";
+
+  if (result.error) {
+    console.error(result.error);
+    toast(result.error.message || "Could not save supplier.");
+    return;
+  }
+
+  closeModal();
+  toast(id ? "Supplier updated successfully." : "Supplier added successfully.");
+  await loadSuppliers();
+});
+
+async function toggleSupplier(id) {
+  const s = suppliers.find(x => x.id === id);
+  if (!s) return;
+
+  const action = s.is_active ? "deactivate" : "activate";
+
+  if (!confirm(`Are you sure you want to ${action} ${s.supplier_name}?`)) {
+    return;
+  }
+
+  const { error } = await db
+    .from("suppliers")
+    .update({
+      is_active: !s.is_active,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if (error) {
+    toast("Could not update supplier.");
+    console.error(error);
+    return;
+  }
+
+  toast(`Supplier ${action}d successfully.`);
+  await loadSuppliers();
+}
+
+(async () => {
+  if (await authenticate()) {
+    await loadSuppliers();
+  }
+})();
+</script>
+
+</body>
+</html>
