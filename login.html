@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-buy Admin | Login</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: #090909;
+            color: white;
+        }
+
+        .input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #292929;
+            border-radius: 10px;
+            padding: 14px;
+            color: white;
+            outline: none;
+        }
+
+        .input:focus {
+            border-color: #2563eb;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center px-5">
+
+<div class="w-full max-w-md">
+
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-bold">
+            R<span class="text-blue-500">-</span>buy
+        </h1>
+        <p class="text-gray-500 mt-2">Administration Portal</p>
+    </div>
+
+    <div class="bg-[#111] border border-gray-800 rounded-2xl p-8">
+
+        <h2 class="text-2xl font-semibold mb-2">Admin Login</h2>
+
+        <p class="text-gray-500 text-sm mb-8">
+            Sign in to manage your business.
+        </p>
+
+        <form id="loginForm" class="space-y-5">
+
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    class="input"
+                    placeholder="admin@example.com"
+                    required>
+            </div>
+
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    class="input"
+                    placeholder="Your password"
+                    required>
+            </div>
+
+            <div id="errorMessage"
+                 class="hidden text-red-400 text-sm"></div>
+
+            <button
+                id="loginButton"
+                type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700
+                rounded-xl py-4 font-semibold transition">
+
+                Sign In
+            </button>
+
+        </form>
+    </div>
+
+    <p class="text-center text-gray-600 text-xs mt-8">
+        R-buy Administration • Secure Access
+    </p>
+
+</div>
+
+<script>
+const SUPABASE_URL =
+    "https://ixuohpgqpuvjdbigmhje.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+const form = document.getElementById("loginForm");
+const button = document.getElementById("loginButton");
+const errorBox = document.getElementById("errorMessage");
+
+// Verify administrator membership
+async function verifyAdmin() {
+
+    const { data: { user }, error } =
+        await supabaseClient.auth.getUser();
+
+    if (error || !user) return false;
+
+    const { data, error: adminError } =
+        await supabaseClient
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+    return !adminError && !!data;
+}
+
+// Redirect already authenticated administrators
+(async () => {
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    if (session && await verifyAdmin()) {
+        window.location.replace("index.html");
+    }
+})();
+
+form.addEventListener("submit", async (event) => {
+
+    event.preventDefault();
+
+    errorBox.classList.add("hidden");
+
+    button.disabled = true;
+    button.textContent = "Signing In...";
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+    try {
+
+        const { error } =
+            await supabaseClient.auth.signInWithPassword({
+                email,
+                password
+            });
+
+        if (error) throw error;
+
+        const authorized = await verifyAdmin();
+
+        if (!authorized) {
+            await supabaseClient.auth.signOut();
+
+            throw new Error(
+                "This account is not authorized as an R-buy administrator."
+            );
+        }
+
+        window.location.replace("index.html");
+
+    } catch (error) {
+
+        errorBox.textContent = error.message;
+        errorBox.classList.remove("hidden");
+
+        button.disabled = false;
+        button.textContent = "Sign In";
+    }
+});
+</script>
+
+</body>
+</html>
