@@ -29,33 +29,21 @@
       color: white;
       outline: none;
     }
-    .field:focus {
-      border-color: #3b82f6;
-    }
-    .field:disabled {
-      opacity: .65;
-      cursor: not-allowed;
-    }
+    .field:focus { border-color: #3b82f6; }
+    .field:disabled { opacity: .65; cursor: not-allowed; }
     .btn {
       padding: 10px 16px;
       border-radius: 8px;
       font-weight: 600;
       transition: .2s;
     }
-    .btn-primary {
-      background: #2563eb;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #1d4ed8;
-    }
-    .btn-secondary {
-      background: #252c39;
-      color: white;
-    }
-    .btn-secondary:hover {
-      background: #343d4e;
-    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #252c39; color: white; }
+    .btn-secondary:hover { background: #343d4e; }
+    .btn-mpesa { background: #15803d; color: white; }
+    .btn-mpesa:hover { background: #166534; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
     .label {
       display: block;
       font-size: 12px;
@@ -215,16 +203,13 @@
 
             <div class="flex flex-wrap gap-3 pt-2">
 
-              <a id="whatsappBtn"
-                 href="#"
-                 target="_blank"
+              <a id="whatsappBtn" href="#" target="_blank"
                  rel="noopener noreferrer"
                  class="btn bg-green-600 hover:bg-green-700 text-white text-sm">
                 Contact on WhatsApp
               </a>
 
-              <a id="emailBtn"
-                 href="#"
+              <a id="emailBtn" href="#"
                  class="btn btn-secondary text-sm">
                 Send Email
               </a>
@@ -271,9 +256,7 @@
 
             <div>
               <p class="label">Reference URL</p>
-              <a id="referenceUrl"
-                 href="#"
-                 target="_blank"
+              <a id="referenceUrl" href="#" target="_blank"
                  rel="noopener noreferrer"
                  class="text-blue-400 text-sm break-all hover:underline">
                 No reference provided
@@ -297,10 +280,7 @@
 
         <label class="label">Investigation notes</label>
 
-        <textarea
-          id="investigationNotes"
-          rows="5"
-          class="field"
+        <textarea id="investigationNotes" rows="5" class="field"
           placeholder="Record suppliers contacted, product availability, product quality, sourcing prices and other findings..."></textarea>
 
       </section>
@@ -326,13 +306,13 @@
           <div>
             <label class="label">Offered product name</label>
             <input id="offeredProductName" class="field"
-                   placeholder="Name of product being offered">
+              placeholder="Name of product being offered">
           </div>
 
           <div>
             <label class="label">Product price (all items)</label>
             <input id="offeredPrice" type="number" min="0" step="0.01"
-                   class="field" placeholder="0.00">
+              class="field" placeholder="0.00">
             <p class="text-xs text-gray-500 mt-2">
               Enter the total price for the entire requested quantity.
             </p>
@@ -341,25 +321,25 @@
           <div>
             <label class="label">Delivery fee</label>
             <input id="deliveryFee" type="number" min="0" step="0.01"
-                   class="field" placeholder="0.00">
+              class="field" placeholder="0.00">
           </div>
 
           <div>
             <label class="label">R-buy service fee</label>
             <input id="serviceFee" type="number" min="0" step="0.01"
-                   class="field" placeholder="0.00">
+              class="field" placeholder="0.00">
           </div>
 
           <div>
             <label class="label">Delivery company</label>
             <input id="deliveryCompany" class="field"
-                   placeholder="e.g. G4S, Fargo, local courier">
+              placeholder="e.g. G4S, Fargo, local courier">
           </div>
 
           <div>
             <label class="label">Estimated delivery time</label>
             <input id="deliveryEstimate" class="field"
-                   placeholder="e.g. 2-3 working days">
+              placeholder="e.g. 2-3 working days">
           </div>
 
           <div>
@@ -424,7 +404,7 @@
           </button>
 
           <button id="whatsappQuoteBtn"
-                  class="btn bg-green-600 hover:bg-green-700 text-white">
+            class="btn bg-green-600 hover:bg-green-700 text-white">
             Send Quotation on WhatsApp
           </button>
 
@@ -433,6 +413,71 @@
         <p class="text-xs text-gray-500 mt-4">
           Saving stores the quotation in Supabase. Sending opens WhatsApp with
           a prepared message for you to review and send manually.
+        </p>
+
+      </section>
+
+      <!-- NEW: M-PESA PAYMENT PANEL -->
+      <section class="panel p-5">
+
+        <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+          <div>
+            <h3 class="font-semibold text-xl">M-Pesa Payment</h3>
+            <p class="text-sm text-gray-500 mt-1">
+              Request payment directly on the customer's phone.
+            </p>
+          </div>
+
+          <span class="text-xs text-green-400 bg-green-500/10 px-3 py-2 rounded-lg">
+            IntaSend Sandbox
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <div class="bg-[#0b1019] border border-gray-700 rounded-xl p-5">
+            <p class="label">Customer</p>
+            <p id="paymentCustomerName" class="font-semibold"></p>
+
+            <p class="label mt-4">M-Pesa phone number</p>
+            <p id="paymentPhone" class="text-lg font-semibold text-green-400"></p>
+          </div>
+
+          <div class="bg-[#0b1019] border border-gray-700 rounded-xl p-5">
+            <p class="label">Quotation amount</p>
+            <p id="paymentAmount" class="text-2xl font-bold text-blue-400">
+              KES 0
+            </p>
+
+            <p class="text-xs text-gray-500 mt-2">
+              The payment function calculates the outstanding balance from
+              the saved quotation and confirmed payments.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="mt-5 bg-[#0b1019] border border-gray-700 rounded-xl p-4">
+          <p class="label">Payment readiness</p>
+          <p id="paymentReadiness" class="text-sm text-gray-300">
+            Checking order...
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-5">
+
+          <button id="sendMpesaBtn" class="btn btn-mpesa" disabled>
+            Send M-Pesa STK Push
+          </button>
+
+        </div>
+
+        <div id="paymentResult" class="hidden mt-5 p-4 rounded-lg text-sm"></div>
+
+        <p class="text-xs text-gray-500 mt-4">
+          The STK Push requests payment. It does not confirm that payment
+          has been received. Confirmation will be handled by the payment
+          verification webhook, which we will build next.
         </p>
 
       </section>
@@ -473,9 +518,13 @@
   // SUPABASE CONFIGURATION
   // --------------------------------------------------
 
-  const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
+  const SUPABASE_URL =
+    "https://ixuohpgqpuvjdbigmhje.supabase.co";
 
-  const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+  const SUPABASE_KEY =
+    "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+
+  const PAYMENT_FUNCTION = "payment-script";
 
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
@@ -489,6 +538,7 @@
   const orderId = new URLSearchParams(window.location.search).get("id");
 
   let currentOrder = null;
+  let paymentRequestInProgress = false;
 
   const $ = (id) => document.getElementById(id);
 
@@ -499,16 +549,6 @@
   // --------------------------------------------------
   // UTILITIES
   // --------------------------------------------------
-
-  function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    })[char]);
-  }
 
   function formatKES(value) {
     return "KES " + Number(value || 0).toLocaleString("en-KE", {
@@ -548,6 +588,24 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function showPaymentResult(message, type = "info") {
+    const box = $("paymentResult");
+
+    box.classList.remove("hidden");
+
+    box.className = "mt-5 p-4 rounded-lg text-sm";
+
+    if (type === "success") {
+      box.classList.add("bg-green-500/10", "text-green-400");
+    } else if (type === "error") {
+      box.classList.add("bg-red-500/10", "text-red-400");
+    } else {
+      box.classList.add("bg-blue-500/10", "text-blue-400");
+    }
+
+    box.textContent = message;
+  }
+
   function getNumber(id) {
     const value = $(id).value.trim();
 
@@ -579,6 +637,7 @@
   function safeExternalUrl(value) {
     try {
       const url = new URL(value);
+
       if (url.protocol === "http:" || url.protocol === "https:") {
         return url.href;
       }
@@ -630,7 +689,8 @@
   async function loadOrder() {
 
     if (!orderId) {
-      loadingState.textContent = "No order ID was provided. Return to the Orders page.";
+      loadingState.textContent =
+        "No order ID was provided. Return to the Orders page.";
       return;
     }
 
@@ -643,6 +703,7 @@
     if (error || !data) {
       loadingState.textContent =
         "Unable to load this order. Check the order ID and your admin permissions.";
+
       console.error("Order loading error:", error);
       return;
     }
@@ -661,27 +722,45 @@
 
   function renderOrder(order) {
 
-    const reference = "RBUY-" + order.id.substring(0, 8).toUpperCase();
+    const reference =
+      "RBUY-" + order.id.substring(0, 8).toUpperCase();
 
     $("orderReference").textContent = reference;
 
-    $("summaryProduct").textContent = order.product_name || "Unnamed product";
-    $("summaryDate").textContent = "Submitted " + formatDate(order.created_at);
+    $("summaryProduct").textContent =
+      order.product_name || "Unnamed product";
 
-    $("customerName").textContent = order.customer_name || "Not provided";
-    $("customerPhone").textContent = order.whatsapp || "Not provided";
-    $("customerEmail").textContent = order.email || "Not provided";
-    $("deliveryLocation").textContent = order.delivery_location || "Not provided";
+    $("summaryDate").textContent =
+      "Submitted " + formatDate(order.created_at);
 
-    $("productName").textContent = order.product_name || "Not provided";
-    $("productDescription").textContent = order.product_description || "No description";
+    $("customerName").textContent =
+      order.customer_name || "Not provided";
 
-    $("quantity").textContent = order.quantity ?? "Not provided";
+    $("customerPhone").textContent =
+      order.whatsapp || "Not provided";
 
-    $("customerBudget").textContent = formatKES(order.budget);
+    $("customerEmail").textContent =
+      order.email || "Not provided";
+
+    $("deliveryLocation").textContent =
+      order.delivery_location || "Not provided";
+
+    $("productName").textContent =
+      order.product_name || "Not provided";
+
+    $("productDescription").textContent =
+      order.product_description || "No description";
+
+    $("quantity").textContent =
+      order.quantity ?? "Not provided";
+
+    $("customerBudget").textContent =
+      formatKES(order.budget);
 
     $("budgetType").textContent =
-      order.budget_type === "per_item" ? "Per item" : "Total budget";
+      order.budget_type === "per_item"
+        ? "Per item"
+        : "Total budget";
 
     const referenceLink = safeExternalUrl(order.reference_url || "");
 
@@ -690,61 +769,97 @@
       $("referenceUrl").textContent = order.reference_url;
     } else {
       $("referenceUrl").removeAttribute("href");
-      $("referenceUrl").textContent = "No valid reference provided";
+      $("referenceUrl").textContent =
+        "No valid reference provided";
     }
 
-    $("investigationNotes").value = order.investigation_notes || "";
+    $("investigationNotes").value =
+      order.investigation_notes || "";
 
-    $("offeredProductName").value = order.offered_product_name || "";
-    $("offeredDescription").value = order.offered_description || "";
+    $("offeredProductName").value =
+      order.offered_product_name || "";
 
-    $("offeredPrice").value = order.offered_price ?? "";
-    $("deliveryFee").value = order.delivery_fee ?? "";
-    $("serviceFee").value = order.service_fee ?? "";
+    $("offeredDescription").value =
+      order.offered_description || "";
 
-    $("deliveryCompany").value = order.delivery_company || "";
-    $("deliveryEstimate").value = order.delivery_estimate || "";
+    $("offeredPrice").value =
+      order.offered_price ?? "";
+
+    $("deliveryFee").value =
+      order.delivery_fee ?? "";
+
+    $("serviceFee").value =
+      order.service_fee ?? "";
+
+    $("deliveryCompany").value =
+      order.delivery_company || "";
+
+    $("deliveryEstimate").value =
+      order.delivery_estimate || "";
 
     if (order.offer_expires_at) {
       const date = new Date(order.offer_expires_at);
+
       const localDate = new Date(
         date.getTime() - date.getTimezoneOffset() * 60000
       );
 
-      $("offerExpiresAt").value = localDate.toISOString().slice(0, 16);
+      $("offerExpiresAt").value =
+        localDate.toISOString().slice(0, 16);
     } else {
       $("offerExpiresAt").value = "";
     }
 
-    $("orderStatus").value = order.status || "pending_review";
-    $("paymentStatus").value = order.payment_status || "unpaid";
+    $("orderStatus").value =
+      order.status || "pending_review";
+
+    $("paymentStatus").value =
+      order.payment_status || "unpaid";
 
     $("orderId").textContent = order.id;
-    $("createdAt").textContent = formatDate(order.created_at);
-    $("updatedAt").textContent = formatDate(order.updated_at);
+
+    $("createdAt").textContent =
+      formatDate(order.created_at);
+
+    $("updatedAt").textContent =
+      formatDate(order.updated_at);
 
     const phone = normalizePhone(order.whatsapp);
 
     if (phone) {
       $("whatsappBtn").href = "https://wa.me/" + phone;
-      $("whatsappBtn").classList.remove("opacity-40", "pointer-events-none");
+      $("whatsappBtn").classList.remove(
+        "opacity-40",
+        "pointer-events-none"
+      );
     } else {
       $("whatsappBtn").removeAttribute("href");
-      $("whatsappBtn").classList.add("opacity-40", "pointer-events-none");
+      $("whatsappBtn").classList.add(
+        "opacity-40",
+        "pointer-events-none"
+      );
     }
 
     if (order.email) {
       $("emailBtn").href =
         "mailto:" + encodeURIComponent(order.email) +
-        "?subject=" + encodeURIComponent("R-Buy Order " + reference);
+        "?subject=" +
+        encodeURIComponent("R-Buy Order " + reference);
 
-      $("emailBtn").classList.remove("opacity-40", "pointer-events-none");
+      $("emailBtn").classList.remove(
+        "opacity-40",
+        "pointer-events-none"
+      );
     } else {
       $("emailBtn").removeAttribute("href");
-      $("emailBtn").classList.add("opacity-40", "pointer-events-none");
+      $("emailBtn").classList.add(
+        "opacity-40",
+        "pointer-events-none"
+      );
     }
 
     updateQuotationTotal();
+    updatePaymentPanel();
   }
 
   // --------------------------------------------------
@@ -769,13 +884,26 @@
     try {
       const quote = getQuotation();
 
-      $("displayProductPrice").textContent = formatKES(quote.product);
-      $("displayDeliveryFee").textContent = formatKES(quote.delivery);
-      $("displayServiceFee").textContent = formatKES(quote.service);
-      $("quotationTotal").textContent = formatKES(quote.total);
+      $("displayProductPrice").textContent =
+        formatKES(quote.product);
+
+      $("displayDeliveryFee").textContent =
+        formatKES(quote.delivery);
+
+      $("displayServiceFee").textContent =
+        formatKES(quote.service);
+
+      $("quotationTotal").textContent =
+        formatKES(quote.total);
+
+      $("paymentAmount").textContent =
+        formatKES(quote.total);
+
+      updatePaymentPanel();
 
     } catch (error) {
       $("quotationTotal").textContent = "Invalid amount";
+      $("paymentAmount").textContent = "Invalid amount";
     }
   }
 
@@ -799,7 +927,8 @@
 
     const updates = {
 
-      investigation_notes: $("investigationNotes").value.trim(),
+      investigation_notes:
+        $("investigationNotes").value.trim(),
 
       offered_product_name:
         $("offeredProductName").value.trim() || null,
@@ -846,17 +975,23 @@
 
       currentOrder = data;
 
-      $("updatedAt").textContent = formatDate(data.updated_at);
+      $("updatedAt").textContent =
+        formatDate(data.updated_at);
+
+      updatePaymentPanel();
 
       if (showSuccess) {
-        showMessage("Order and quotation saved successfully.");
+        showMessage(
+          "Order and quotation saved successfully."
+        );
       }
 
       return data;
 
     } finally {
       $("saveBtn").disabled = false;
-      $("saveBtn").textContent = "Save Order & Quotation";
+      $("saveBtn").textContent =
+        "Save Order & Quotation";
     }
   }
 
@@ -866,7 +1001,225 @@
       await saveOrder(true);
     } catch (error) {
       console.error(error);
-      showMessage(error.message || "Unable to save order.", "error");
+
+      showMessage(
+        error.message || "Unable to save order.",
+        "error"
+      );
+    }
+
+  });
+
+  // --------------------------------------------------
+  // PAYMENT PANEL
+  // --------------------------------------------------
+
+  function updatePaymentPanel() {
+
+    if (!currentOrder) return;
+
+    const phone = normalizePhone(currentOrder.whatsapp);
+
+    $("paymentCustomerName").textContent =
+      currentOrder.customer_name || "Not provided";
+
+    $("paymentPhone").textContent =
+      phone || "Invalid or missing phone number";
+
+    try {
+      const quote = getQuotation();
+
+      $("paymentAmount").textContent =
+        formatKES(quote.total);
+    } catch (error) {
+      $("paymentAmount").textContent = "Invalid quotation";
+    }
+
+    const button = $("sendMpesaBtn");
+    const readiness = $("paymentReadiness");
+
+    const quote = (() => {
+      try {
+        return getQuotation();
+      } catch (error) {
+        return null;
+      }
+    })();
+
+    let reason = "";
+
+    if (currentOrder.status !== "awaiting_payment") {
+      reason = "Set the order status to Awaiting payment and save it.";
+    } else if (!quote || quote.total <= 0 || quote.product <= 0) {
+      reason = "Complete the quotation with a valid product price.";
+    } else if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+      reason = "The customer's saved WhatsApp number is not a valid Kenyan M-Pesa number.";
+    } else if (
+      currentOrder.payment_status === "paid" ||
+      currentOrder.payment_status === "refunded"
+    ) {
+      reason = "This order is already marked as paid or refunded.";
+    }
+
+    if (reason) {
+      readiness.textContent = reason;
+      readiness.className = "text-sm text-yellow-400";
+      button.disabled = true;
+    } else {
+      readiness.textContent =
+        "Ready to request payment. The saved quotation will be used.";
+      readiness.className = "text-sm text-green-400";
+      button.disabled = paymentRequestInProgress;
+    }
+
+    if (paymentRequestInProgress) {
+      button.disabled = true;
+    }
+  }
+
+  // --------------------------------------------------
+  // SEND M-PESA STK PUSH
+  // --------------------------------------------------
+
+  $("sendMpesaBtn").addEventListener("click", async () => {
+
+    if (paymentRequestInProgress) return;
+
+    if (!currentOrder) {
+      showPaymentResult(
+        "No order is loaded.",
+        "error"
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Send an M-Pesa STK Push to " +
+      currentOrder.whatsapp +
+      " for this saved quotation?\n\n" +
+      "Only proceed if the customer has agreed to the quotation."
+    );
+
+    if (!confirmed) return;
+
+    paymentRequestInProgress = true;
+
+    const button = $("sendMpesaBtn");
+
+    button.disabled = true;
+    button.textContent = "Preparing payment request...";
+
+    try {
+
+      // Save the quotation before requesting payment.
+      const savedOrder = await saveOrder(false);
+
+      if (savedOrder.status !== "awaiting_payment") {
+        throw new Error(
+          "The order must be marked Awaiting payment before sending an STK Push."
+        );
+      }
+
+      if (
+        savedOrder.payment_status === "paid" ||
+        savedOrder.payment_status === "refunded"
+      ) {
+        throw new Error(
+          "This order is already marked as paid or refunded."
+        );
+      }
+
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        throw new Error(
+          "Your admin session has expired. Please log in again."
+        );
+      }
+
+      button.textContent = "Contacting IntaSend...";
+
+      // Call the deployed Supabase Edge Function.
+      const { data, error } =
+        await supabaseClient.functions.invoke(
+          PAYMENT_FUNCTION,
+          {
+            body: {
+              order_id: currentOrder.id
+            }
+          }
+        );
+
+      if (error) {
+        console.error("Payment function error:", error);
+
+        let detail = error.message ||
+          "The payment request could not be completed.";
+
+        if (error.context) {
+          try {
+            const responseBody = await error.context.json();
+
+            if (responseBody.error) {
+              detail = responseBody.error;
+            }
+          } catch (parseError) {}
+        }
+
+        throw new Error(detail);
+      }
+
+      if (!data || !data.success) {
+        throw new Error(
+          data?.error || "IntaSend did not confirm the payment request."
+        );
+      }
+
+      showPaymentResult(
+        "STK Push request successfully initiated.\n\n" +
+        "Order: RBUY-" +
+        String(data.order_number) +
+        "\nAmount: " +
+        formatKES(data.amount) +
+        "\nPhone: " +
+        data.phone +
+        "\nInvoice reference: " +
+        data.invoice_id +
+        "\n\nThe customer should check their phone and enter their M-Pesa PIN if they wish to pay. Payment is still awaiting provider confirmation.",
+        "success"
+      );
+
+      // Reflect the pending state in the page.
+      $("paymentStatus").value = "pending";
+
+      currentOrder.payment_status = "pending";
+
+      updatePaymentPanel();
+
+      showMessage(
+        "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
+        "success"
+      );
+
+    } catch (error) {
+
+      console.error("STK Push error:", error);
+
+      showPaymentResult(
+        error.message ||
+        "Unable to initiate the M-Pesa payment request.",
+        "error"
+      );
+
+    } finally {
+
+      paymentRequestInProgress = false;
+
+      button.textContent = "Send M-Pesa STK Push";
+
+      updatePaymentPanel();
+
     }
 
   });
@@ -884,10 +1237,13 @@
     }
 
     if (!quote.product && !quote.delivery && !quote.service) {
-      throw new Error("Enter quotation amounts before preparing the message.");
+      throw new Error(
+        "Enter quotation amounts before preparing the message."
+      );
     }
 
-    const reference = "RBUY-" + currentOrder.id.substring(0, 8).toUpperCase();
+    const reference =
+      "RBUY-" + currentOrder.id.substring(0, 8).toUpperCase();
 
     const productName =
       $("offeredProductName").value.trim() ||
@@ -898,14 +1254,18 @@
 
     const expiry =
       $("offerExpiresAt").value
-        ? formatDate(new Date($("offerExpiresAt").value).toISOString())
+        ? formatDate(
+            new Date($("offerExpiresAt").value).toISOString()
+          )
         : "Not specified";
 
     const deliveryCompany =
-      $("deliveryCompany").value.trim() || "To be confirmed";
+      $("deliveryCompany").value.trim() ||
+      "To be confirmed";
 
     const deliveryEstimate =
-      $("deliveryEstimate").value.trim() || "To be confirmed";
+      $("deliveryEstimate").value.trim() ||
+      "To be confirmed";
 
     return `Hello ${currentOrder.customer_name || "there"},
 
@@ -954,7 +1314,10 @@ You can buy anything.`;
 
     } catch (error) {
 
-      showMessage(error.message || "Unable to copy quotation.", "error");
+      showMessage(
+        error.message || "Unable to copy quotation.",
+        "error"
+      );
 
     }
 
@@ -968,13 +1331,14 @@ You can buy anything.`;
 
     try {
 
-      // Save the quotation before preparing the customer message.
       await saveOrder(false);
 
       const phone = normalizePhone(currentOrder.whatsapp);
 
       if (!phone) {
-        throw new Error("This customer does not have a valid WhatsApp number.");
+        throw new Error(
+          "This customer does not have a valid WhatsApp number."
+        );
       }
 
       const message = buildQuotationMessage();
@@ -983,14 +1347,24 @@ You can buy anything.`;
         "https://wa.me/" + phone +
         "?text=" + encodeURIComponent(message);
 
-      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+      window.open(
+        whatsappUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
 
-      showMessage("Quotation saved. Review the WhatsApp message and send it to the customer.");
+      showMessage(
+        "Quotation saved. Review the WhatsApp message and send it to the customer."
+      );
 
     } catch (error) {
 
       console.error(error);
-      showMessage(error.message || "Unable to prepare quotation.", "error");
+
+      showMessage(
+        error.message || "Unable to prepare quotation.",
+        "error"
+      );
 
     }
 
