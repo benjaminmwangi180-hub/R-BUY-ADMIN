@@ -5,42 +5,253 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>R-buy Admin | Dashboard</title>
+    <title>R-BUY | Operations Dashboard</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: #090909;
-            color: #fff;
+            margin: 0;
+            background: #f5f4ef;
+            color: #172033;
+            font-family: 'DM Sans', sans-serif;
         }
 
-        .panel {
-            background: #111;
-            border: 1px solid #252525;
-            border-radius: 16px;
+        .mono {
+            font-family: 'DM Mono', monospace;
         }
 
-        .sidebar-link {
-            display: block;
-            padding: 12px 15px;
-            border-radius: 10px;
-            color: #999;
-            transition: .2s;
-        }
-
-        .sidebar-link:hover,
-        .sidebar-link.active {
-            background: #1c1c1c;
+        .sidebar {
+            background: #172033;
             color: white;
         }
 
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 12px 15px;
+            border-radius: 11px;
+            color: #aab2c1;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all .2s ease;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255,255,255,.07);
+            color: white;
+            transform: translateX(2px);
+        }
+
+        .sidebar-link.active {
+            background: #2868df;
+            color: white;
+            box-shadow: 0 7px 20px rgba(40,104,223,.2);
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid #e9e8e2;
+            border-radius: 19px;
+            box-shadow: 0 5px 22px rgba(20,30,50,.025);
+        }
+
         .stat-card {
-            background: #111;
-            border: 1px solid #252525;
-            border-radius: 16px;
+            background: white;
+            border: 1px solid #e9e8e2;
+            border-radius: 18px;
             padding: 22px;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(20,30,50,.06);
+        }
+
+        .stat-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fff7df;
+            color: #a56a00;
+        }
+
+        .status-investigating {
+            background: #eaf2ff;
+            color: #2868df;
+        }
+
+        .status-awaiting-customer {
+            background: #f3eaff;
+            color: #8250bd;
+        }
+
+        .status-awaiting-payment {
+            background: #fff0e3;
+            color: #c66b17;
+        }
+
+        .status-procurement {
+            background: #e6f8f7;
+            color: #14817a;
+        }
+
+        .status-transit {
+            background: #edf0ff;
+            color: #5865bb;
+        }
+
+        .status-completed {
+            background: #e8f8ee;
+            color: #21834b;
+        }
+
+        .status-cancelled {
+            background: #fff0ef;
+            color: #c3443c;
+        }
+
+        .status-unavailable {
+            background: #f0f1f3;
+            color: #707783;
+        }
+
+        .welcome-panel {
+            background: #172033;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-panel::before {
+            content: "";
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 50%;
+            right: -70px;
+            top: -160px;
+        }
+
+        .welcome-panel::after {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 50%;
+            right: -10px;
+            top: -105px;
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .orange-dot {
+            display: inline-block;
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            background: #f59e0b;
+        }
+
+        .table-row {
+            transition: background .15s ease;
+        }
+
+        .table-row:hover {
+            background: #f8f9fb;
+        }
+
+        .order-link {
+            color: #2868df;
+            font-weight: 700;
+        }
+
+        .order-link:hover {
+            text-decoration: underline;
+        }
+
+        .activity-track {
+            height: 8px;
+            background: #eef0f3;
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .activity-fill {
+            height: 100%;
+            border-radius: 100px;
+            transition: width .5s ease;
+            min-width: 0;
+        }
+
+        .mobile-overlay {
+            display: none;
+        }
+
+        @media (max-width: 767px) {
+            .mobile-overlay.open {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(10,15,25,.45);
+                z-index: 40;
+            }
+
+            .mobile-sidebar {
+                position: fixed;
+                z-index: 50;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 275px;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                overflow-y: auto;
+            }
+
+            .mobile-sidebar.open {
+                transform: translateX(0);
+            }
         }
     </style>
 </head>
@@ -49,172 +260,686 @@
 
 <div class="min-h-screen flex">
 
+    <!-- MOBILE OVERLAY -->
+    <div id="mobileOverlay" class="mobile-overlay"></div>
+
+
     <!-- SIDEBAR -->
-    <aside class="w-64 border-r border-gray-800 p-5 hidden md:block">
+    <aside id="sidebar"
+           class="sidebar mobile-sidebar md:translate-x-0 md:sticky md:top-0 md:h-screen md:w-64 md:flex-shrink-0 p-5 flex flex-col">
 
-        <a href="index.html"
-           class="text-2xl font-bold block mb-10">
-            R<span class="text-blue-500">-</span>buy
-        </a>
+        <!-- BRAND -->
+        <div class="flex justify-between items-center mb-12">
 
-        <p class="text-xs text-gray-600 uppercase tracking-widest mb-3">
-            Workspace
-        </p>
+            <a href="index.html" class="flex items-center gap-3">
 
-        <nav class="space-y-2">
-            <a href="index.html" class="sidebar-link active">
-                Dashboard
+                <div class="w-11 h-11 bg-blue-600 rounded-xl flex items-center justify-center text-2xl font-extrabold">
+                    R
+                </div>
+
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight">
+                        R<span class="text-blue-400">-</span>BUY
+                    </h1>
+
+                    <p class="text-[9px] text-gray-400 mono tracking-[.2em]">
+                        ADMINISTRATION
+                    </p>
+                </div>
+
             </a>
 
-            <a href="orders.html" class="sidebar-link">
-                Orders
-            </a>
-
-            <a href="customers.html" class="sidebar-link">
-                Customers
-            </a>
-        </nav>
-
-        <div class="absolute bottom-6">
-            <p class="text-xs text-gray-600 mb-3">
-                R-buy Administration
-            </p>
-            <button id="logoutButton"
-                    class="text-sm text-red-400 hover:text-red-300">
-                Sign Out
+            <button id="closeSidebar"
+                    class="md:hidden text-gray-400 text-2xl">
+                ×
             </button>
+
         </div>
-    </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 p-5 md:p-10">
 
-        <!-- TOP BAR -->
-        <header class="flex justify-between items-center mb-10">
+        <!-- NAVIGATION -->
+        <div>
 
-            <div>
-                <p class="text-gray-500 text-sm">
-                    Administration / Overview
+            <p class="text-[10px] text-gray-500 uppercase tracking-[.2em] mono mb-4 px-3">
+                Workspace
+            </p>
+
+            <nav class="space-y-2">
+
+                <a href="index.html" class="sidebar-link active">
+                    <span>▦</span>
+                    Dashboard
+                </a>
+
+                <a href="orders.html" class="sidebar-link">
+                    <span>▤</span>
+                    Orders
+                </a>
+
+                <a href="customers.html" class="sidebar-link">
+                    <span>♙</span>
+                    Customers
+                </a>
+
+                <a href="quotations.html" class="sidebar-link">
+                    <span>▧</span>
+                    Quotations
+                </a>
+
+            </nav>
+
+        </div>
+
+
+        <!-- SIDEBAR DECORATION -->
+        <div class="mt-12 border border-white/10 rounded-2xl p-4">
+
+            <p class="text-xs text-gray-400 mb-2">
+                The R-BUY mission
+            </p>
+
+            <p class="text-white font-semibold text-sm leading-relaxed">
+                Find it. Source it. Deliver it.
+            </p>
+
+            <p class="text-orange-400 text-2xl mt-2"
+               style="font-family:'Caveat', cursive;">
+                You can buy anything.
+            </p>
+
+        </div>
+
+
+        <!-- ACCOUNT SECTION -->
+        <div class="mt-auto pt-8">
+
+            <div class="border-t border-white/10 pt-5">
+
+                <div class="flex items-center gap-3 mb-5">
+
+                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
+                        RB
+                    </div>
+
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold">Administrator</p>
+                        <p class="text-xs text-gray-400 truncate"
+                           id="sidebarEmail">
+                            Loading...
+                        </p>
+                    </div>
+
+                </div>
+
+                <button id="logoutButton"
+                        class="w-full text-left px-3 py-3 rounded-xl text-sm text-red-300 hover:bg-white/5 transition">
+                    ↪ &nbsp; Sign Out
+                </button>
+
+                <p class="text-[10px] text-gray-600 mt-5 px-3 mono">
+                    R-BUY OPERATIONS • 2026
                 </p>
 
-                <h1 class="text-3xl font-bold mt-2">
-                    Dashboard
-                </h1>
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 min-w-0 p-5 md:p-8 xl:p-10">
+
+
+        <!-- TOP BAR -->
+        <header class="flex justify-between items-center gap-4 mb-8">
+
+            <div class="flex items-center gap-4">
+
+                <button id="openSidebar"
+                        class="md:hidden w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-xl">
+                    ☰
+                </button>
+
+                <div>
+                    <p class="text-gray-400 text-xs mono tracking-wider">
+                        R-BUY / WORKSPACE / OVERVIEW
+                    </p>
+
+                    <h1 class="text-2xl md:text-3xl font-extrabold mt-2 tracking-tight">
+                        Dashboard
+                    </h1>
+                </div>
+
             </div>
 
             <div class="text-right">
-                <p class="text-sm text-gray-500">Administrator</p>
-                <p id="adminEmail" class="text-sm font-medium">
+
+                <p class="text-xs text-gray-400 mono"
+                   id="currentDate">
+                    LOADING DATE
+                </p>
+
+                <p id="adminEmail"
+                   class="text-sm font-semibold text-gray-700 mt-1 hidden sm:block">
                     Loading...
                 </p>
+
+                <p class="text-xs text-blue-600 font-semibold sm:hidden">
+                    Administrator
+                </p>
+
             </div>
+
         </header>
 
-        <!-- WELCOME -->
-        <section class="panel p-6 mb-8">
 
-            <p class="text-blue-400 text-sm mb-2">
-                R-BUY OPERATIONS
-            </p>
+        <!-- WELCOME BANNER -->
+        <section class="welcome-panel rounded-3xl p-7 md:p-9 mb-8">
 
-            <h2 class="text-2xl font-semibold mb-3">
-                Welcome back.
-            </h2>
+            <div class="welcome-content">
 
-            <p class="text-gray-400">
-                Here's what's happening with your orders today.
-            </p>
+                <div class="flex items-center gap-2 mb-5">
+
+                    <span class="orange-dot"></span>
+
+                    <span class="text-xs text-gray-300 mono tracking-[.18em]">
+                        R-BUY OPERATIONS
+                    </span>
+
+                </div>
+
+                <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+
+                    <div>
+
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                            <span id="greeting">Welcome back.</span>
+                        </h2>
+
+                        <p class="text-gray-400 mt-3 max-w-lg leading-relaxed">
+                            Your business at a glance. Track customer requests,
+                            manage orders and keep procurement moving.
+                        </p>
+
+                        <p class="text-orange-400 text-2xl mt-4"
+                           style="font-family:'Caveat', cursive;">
+                            Every request is an opportunity.
+                        </p>
+
+                    </div>
+
+                    <a href="orders.html"
+                       class="inline-flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-6 py-4 rounded-xl text-sm font-bold transition shadow-lg shadow-blue-900/20">
+
+                        Manage Orders
+                        <span>→</span>
+
+                    </a>
+
+                </div>
+
+            </div>
+
         </section>
+
+
+        <!-- SECTION HEADING -->
+        <div class="flex justify-between items-end mb-5">
+
+            <div>
+                <p class="text-blue-600 text-[10px] mono tracking-[.2em] mb-1">
+                    BUSINESS OVERVIEW
+                </p>
+
+                <h2 class="text-xl font-bold">
+                    Order performance
+                </h2>
+            </div>
+
+            <span class="text-xs text-gray-400 hidden sm:block">
+                Live database figures
+            </span>
+
+        </div>
+
 
         <!-- STATISTICS -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-10">
+        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
 
+
+            <!-- TOTAL -->
             <div class="stat-card">
-                <p class="text-gray-500 text-sm">Total Orders</p>
-                <p id="totalOrders" class="text-3xl font-bold mt-3">—</p>
+
+                <div class="flex justify-between items-start">
+
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">
+                            Total Orders
+                        </p>
+
+                        <p id="totalOrders"
+                           class="text-4xl font-extrabold mt-4 tracking-tight">
+                            —
+                        </p>
+                    </div>
+
+                    <div class="stat-icon bg-blue-50 text-blue-600">
+                        ▤
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-gray-400 mt-5">
+                    All customer requests
+                </p>
+
             </div>
 
+
+            <!-- PENDING -->
             <div class="stat-card">
-                <p class="text-gray-500 text-sm">Pending Review</p>
-                <p id="pendingOrders" class="text-3xl font-bold mt-3 text-yellow-400">—</p>
+
+                <div class="flex justify-between items-start">
+
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">
+                            Pending Review
+                        </p>
+
+                        <p id="pendingOrders"
+                           class="text-4xl font-extrabold mt-4 tracking-tight text-amber-600">
+                            —
+                        </p>
+                    </div>
+
+                    <div class="stat-icon bg-amber-50 text-amber-600">
+                        ◷
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-gray-400 mt-5">
+                    Awaiting initial assessment
+                </p>
+
             </div>
 
+
+            <!-- INVESTIGATING -->
             <div class="stat-card">
-                <p class="text-gray-500 text-sm">Investigating</p>
-                <p id="investigatingOrders" class="text-3xl font-bold mt-3 text-blue-400">—</p>
+
+                <div class="flex justify-between items-start">
+
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">
+                            Investigating
+                        </p>
+
+                        <p id="investigatingOrders"
+                           class="text-4xl font-extrabold mt-4 tracking-tight text-blue-600">
+                            —
+                        </p>
+                    </div>
+
+                    <div class="stat-icon bg-blue-50 text-blue-600">
+                        ⌕
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-gray-400 mt-5">
+                    Products being sourced
+                </p>
+
             </div>
 
+
+            <!-- COMPLETED -->
             <div class="stat-card">
-                <p class="text-gray-500 text-sm">Completed</p>
-                <p id="completedOrders" class="text-3xl font-bold mt-3 text-green-400">—</p>
+
+                <div class="flex justify-between items-start">
+
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">
+                            Completed
+                        </p>
+
+                        <p id="completedOrders"
+                           class="text-4xl font-extrabold mt-4 tracking-tight text-green-600">
+                            —
+                        </p>
+                    </div>
+
+                    <div class="stat-icon bg-green-50 text-green-600">
+                        ✓
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-gray-400 mt-5">
+                    Successfully fulfilled orders
+                </p>
+
             </div>
 
         </section>
 
-        <!-- RECENT ORDERS -->
-        <section class="panel p-6">
 
-            <div class="flex justify-between items-center mb-6">
+        <!-- ACTIVITY + QUICK ACTIONS -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-8">
+
+
+            <!-- ACTIVITY BREAKDOWN -->
+            <div class="panel p-6 xl:col-span-2">
+
+                <div class="flex justify-between items-center mb-7">
+
+                    <div>
+                        <h2 class="font-bold text-lg">
+                            Order activity
+                        </h2>
+
+                        <p class="text-xs text-gray-400 mt-1">
+                            Distribution of your orders by status
+                        </p>
+                    </div>
+
+                    <span class="text-xs mono text-gray-400">
+                        OVERVIEW
+                    </span>
+
+                </div>
+
+
+                <div class="space-y-6">
+
+                    <div>
+
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600 font-medium">
+                                Pending review
+                            </span>
+
+                            <span id="activityPendingCount"
+                                  class="font-bold text-gray-800">
+                                0
+                            </span>
+                        </div>
+
+                        <div class="activity-track">
+                            <div id="activityPendingBar"
+                                 class="activity-fill bg-amber-400"
+                                 style="width:0%">
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600 font-medium">
+                                Under investigation
+                            </span>
+
+                            <span id="activityInvestigatingCount"
+                                  class="font-bold text-gray-800">
+                                0
+                            </span>
+                        </div>
+
+                        <div class="activity-track">
+                            <div id="activityInvestigatingBar"
+                                 class="activity-fill bg-blue-500"
+                                 style="width:0%">
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600 font-medium">
+                                Completed
+                            </span>
+
+                            <span id="activityCompletedCount"
+                                  class="font-bold text-gray-800">
+                                0
+                            </span>
+                        </div>
+
+                        <div class="activity-track">
+                            <div id="activityCompletedBar"
+                                 class="activity-fill bg-green-500"
+                                 style="width:0%">
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="border-t border-gray-100 mt-7 pt-5 flex justify-between items-center">
+
+                    <p class="text-xs text-gray-400">
+                        Total recorded orders
+                    </p>
+
+                    <p id="activityTotal"
+                       class="font-bold text-lg">
+                        0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+            <div class="panel p-6">
+
+                <h2 class="font-bold text-lg">
+                    Quick access
+                </h2>
+
+                <p class="text-xs text-gray-400 mt-1 mb-6">
+                    Jump into your workspace
+                </p>
+
+
+                <div class="space-y-3">
+
+                    <a href="orders.html"
+                       class="flex items-center gap-3 p-3 rounded-xl bg-blue-50 hover:bg-blue-100 transition">
+
+                        <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center">
+                            ▤
+                        </div>
+
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">
+                                Manage Orders
+                            </p>
+
+                            <p class="text-xs text-gray-500">
+                                Review customer requests
+                            </p>
+                        </div>
+
+                        <span class="text-blue-600">→</span>
+
+                    </a>
+
+
+                    <a href="customers.html"
+                       class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+
+                        <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center">
+                            ♙
+                        </div>
+
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">
+                                Customers
+                            </p>
+
+                            <p class="text-xs text-gray-500">
+                                View customer records
+                            </p>
+                        </div>
+
+                        <span class="text-gray-400">→</span>
+
+                    </a>
+
+
+                    <a href="quotations.html"
+                       class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+
+                        <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center">
+                            ▧
+                        </div>
+
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">
+                                Quotations
+                            </p>
+
+                            <p class="text-xs text-gray-500">
+                                Manage customer offers
+                            </p>
+                        </div>
+
+                        <span class="text-gray-400">→</span>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- RECENT ORDERS -->
+        <section class="panel overflow-hidden">
+
+            <div class="p-6 md:p-7 flex justify-between items-center gap-4">
 
                 <div>
-                    <h2 class="text-xl font-semibold">
-                        Recent Orders
+                    <p class="text-blue-600 text-[10px] mono tracking-[.2em] mb-2">
+                        CUSTOMER REQUESTS
+                    </p>
+
+                    <h2 class="text-xl font-bold">
+                        Recent orders
                     </h2>
 
-                    <p class="text-sm text-gray-500 mt-1">
-                        Latest customer requests
+                    <p class="text-sm text-gray-400 mt-1">
+                        Your latest customer activity
                     </p>
                 </div>
 
                 <a href="orders.html"
-                   class="text-blue-400 hover:text-blue-300 text-sm">
-                    View All →
+                   class="text-blue-600 hover:text-blue-800 text-sm font-bold whitespace-nowrap">
+                    View all →
                 </a>
+
             </div>
 
+
+            <!-- LOADING -->
             <div id="loadingOrders"
-                 class="text-gray-500 py-8 text-center">
-                Loading orders...
+                 class="text-gray-400 py-12 text-center text-sm">
+                <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <p>Loading recent orders...</p>
             </div>
 
+
+            <!-- TABLE -->
             <div id="ordersContainer"
                  class="hidden overflow-x-auto">
 
                 <table class="w-full text-sm text-left">
 
-                    <thead class="text-gray-500 border-b border-gray-800">
-                        <tr>
-                            <th class="py-4 pr-4">Reference</th>
-                            <th class="py-4 pr-4">Customer</th>
-                            <th class="py-4 pr-4">Product</th>
-                            <th class="py-4 pr-4">Status</th>
-                            <th class="py-4">Date</th>
+                    <thead class="bg-gray-50 border-y border-gray-100">
+
+                        <tr class="text-[10px] text-gray-400 mono uppercase tracking-wider">
+
+                            <th class="py-4 px-6">Reference</th>
+
+                            <th class="py-4 px-4">Customer</th>
+
+                            <th class="py-4 px-4">Product</th>
+
+                            <th class="py-4 px-4">Status</th>
+
+                            <th class="py-4 px-6">Date</th>
+
                         </tr>
+
                     </thead>
 
                     <tbody id="ordersTable"
-                           class="divide-y divide-gray-800">
+                           class="divide-y divide-gray-100">
+
                     </tbody>
 
                 </table>
+
             </div>
 
+
+            <!-- EMPTY -->
             <div id="emptyOrders"
-                 class="hidden text-gray-500 py-8 text-center">
-                No orders have been submitted yet.
+                 class="hidden text-gray-400 py-12 text-center">
+
+                <div class="text-4xl mb-3">🛍️</div>
+
+                <p class="font-semibold text-gray-700">
+                    No orders yet
+                </p>
+
+                <p class="text-sm mt-1">
+                    Customer requests will appear here.
+                </p>
+
             </div>
 
+
+            <!-- ERROR -->
             <div id="dashboardError"
-                 class="hidden text-red-400 py-5 text-sm">
+                 class="hidden bg-red-50 text-red-600 p-5 m-5 rounded-xl text-sm">
             </div>
 
         </section>
 
+
+        <!-- FOOTER -->
+        <footer class="mt-10 flex flex-col sm:flex-row justify-between gap-3 text-xs text-gray-400">
+
+            <p>
+                © 2026 R-BUY Administration. All rights reserved.
+            </p>
+
+            <p class="mono">
+                FIND IT. SOURCE IT. DELIVER IT.
+            </p>
+
+        </footer>
+
+
         <!-- MOBILE LOGOUT -->
-        <div class="md:hidden mt-8">
+        <div class="md:hidden mt-5">
             <button id="mobileLogout"
-                    class="text-red-400">
-                Sign Out
+                    class="text-sm text-red-500 font-semibold">
+                ↪ Sign Out
             </button>
         </div>
 
@@ -222,7 +947,13 @@
 
 </div>
 
+
 <script>
+
+// =========================================
+// SUPABASE CONFIGURATION
+// =========================================
+
 const SUPABASE_URL =
     "https://ixuohpgqpuvjdbigmhje.supabase.co";
 
@@ -235,41 +966,119 @@ const supabaseClient =
         SUPABASE_KEY
     );
 
+
+// =========================================
+// MOBILE SIDEBAR
+// =========================================
+
+const sidebar =
+    document.getElementById("sidebar");
+
+const overlay =
+    document.getElementById("mobileOverlay");
+
+function openSidebar() {
+    sidebar.classList.add("open");
+    overlay.classList.add("open");
+}
+
+function closeSidebar() {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("open");
+}
+
+document.getElementById("openSidebar")
+    .addEventListener("click", openSidebar);
+
+document.getElementById("closeSidebar")
+    .addEventListener("click", closeSidebar);
+
+overlay.addEventListener("click", closeSidebar);
+
+
+// =========================================
+// DATE AND GREETING
+// =========================================
+
+function initializeHeader() {
+
+    const now = new Date();
+
+    document.getElementById("currentDate")
+        .textContent = now.toLocaleDateString("en-KE", {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }).toUpperCase();
+
+    const hour = now.getHours();
+
+    let greeting = "Welcome back.";
+
+    if (hour < 12) {
+        greeting = "Good morning.";
+    } else if (hour < 17) {
+        greeting = "Good afternoon.";
+    } else {
+        greeting = "Good evening.";
+    }
+
+    document.getElementById("greeting")
+        .textContent = greeting;
+}
+
+
 // =========================================
 // AUTHENTICATION
 // =========================================
 
 async function protectDashboard() {
 
-    const { data: { session } } =
+    const { data: { session }, error: sessionError } =
         await supabaseClient.auth.getSession();
 
-    if (!session) {
+    if (sessionError || !session) {
         window.location.replace("login.html");
         return false;
     }
 
-    const { data: { user } } =
+    const { data: { user }, error: userError } =
         await supabaseClient.auth.getUser();
 
-    document.getElementById("adminEmail").textContent =
-        user.email || "Administrator";
-
-    const { data: admin, error } =
-        await supabaseClient
-        .from("admin_users")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-    if (error || !admin) {
+    if (userError || !user) {
         await supabaseClient.auth.signOut();
         window.location.replace("login.html");
         return false;
     }
 
+    document.getElementById("adminEmail").textContent =
+        user.email || "Administrator";
+
+    document.getElementById("sidebarEmail").textContent =
+        user.email || "Administrator";
+
+
+    // Verify administrator membership
+    const { data: admin, error: adminError } =
+        await supabaseClient
+            .from("admin_users")
+            .select("user_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+    if (adminError || !admin) {
+
+        await supabaseClient.auth.signOut();
+
+        window.location.replace("login.html");
+
+        return false;
+    }
+
     return true;
 }
+
 
 // =========================================
 // ORDER STATISTICS
@@ -295,6 +1104,128 @@ async function getOrderCount(status = null) {
     return count || 0;
 }
 
+
+// =========================================
+// ACTIVITY BREAKDOWN
+// =========================================
+
+function updateActivity(total, pending, investigating, completed) {
+
+    const values = [
+        {
+            count: pending,
+            countId: "activityPendingCount",
+            barId: "activityPendingBar"
+        },
+        {
+            count: investigating,
+            countId: "activityInvestigatingCount",
+            barId: "activityInvestigatingBar"
+        },
+        {
+            count: completed,
+            countId: "activityCompletedCount",
+            barId: "activityCompletedBar"
+        }
+    ];
+
+    values.forEach(item => {
+
+        document.getElementById(item.countId)
+            .textContent = item.count;
+
+        const percentage = total > 0
+            ? (item.count / total) * 100
+            : 0;
+
+        document.getElementById(item.barId)
+            .style.width = percentage + "%";
+    });
+
+    document.getElementById("activityTotal")
+        .textContent = total;
+}
+
+
+// =========================================
+// STATUS DISPLAY
+// =========================================
+
+const statusConfig = {
+
+    pending_review: {
+        label: "Pending Review",
+        className: "status-pending",
+        dot: "#d99a19"
+    },
+
+    under_investigation: {
+        label: "Investigating",
+        className: "status-investigating",
+        dot: "#2868df"
+    },
+
+    awaiting_customer: {
+        label: "Awaiting Customer",
+        className: "status-awaiting-customer",
+        dot: "#9564c7"
+    },
+
+    awaiting_payment: {
+        label: "Awaiting Payment",
+        className: "status-awaiting-payment",
+        dot: "#d98232"
+    },
+
+    procurement: {
+        label: "Procurement",
+        className: "status-procurement",
+        dot: "#14817a"
+    },
+
+    in_transit: {
+        label: "In Transit",
+        className: "status-transit",
+        dot: "#5865bb"
+    },
+
+    completed: {
+        label: "Completed",
+        className: "status-completed",
+        dot: "#21834b"
+    },
+
+    cancelled: {
+        label: "Cancelled",
+        className: "status-cancelled",
+        dot: "#c3443c"
+    },
+
+    unavailable: {
+        label: "Unavailable",
+        className: "status-unavailable",
+        dot: "#707783"
+    }
+
+};
+
+
+// =========================================
+// HTML ESCAPING
+// =========================================
+
+function escapeHTML(value) {
+
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    }[char]));
+}
+
+
 // =========================================
 // RECENT ORDERS
 // =========================================
@@ -303,32 +1234,39 @@ async function loadRecentOrders() {
 
     const { data, error } =
         await supabaseClient
-        .from("orders")
-        .select(`
-            id,
-            order_number,
-            customer_name,
-            product_name,
-            status,
-            created_at
-        `)
-        .order("created_at", {
-            ascending: false
-        })
-        .limit(10);
+            .from("orders")
+            .select(`
+                id,
+                order_number,
+                customer_name,
+                product_name,
+                status,
+                created_at
+            `)
+            .order("created_at", {
+                ascending: false
+            })
+            .limit(10);
 
     if (error) throw error;
 
-    const table = document.getElementById("ordersTable");
+    const table =
+        document.getElementById("ordersTable");
+
     table.innerHTML = "";
 
+
     if (!data || data.length === 0) {
+
+        document.getElementById("ordersContainer")
+            .classList.add("hidden");
 
         document.getElementById("emptyOrders")
             .classList.remove("hidden");
 
         return;
     }
+
 
     data.forEach(order => {
 
@@ -345,76 +1283,86 @@ async function loadRecentOrders() {
                 }
             );
 
-        const statusLabels = {
-            pending_review: "Pending Review",
-            under_investigation: "Investigating",
-            awaiting_customer: "Awaiting Customer",
-            awaiting_payment: "Awaiting Payment",
-            procurement: "Procurement",
-            in_transit: "In Transit",
-            completed: "Completed",
-            cancelled: "Cancelled",
-            unavailable: "Unavailable"
-        };
-
-        const statusColors = {
-            pending_review: "text-yellow-400",
-            under_investigation: "text-blue-400",
-            awaiting_customer: "text-purple-400",
-            awaiting_payment: "text-orange-400",
-            procurement: "text-cyan-400",
-            in_transit: "text-indigo-400",
-            completed: "text-green-400",
-            cancelled: "text-red-400",
-            unavailable: "text-gray-400"
-        };
+        const status =
+            statusConfig[order.status] || {
+                label: order.status || "Unknown",
+                className: "status-unavailable",
+                dot: "#707783"
+            };
 
         const row = document.createElement("tr");
 
+        row.className = "table-row";
+
+
         row.innerHTML = `
-            <td class="py-4 pr-4">
-                <span class="text-blue-400 font-medium">
+
+            <td class="py-5 px-6">
+
+                <a href="order-details.html?id=${encodeURIComponent(order.id)}"
+                   class="order-link whitespace-nowrap">
+
                     ${reference}
+
+                </a>
+
+            </td>
+
+
+            <td class="py-5 px-4">
+
+                <span class="font-semibold text-gray-700">
+
+                    ${escapeHTML(order.customer_name || "Customer")}
+
                 </span>
+
             </td>
 
-            <td class="py-4 pr-4">
-                ${escapeHTML(order.customer_name || "Customer")}
-            </td>
 
-            <td class="py-4 pr-4 text-gray-400">
-                ${escapeHTML(order.product_name)}
-            </td>
+            <td class="py-5 px-4">
 
-            <td class="py-4 pr-4">
-                <span class="${statusColors[order.status] || "text-gray-400"}">
-                    ${statusLabels[order.status] || escapeHTML(order.status)}
+                <span class="text-gray-500">
+
+                    ${escapeHTML(order.product_name || "Unnamed product")}
+
                 </span>
+
             </td>
 
-            <td class="py-4 text-gray-500">
-                ${date}
+
+            <td class="py-5 px-4">
+
+                <span class="status-badge ${status.className}">
+
+                    <span class="status-dot"
+                          style="background:${status.dot}">
+                    </span>
+
+                    ${escapeHTML(status.label)}
+
+                </span>
+
             </td>
+
+
+            <td class="py-5 px-6 text-gray-400 whitespace-nowrap">
+
+                ${escapeHTML(date)}
+
+            </td>
+
         `;
 
         table.appendChild(row);
+
     });
+
 }
 
-// Escape customer-supplied text before displaying it
-function escapeHTML(value) {
-
-    return String(value).replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    }[char]));
-}
 
 // =========================================
-// DASHBOARD
+// DASHBOARD DATA
 // =========================================
 
 async function loadDashboard() {
@@ -438,29 +1386,48 @@ async function loadDashboard() {
 
         ]);
 
-        document.getElementById("totalOrders").textContent =
-            total;
 
-        document.getElementById("pendingOrders").textContent =
-            pending;
+        // Update statistics
+        document.getElementById("totalOrders")
+            .textContent = total;
 
-        document.getElementById("investigatingOrders").textContent =
-            investigating;
+        document.getElementById("pendingOrders")
+            .textContent = pending;
 
-        document.getElementById("completedOrders").textContent =
-            completed;
+        document.getElementById("investigatingOrders")
+            .textContent = investigating;
 
+        document.getElementById("completedOrders")
+            .textContent = completed;
+
+
+        // Update activity visualization
+        updateActivity(
+            total,
+            pending,
+            investigating,
+            completed
+        );
+
+
+        // Load recent orders
         await loadRecentOrders();
+
 
         document.getElementById("loadingOrders")
             .classList.add("hidden");
 
-        document.getElementById("ordersContainer")
-            .classList.remove("hidden");
+
+        if (total > 0 || document.getElementById("ordersTable").children.length > 0) {
+
+            document.getElementById("ordersContainer")
+                .classList.remove("hidden");
+
+        }
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Dashboard error:", error);
 
         document.getElementById("loadingOrders")
             .classList.add("hidden");
@@ -472,8 +1439,11 @@ async function loadDashboard() {
             "Could not load dashboard data: " + error.message;
 
         errorBox.classList.remove("hidden");
+
     }
+
 }
+
 
 // =========================================
 // LOGOUT
@@ -481,10 +1451,31 @@ async function loadDashboard() {
 
 async function logout() {
 
-    await supabaseClient.auth.signOut();
+    const buttons = [
+        document.getElementById("logoutButton"),
+        document.getElementById("mobileLogout")
+    ];
+
+    buttons.forEach(button => {
+        if (button) button.disabled = true;
+    });
+
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        console.error("Logout error:", error);
+
+        buttons.forEach(button => {
+            if (button) button.disabled = false;
+        });
+
+        alert("Could not sign out. Please try again.");
+        return;
+    }
 
     window.location.replace("login.html");
 }
+
 
 document.getElementById("logoutButton")
     .addEventListener("click", logout);
@@ -492,11 +1483,14 @@ document.getElementById("logoutButton")
 document.getElementById("mobileLogout")
     .addEventListener("click", logout);
 
+
 // =========================================
-// INITIALIZE
+// INITIALIZE DASHBOARD
 // =========================================
 
 (async () => {
+
+    initializeHeader();
 
     const authorized = await protectDashboard();
 
@@ -505,6 +1499,7 @@ document.getElementById("mobileLogout")
     }
 
 })();
+
 </script>
 
 </body>
