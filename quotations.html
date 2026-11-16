@@ -1,0 +1,703 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotations | R-Buy Admin</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      background: #0b0d12;
+      color: #f3f4f6;
+      font-family: Arial, sans-serif;
+    }
+    .panel {
+      background: #131720;
+      border: 1px solid #252b38;
+      border-radius: 14px;
+    }
+    .field {
+      width: 100%;
+      background: #0c1018;
+      border: 1px solid #303746;
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: white;
+      outline: none;
+    }
+    .field:focus {
+      border-color: #3b82f6;
+    }
+    .nav-link {
+      display: block;
+      padding: 11px 14px;
+      border-radius: 8px;
+      color: #aeb6c5;
+      margin-bottom: 5px;
+    }
+    .nav-link:hover, .nav-active {
+      background: #202a3a;
+      color: white;
+    }
+    .stat-card {
+      background: #131720;
+      border: 1px solid #252b38;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+    th {
+      text-align: left;
+      color: #8993a4;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 14px;
+      border-bottom: 1px solid #293140;
+      white-space: nowrap;
+    }
+    td {
+      padding: 15px 14px;
+      border-bottom: 1px solid #222936;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    tbody tr:hover {
+      background: #191f2b;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .btn {
+      padding: 9px 13px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="min-h-screen flex flex-col md:flex-row">
+
+  <!-- SIDEBAR -->
+  <aside class="w-full md:w-64 bg-[#10141c] border-b md:border-b-0 md:border-r border-gray-800 p-5 md:min-h-screen">
+
+    <div class="mb-9">
+      <h1 class="text-2xl font-bold tracking-tight">
+        R<span class="text-blue-500">-</span>BUY
+      </h1>
+      <p class="text-xs text-gray-500 mt-1">Administration Panel</p>
+    </div>
+
+    <nav>
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="orders.html" class="nav-link">Orders</a>
+      <a href="customers.html" class="nav-link">Customers</a>
+      <a href="quotations.html" class="nav-link nav-active">Quotations</a>
+    </nav>
+
+    <div class="mt-10 border-t border-gray-800 pt-5">
+      <button id="logoutBtn" class="text-sm text-red-400 hover:text-red-300">
+        Log out
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full">
+
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold">Quotations</h2>
+        <p class="text-sm text-gray-500 mt-2">
+          Prepare, monitor and manage customer quotations.
+        </p>
+      </div>
+
+      <button id="refreshBtn"
+        class="btn bg-blue-600 hover:bg-blue-700 text-white">
+        Refresh Quotations
+      </button>
+
+    </div>
+
+    <div id="messageBox" class="hidden mb-5 p-4 rounded-lg text-sm"></div>
+
+    <!-- STATISTICS -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Total quotations</p>
+        <h3 id="totalQuotes" class="text-3xl font-bold mt-3">0</h3>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Awaiting customer</p>
+        <h3 id="awaitingCustomer" class="text-3xl font-bold mt-3">0</h3>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Awaiting payment</p>
+        <h3 id="awaitingPayment" class="text-3xl font-bold mt-3">0</h3>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-sm text-gray-500">Value awaiting response</p>
+        <h3 id="pendingValue" class="text-2xl font-bold mt-3 text-blue-400">
+          KES 0.00
+        </h3>
+      </div>
+
+    </section>
+
+    <!-- QUOTATION DIRECTORY -->
+    <section class="panel p-5">
+
+      <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+
+        <div>
+          <h3 class="text-lg font-semibold">Quotation Directory</h3>
+          <p class="text-xs text-gray-500 mt-1">
+            Quotations are generated from saved order records.
+          </p>
+        </div>
+
+        <span id="resultCount" class="text-xs text-gray-400">
+          0 quotations
+        </span>
+
+      </div>
+
+      <!-- FILTERS -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+
+        <input
+          id="searchInput"
+          class="field md:col-span-2"
+          placeholder="Search customer, product or order reference..."
+        >
+
+        <select id="statusFilter" class="field">
+          <option value="all">All quotations</option>
+          <option value="draft">Draft / In progress</option>
+          <option value="awaiting_customer">Awaiting customer</option>
+          <option value="awaiting_payment">Awaiting payment</option>
+          <option value="expired">Expired quotations</option>
+          <option value="other">Other order stages</option>
+        </select>
+
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th>Product price</th>
+              <th>Delivery</th>
+              <th>Service fee</th>
+              <th>Total quotation</th>
+              <th>Expiry</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="quotesTable">
+            <tr>
+              <td colspan="10" class="text-center text-gray-500 py-10">
+                Loading quotations...
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <div id="emptyState" class="hidden text-center py-12">
+        <div class="text-4xl mb-3">📄</div>
+        <h3 class="font-semibold">No quotations found</h3>
+        <p class="text-sm text-gray-500 mt-2">
+          Prepare a quotation from an order's details page to see it here.
+        </p>
+        <a href="orders.html"
+          class="inline-block mt-5 text-blue-400 hover:underline text-sm">
+          View Orders
+        </a>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+
+  // --------------------------------------------------
+  // SUPABASE CONFIGURATION
+  // --------------------------------------------------
+
+  const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
+
+  const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  const $ = id => document.getElementById(id);
+
+  let allQuotes = [];
+
+  // --------------------------------------------------
+  // UTILITIES
+  // --------------------------------------------------
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[char]);
+  }
+
+  function formatKES(value) {
+    return "KES " + Number(value || 0).toLocaleString("en-KE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  function formatDate(value) {
+    if (!value) return "Not specified";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "Not specified";
+
+    return date.toLocaleDateString("en-KE", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+  }
+
+  function isExpired(order) {
+    if (!order.offer_expires_at) return false;
+
+    if (
+      ["awaiting_payment", "procurement", "in_transit", "completed"].includes(order.status)
+    ) {
+      return false;
+    }
+
+    return new Date(order.offer_expires_at).getTime() < Date.now();
+  }
+
+  function quotationTotal(order) {
+    return Number(order.offered_price || 0) +
+      Number(order.delivery_fee || 0) +
+      Number(order.service_fee || 0);
+  }
+
+  function hasQuotation(order) {
+    return Boolean(
+      order.offered_product_name ||
+      order.offered_description ||
+      order.offered_price !== null ||
+      order.delivery_fee !== null ||
+      order.service_fee !== null ||
+      order.offer_expires_at
+    );
+  }
+
+  function getQuoteStatus(order) {
+
+    if (isExpired(order)) {
+      return {
+        key: "expired",
+        label: "Expired",
+        style: "bg-red-500/10 text-red-400"
+      };
+    }
+
+    if (order.status === "awaiting_customer") {
+      return {
+        key: "awaiting_customer",
+        label: "Awaiting customer",
+        style: "bg-yellow-500/10 text-yellow-400"
+      };
+    }
+
+    if (order.status === "awaiting_payment") {
+      return {
+        key: "awaiting_payment",
+        label: "Awaiting payment",
+        style: "bg-blue-500/10 text-blue-400"
+      };
+    }
+
+    if (
+      ["procurement", "in_transit", "completed"].includes(order.status)
+    ) {
+      return {
+        key: "other",
+        label: order.status.replaceAll("_", " "),
+        style: "bg-green-500/10 text-green-400"
+      };
+    }
+
+    if (["cancelled", "unavailable"].includes(order.status)) {
+      return {
+        key: "other",
+        label: order.status.replaceAll("_", " "),
+        style: "bg-red-500/10 text-red-400"
+      };
+    }
+
+    return {
+      key: "draft",
+      label: "Draft / In progress",
+      style: "bg-gray-500/10 text-gray-300"
+    };
+  }
+
+  function showMessage(message, type = "error") {
+    const box = $("messageBox");
+
+    box.classList.remove("hidden");
+
+    box.className = "mb-5 p-4 rounded-lg text-sm";
+
+    if (type === "success") {
+      box.classList.add("bg-green-500/10", "text-green-400");
+    } else {
+      box.classList.add("bg-red-500/10", "text-red-400");
+    }
+
+    box.textContent = message;
+  }
+
+  // --------------------------------------------------
+  // AUTHENTICATION
+  // --------------------------------------------------
+
+  async function checkAdmin() {
+
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    const user = sessionData.session.user;
+
+    const { data: adminRecord, error: adminError } =
+      await supabaseClient
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+    if (adminError || !adminRecord) {
+      await supabaseClient.auth.signOut();
+      window.location.href = "login.html";
+      return false;
+    }
+
+    return true;
+  }
+
+  $("logoutBtn").addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+  });
+
+  // --------------------------------------------------
+  // LOAD QUOTATIONS
+  // --------------------------------------------------
+
+  async function loadQuotes() {
+
+    $("refreshBtn").disabled = true;
+    $("refreshBtn").textContent = "Loading...";
+
+    $("quotesTable").innerHTML = `
+      <tr>
+        <td colspan="10" class="text-center text-gray-500 py-10">
+          Loading quotations...
+        </td>
+      </tr>
+    `;
+
+    try {
+
+      const { data, error } = await supabaseClient
+        .from("orders")
+        .select(`
+          id,
+          customer_name,
+          whatsapp,
+          email,
+          product_name,
+          offered_product_name,
+          offered_description,
+          offered_price,
+          delivery_fee,
+          service_fee,
+          delivery_company,
+          delivery_estimate,
+          offer_expires_at,
+          status,
+          payment_status,
+          created_at,
+          updated_at
+        `)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+
+      allQuotes = (data || []).filter(hasQuotation);
+
+      updateStatistics();
+
+      renderQuotes();
+
+      $("messageBox").classList.add("hidden");
+
+    } catch (error) {
+
+      console.error("Quotation loading error:", error);
+
+      $("quotesTable").innerHTML = `
+        <tr>
+          <td colspan="10" class="text-center text-red-400 py-10">
+            Unable to load quotations.
+          </td>
+        </tr>
+      `;
+
+      showMessage(error.message || "Unable to load quotations.");
+
+    } finally {
+
+      $("refreshBtn").disabled = false;
+      $("refreshBtn").textContent = "Refresh Quotations";
+
+    }
+
+  }
+
+  // --------------------------------------------------
+  // STATISTICS
+  // --------------------------------------------------
+
+  function updateStatistics() {
+
+    const awaiting = allQuotes.filter(order =>
+      getQuoteStatus(order).key === "awaiting_customer"
+    );
+
+    const payment = allQuotes.filter(order =>
+      getQuoteStatus(order).key === "awaiting_payment"
+    );
+
+    const pendingValue = awaiting.reduce((total, order) =>
+      total + quotationTotal(order), 0
+    );
+
+    $("totalQuotes").textContent = allQuotes.length;
+
+    $("awaitingCustomer").textContent = awaiting.length;
+
+    $("awaitingPayment").textContent = payment.length;
+
+    $("pendingValue").textContent = formatKES(pendingValue);
+
+  }
+
+  // --------------------------------------------------
+  // FILTER AND DISPLAY
+  // --------------------------------------------------
+
+  function renderQuotes() {
+
+    const search = $("searchInput").value.trim().toLowerCase();
+
+    const filter = $("statusFilter").value;
+
+    const filtered = allQuotes.filter(order => {
+
+      const reference =
+        "RBUY-" + order.id.substring(0, 8).toUpperCase();
+
+      const searchable = [
+        reference,
+        order.customer_name,
+        order.whatsapp,
+        order.email,
+        order.product_name,
+        order.offered_product_name
+      ].join(" ").toLowerCase();
+
+      const status = getQuoteStatus(order);
+
+      return searchable.includes(search) &&
+        (filter === "all" || status.key === filter);
+
+    });
+
+    $("resultCount").textContent =
+      filtered.length + " quotation" +
+      (filtered.length === 1 ? "" : "s");
+
+    const table = $("quotesTable");
+    const empty = $("emptyState");
+
+    if (!filtered.length) {
+      table.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    empty.classList.add("hidden");
+
+    table.innerHTML = filtered.map(order => {
+
+      const reference =
+        "RBUY-" + order.id.substring(0, 8).toUpperCase();
+
+      const status = getQuoteStatus(order);
+
+      const total = quotationTotal(order);
+
+      const product =
+        order.offered_product_name || order.product_name || "Not specified";
+
+      return `
+
+        <tr>
+
+          <td>
+            <span class="font-semibold text-blue-400">
+              ${reference}
+            </span>
+          </td>
+
+          <td>
+            <p class="font-semibold">
+              ${escapeHTML(order.customer_name || "Unnamed customer")}
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              ${escapeHTML(order.whatsapp || "No phone")}
+            </p>
+          </td>
+
+          <td>
+            ${escapeHTML(product)}
+          </td>
+
+          <td>
+            ${formatKES(order.offered_price)}
+          </td>
+
+          <td>
+            ${formatKES(order.delivery_fee)}
+          </td>
+
+          <td>
+            ${formatKES(order.service_fee)}
+          </td>
+
+          <td>
+            <span class="font-bold text-white">
+              ${formatKES(total)}
+            </span>
+          </td>
+
+          <td>
+            ${formatDate(order.offer_expires_at)}
+          </td>
+
+          <td>
+            <span class="status ${status.style}">
+              ${escapeHTML(status.label)}
+            </span>
+          </td>
+
+          <td>
+            <a
+              href="order-details.html?id=${encodeURIComponent(order.id)}"
+              class="text-blue-400 hover:underline font-semibold">
+              Manage
+            </a>
+          </td>
+
+        </tr>
+
+      `;
+
+    }).join("");
+
+  }
+
+  // --------------------------------------------------
+  // EVENTS
+  // --------------------------------------------------
+
+  $("searchInput").addEventListener("input", renderQuotes);
+
+  $("statusFilter").addEventListener("change", renderQuotes);
+
+  $("refreshBtn").addEventListener("click", loadQuotes);
+
+  // --------------------------------------------------
+  // INITIALIZE
+  // --------------------------------------------------
+
+  async function initializePage() {
+
+    const authorized = await checkAdmin();
+
+    if (!authorized) return;
+
+    await loadQuotes();
+
+  }
+
+  initializePage();
+
+</script>
+
+</body>
+</html>
