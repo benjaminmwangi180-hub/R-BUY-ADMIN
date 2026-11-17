@@ -2,1667 +2,1276 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Details | R-Buy Admin</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Details | R-BUY Admin</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
-    body {
-      background: #0b0d12;
-      color: #f3f4f6;
-      font-family: Arial, sans-serif;
-    }
+<style>
+:root {
+  --cream: #f5f3ed;
+  --paper: #ffffff;
+  --ink: #242424;
+  --muted: #77756f;
+  --blue: #3157d5;
+  --orange: #e58b52;
+  --line: #e8e5dc;
+}
 
-    .panel {
-      background: #131720;
-      border: 1px solid #252b38;
-      border-radius: 14px;
-    }
+* { box-sizing: border-box; }
 
-    .field {
-      width: 100%;
-      background: #0c1018;
-      border: 1px solid #303746;
-      border-radius: 8px;
-      padding: 11px 12px;
-      color: white;
-      outline: none;
-    }
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: Arial, sans-serif;
+}
 
-    .field:focus {
-      border-color: #3b82f6;
-    }
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(25,25,25,.035);
+}
 
-    .field:disabled {
-      opacity: .65;
-      cursor: not-allowed;
-    }
+.field {
+  width: 100%;
+  background: #faf9f6;
+  border: 1px solid #dedbd2;
+  border-radius: 9px;
+  padding: 12px;
+  color: var(--ink);
+  outline: none;
+}
 
-    .btn {
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: .2s;
-    }
+.field:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(49,87,213,.09);
+}
 
-    .btn-primary {
-      background: #2563eb;
-      color: white;
-    }
+.field:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
 
-    .btn-primary:hover {
-      background: #1d4ed8;
-    }
+.btn {
+  padding: 11px 16px;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: .2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+}
 
-    .btn-secondary {
-      background: #252c39;
-      color: white;
-    }
+.btn-primary {
+  background: var(--blue);
+  color: white;
+}
+.btn-primary:hover { background: #2445b5; }
 
-    .btn-secondary:hover {
-      background: #343d4e;
-    }
+.btn-secondary {
+  background: #f0eee8;
+  color: #34332f;
+  border: 1px solid #e2dfd6;
+}
+.btn-secondary:hover { background: #e7e4dc; }
 
-    .btn-mpesa {
-      background: #15803d;
-      color: white;
-    }
+.btn-mpesa {
+  background: #16834a;
+  color: white;
+}
+.btn-mpesa:hover { background: #116b3c; }
 
-    .btn-mpesa:hover {
-      background: #166534;
-    }
+.btn-bank {
+  background: #252e48;
+  color: white;
+}
+.btn-bank:hover { background: #182139; }
 
-    .btn:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
+.btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
 
-    .label {
-      display: block;
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 7px;
-    }
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
 
-    .value {
-      color: #f9fafb;
-      font-size: 14px;
-      overflow-wrap: anywhere;
-    }
+.value {
+  color: var(--ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
 
-    .nav-link {
-      display: block;
-      padding: 11px 14px;
-      border-radius: 8px;
-      color: #aeb6c5;
-      margin-bottom: 5px;
-    }
+.nav-link {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 9px;
+  color: #77756f;
+  margin-bottom: 5px;
+  font-size: 14px;
+  transition: .2s;
+}
 
-    .nav-link:hover,
-    .nav-active {
-      background: #202a3a;
-      color: white;
-    }
-  </style>
+.nav-link:hover, .nav-active {
+  background: #e9edf9;
+  color: var(--blue);
+}
+
+.sidebar {
+  background: #fff;
+  border-color: var(--line);
+}
+
+.soft-panel {
+  background: #faf9f6;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.section-heading {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -.025em;
+}
+
+.eyebrow {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.accent-line {
+  height: 3px;
+  width: 38px;
+  background: var(--orange);
+  border-radius: 5px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+  main { padding: 16px !important; }
+}
+</style>
 </head>
 
 <body>
 
 <div class="min-h-screen flex flex-col md:flex-row">
 
-  <!-- SIDEBAR -->
-  <aside class="w-full md:w-64 bg-[#10141c] border-b md:border-b-0 md:border-r border-gray-800 p-5 md:min-h-screen">
-
-    <div class="mb-9">
-      <h1 class="text-2xl font-bold tracking-tight">
-        R<span class="text-blue-500">-</span>BUY
-      </h1>
-      <p class="text-xs text-gray-500 mt-1">Administration Panel</p>
-    </div>
-
-    <nav>
-      <a href="index.html" class="nav-link">Dashboard</a>
-      <a href="orders.html" class="nav-link nav-active">Orders</a>
-      <a href="customers.html" class="nav-link">Customers</a>
-    </nav>
-
-    <div class="mt-10 border-t border-gray-800 pt-5">
-      <button id="logoutBtn" class="text-sm text-red-400 hover:text-red-300">
-        Log out
-      </button>
-    </div>
-
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full">
-
-    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
-
-      <div>
-        <a href="orders.html" class="text-sm text-blue-400 hover:underline">
-          ← Back to Orders
-        </a>
-
-        <h2 class="text-2xl md:text-3xl font-bold mt-3">
-          Order Details
-        </h2>
-
-        <p class="text-gray-500 text-sm mt-1">
-          Investigate, quote and manage this customer order.
-        </p>
-      </div>
-
-      <span id="orderReference"
-        class="text-sm bg-blue-500/10 text-blue-400 px-3 py-2 rounded-lg">
-        Loading order...
-      </span>
-
-    </div>
-
-    <div id="messageBox"
-      class="hidden mb-6 p-4 rounded-lg text-sm"></div>
-
-    <div id="loadingState"
-      class="panel p-8 text-center text-gray-400">
-      Loading order information...
-    </div>
-
-    <div id="pageContent" class="hidden space-y-6">
-
-      <!-- ORDER STATUS -->
-      <section class="panel p-5">
-
-        <div class="flex flex-wrap justify-between items-center gap-4">
-
-          <div>
-            <p class="text-xs text-gray-500 uppercase tracking-wider">
-              Order progress
-            </p>
-
-            <h3 id="summaryProduct"
-              class="text-xl font-semibold mt-2">
-              Product
-            </h3>
-
-            <p id="summaryDate"
-              class="text-sm text-gray-500 mt-1"></p>
-          </div>
-
-          <div class="flex flex-col sm:flex-row gap-3">
-
-            <div>
-              <label class="label">Order status</label>
-
-              <select id="orderStatus" class="field min-w-48">
-                <option value="pending_review">Pending review</option>
-                <option value="under_investigation">Under investigation</option>
-                <option value="awaiting_customer">Awaiting customer</option>
-                <option value="awaiting_payment">Awaiting payment</option>
-                <option value="procurement">Procurement</option>
-                <option value="in_transit">In transit</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="unavailable">Unavailable</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="label">Payment status</label>
-
-              <input id="paymentStatus" class="field min-w-40" disabled>
-            </div>
-
-          </div>
-        </div>
-
-      </section>
-
-      <!-- CUSTOMER + PRODUCT -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <section class="panel p-5">
-
-          <h3 class="font-semibold text-lg mb-5">
-            Customer Information
-          </h3>
-
-          <div class="space-y-5">
-
-            <div>
-              <p class="label">Customer name</p>
-              <p id="customerName" class="value font-semibold"></p>
-            </div>
-
-            <div>
-              <p class="label">WhatsApp number</p>
-              <p id="customerPhone" class="value"></p>
-            </div>
-
-            <div>
-              <p class="label">Email address</p>
-              <p id="customerEmail" class="value"></p>
-            </div>
-
-            <div>
-              <p class="label">Delivery location</p>
-              <p id="deliveryLocation" class="value"></p>
-            </div>
-
-            <div class="flex flex-wrap gap-3 pt-2">
-
-              <a id="whatsappBtn" href="#" target="_blank"
-                rel="noopener noreferrer"
-                class="btn bg-green-600 hover:bg-green-700 text-white text-sm">
-                Contact on WhatsApp
-              </a>
-
-              <a id="emailBtn" href="#"
-                class="btn btn-secondary text-sm">
-                Send Email
-              </a>
-
-            </div>
-
-          </div>
-        </section>
-
-        <section class="panel p-5">
-
-          <h3 class="font-semibold text-lg mb-5">
-            Requested Product
-          </h3>
-
-          <div class="space-y-5">
-
-            <div>
-              <p class="label">Product name</p>
-              <p id="productName" class="value font-semibold"></p>
-            </div>
-
-            <div>
-              <p class="label">Description</p>
-              <p id="productDescription"
-                class="value whitespace-pre-wrap"></p>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-
-              <div>
-                <p class="label">Quantity</p>
-                <p id="quantity" class="value"></p>
-              </div>
-
-              <div>
-                <p class="label">Customer budget</p>
-                <p id="customerBudget" class="value"></p>
-              </div>
-
-            </div>
-
-            <div>
-              <p class="label">Budget type</p>
-              <p id="budgetType" class="value"></p>
-            </div>
-
-            <div>
-              <p class="label">Reference URL</p>
-
-              <a id="referenceUrl" href="#" target="_blank"
-                rel="noopener noreferrer"
-                class="text-blue-400 text-sm break-all hover:underline">
-                No reference provided
-              </a>
-            </div>
-
-          </div>
-        </section>
-
-      </div>
-
-      <!-- INVESTIGATION -->
-      <section class="panel p-5">
-
-        <h3 class="font-semibold text-lg">
-          Product Investigation
-        </h3>
-
-        <p class="text-sm text-gray-500 mt-1 mb-5">
-          Record sourcing information and internal findings.
-        </p>
-
-        <label class="label">Investigation notes</label>
-
-        <textarea id="investigationNotes" rows="5"
-          class="field"
-          placeholder="Record suppliers contacted, product availability, quality, sourcing prices and other findings..."></textarea>
-
-        <button id="saveBtn" class="btn btn-secondary mt-5">
-          Save Order Notes & Status
-        </button>
-
-      </section>
-
-      <!-- QUOTATION BUILDER -->
-      <section class="panel p-5">
-
-        <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
-
-          <div>
-            <h3 class="font-semibold text-xl">
-              Quotation Builder
-            </h3>
-
-            <p class="text-sm text-gray-500 mt-1">
-              Prepare and issue a secure customer quotation.
-            </p>
-          </div>
-
-          <span class="text-xs text-blue-400 bg-blue-500/10 px-3 py-2 rounded-lg">
-            Currency: KES
-          </span>
-
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-          <div>
-            <label class="label">Offered product name</label>
-
-            <input id="offeredProductName" class="field"
-              placeholder="Name of product being offered">
-          </div>
-
-          <div>
-            <label class="label">Product price (all items)</label>
-
-            <input id="offeredPrice" type="number"
-              min="0" step="0.01" class="field"
-              placeholder="0.00">
-
-            <p class="text-xs text-gray-500 mt-2">
-              Enter the total price for the entire requested quantity.
-            </p>
-          </div>
-
-          <div>
-            <label class="label">Delivery fee</label>
-
-            <input id="deliveryFee" type="number"
-              min="0" step="0.01" class="field"
-              placeholder="0.00">
-          </div>
-
-          <div>
-            <label class="label">R-Buy service fee</label>
-
-            <input id="serviceFee" type="number"
-              min="0" step="0.01" class="field"
-              placeholder="0.00">
-          </div>
-
-          <div>
-            <label class="label">Delivery company</label>
-
-            <input id="deliveryCompany" class="field"
-              placeholder="e.g. G4S, Fargo, local courier">
-          </div>
-
-          <div>
-            <label class="label">Estimated delivery time</label>
-
-            <input id="deliveryEstimate" class="field"
-              placeholder="e.g. 2-3 working days">
-          </div>
-
-          <div>
-            <label class="label">Quotation expiry date</label>
-
-            <input id="offerExpiresAt" type="datetime-local"
-              class="field">
-          </div>
-
-          <div>
-            <label class="label">Quotation version</label>
-
-            <input id="quotationVersion" class="field"
-              value="No quotation issued" disabled>
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="label">Offered product description</label>
-
-            <textarea id="offeredDescription" rows="4"
-              class="field"
-              placeholder="Describe the exact product being offered, specifications, colour, size, model or alternatives..."></textarea>
-          </div>
-
-        </div>
-
-        <!-- QUOTATION TOTAL -->
-        <div class="mt-7 bg-[#0b1019] border border-gray-700 rounded-xl p-5">
-
-          <h4 class="text-sm text-gray-400 mb-4">
-            Quotation Breakdown
-          </h4>
-
-          <div class="space-y-3 text-sm">
-
-            <div class="flex justify-between">
-              <span class="text-gray-400">Product price</span>
-              <span id="displayProductPrice">KES 0.00</span>
-            </div>
-
-            <div class="flex justify-between">
-              <span class="text-gray-400">Delivery fee</span>
-              <span id="displayDeliveryFee">KES 0.00</span>
-            </div>
-
-            <div class="flex justify-between">
-              <span class="text-gray-400">R-Buy service fee</span>
-              <span id="displayServiceFee">KES 0.00</span>
-            </div>
-
-            <div class="border-t border-gray-700 pt-4 mt-4 flex justify-between items-center">
-              <span class="font-semibold">CUSTOMER TOTAL</span>
-
-              <span id="quotationTotal"
-                class="text-2xl font-bold text-blue-400">
-                KES 0.00
-              </span>
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- ISSUE QUOTATION -->
-        <div class="flex flex-wrap gap-3 mt-6">
-
-          <button id="issueQuoteBtn" class="btn btn-primary">
-            Generate & Send Secure Quotation
-          </button>
-
-          <button id="copyQuoteBtn" class="btn btn-secondary" disabled>
-            Copy Quotation Link
-          </button>
-
-        </div>
-
-        <div id="quotationLinkPanel"
-          class="hidden mt-5 bg-[#0b1019] border border-gray-700 rounded-xl p-5">
-
-          <p class="text-sm font-semibold text-green-400 mb-2">
-            Secure quotation generated
-          </p>
-
-          <p class="text-xs text-gray-400 mb-3">
-            This is the unique customer link for this quotation version.
-          </p>
-
-          <p id="quotationLink"
-            class="text-sm text-blue-400 break-all"></p>
-
-        </div>
-
-        <div class="mt-5 bg-[#0b1019] border border-gray-700 rounded-xl p-5">
-
-          <p class="label">Latest quotation status</p>
-
-          <div class="flex flex-wrap justify-between items-center gap-3">
-
-            <div>
-              <p id="quotationStatus"
-                class="text-lg font-semibold">
-                No quotation issued
-              </p>
-
-              <p id="quotationResponseDetails"
-                class="text-xs text-gray-500 mt-2">
-                A customer response will appear here.
-              </p>
-            </div>
-
-            <button id="refreshQuotationBtn"
-              class="btn btn-secondary text-sm">
-              Refresh status
-            </button>
-
-          </div>
-
-        </div>
-
-        <p class="text-xs text-gray-500 mt-4">
-          Generating a new quotation creates a new version and replaces
-          any previous unanswered quotation. A customer must accept the
-          latest version before payment can proceed.
-        </p>
-
-      </section>
-
-      <!-- M-PESA PAYMENT -->
-      <section class="panel p-5">
-
-        <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
-
-          <div>
-            <h3 class="font-semibold text-xl">
-              M-Pesa Payment
-            </h3>
-
-            <p class="text-sm text-gray-500 mt-1">
-              Request payment directly on the customer's phone.
-            </p>
-          </div>
-
-          <span class="text-xs text-green-400 bg-green-500/10 px-3 py-2 rounded-lg">
-            IntaSend Sandbox
-          </span>
-
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-          <div class="bg-[#0b1019] border border-gray-700 rounded-xl p-5">
-
-            <p class="label">Customer</p>
-            <p id="paymentCustomerName" class="font-semibold"></p>
-
-            <p class="label mt-4">M-Pesa phone number</p>
-
-            <p id="paymentPhone"
-              class="text-lg font-semibold text-green-400"></p>
-
-          </div>
-
-          <div class="bg-[#0b1019] border border-gray-700 rounded-xl p-5">
-
-            <p class="label">Quotation amount</p>
-
-            <p id="paymentAmount"
-              class="text-2xl font-bold text-blue-400">
-              KES 0
-            </p>
-
-            <p class="text-xs text-gray-500 mt-2">
-              Payment is available only after the latest quotation
-              has been accepted.
-            </p>
-
-          </div>
-
-        </div>
-
-        <div class="mt-5 bg-[#0b1019] border border-gray-700 rounded-xl p-4">
-
-          <p class="label">Payment readiness</p>
-
-          <p id="paymentReadiness"
-            class="text-sm text-gray-300">
-            Checking order...
-          </p>
-
-        </div>
-
-        <div class="flex flex-wrap gap-3 mt-5">
-
-          <button id="sendMpesaBtn"
-            class="btn btn-mpesa" disabled>
-            Send M-Pesa STK Push
-          </button>
-
-        </div>
-
-        <div id="paymentResult"
-          class="hidden mt-5 p-4 rounded-lg text-sm"></div>
-
-        <p class="text-xs text-gray-500 mt-4">
-          An STK Push is a payment request, not proof of payment.
-          The actual payment must be confirmed by the provider.
-        </p>
-
-      </section>
-
-      <!-- ORDER RECORD -->
-      <section class="panel p-5">
-
-        <h3 class="font-semibold text-lg mb-5">
-          Order Record
-        </h3>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-
-          <div>
-            <p class="label">Order UUID</p>
-            <p id="orderId"
-              class="text-xs text-gray-400 break-all"></p>
-          </div>
-
-          <div>
-            <p class="label">Created on</p>
-            <p id="createdAt" class="value"></p>
-          </div>
-
-          <div>
-            <p class="label">Last updated</p>
-            <p id="updatedAt" class="value"></p>
-          </div>
-
-        </div>
-
-      </section>
-
-    </div>
-
-  </main>
+<!-- SIDEBAR -->
+<aside class="sidebar w-full md:w-64 border-b md:border-b-0 md:border-r p-5 md:min-h-screen">
+
+  <div class="mb-9">
+    <h1 class="text-3xl font-bold tracking-tight">
+      R<span style="color:var(--blue)">-</span>BUY
+    </h1>
+    <p class="text-xs mt-1" style="color:var(--muted)">Administration Panel</p>
+    <div class="accent-line mt-4"></div>
+    <p class="text-xs" style="color:var(--muted)">You can buy anything.</p>
+  </div>
+
+  <nav>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="orders.html" class="nav-link nav-active">Orders</a>
+    <a href="customers.html" class="nav-link">Customers</a>
+  </nav>
+
+  <div class="mt-10 border-t pt-5" style="border-color:var(--line)">
+    <button id="logoutBtn" class="text-sm text-red-500 hover:text-red-700">
+      Log out
+    </button>
+  </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full">
+
+<div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+
+  <div>
+    <a href="orders.html" class="text-sm hover:underline"
+       style="color:var(--blue)">← Back to Orders</a>
+
+    <h2 class="text-3xl font-bold mt-3 tracking-tight">
+      Order Details
+    </h2>
+
+    <p class="text-sm mt-1" style="color:var(--muted)">
+      Investigate, quote and manage this customer order.
+    </p>
+  </div>
+
+  <span id="orderReference"
+    class="text-sm px-4 py-3 rounded-xl font-semibold"
+    style="background:#e9edf9;color:var(--blue)">
+    Loading order...
+  </span>
 
 </div>
 
+<div id="messageBox" class="hidden mb-6 p-4 rounded-xl text-sm"></div>
+
+<div id="loadingState" class="panel p-8 text-center" style="color:var(--muted)">
+  Loading order information...
+</div>
+
+<div id="pageContent" class="hidden space-y-6">
+
+<!-- ORDER STATUS -->
+<section class="panel p-5">
+
+  <div class="flex flex-wrap justify-between items-center gap-4">
+
+    <div>
+      <p class="eyebrow">Order progress</p>
+      <h3 id="summaryProduct" class="text-xl font-bold mt-2">Product</h3>
+      <p id="summaryDate" class="text-sm mt-1" style="color:var(--muted)"></p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3">
+
+      <div>
+        <label class="label">Order status</label>
+        <select id="orderStatus" class="field min-w-48">
+          <option value="pending_review">Pending review</option>
+          <option value="under_investigation">Under investigation</option>
+          <option value="awaiting_customer">Awaiting customer</option>
+          <option value="awaiting_payment">Awaiting payment</option>
+          <option value="procurement">Procurement</option>
+          <option value="in_transit">In transit</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="unavailable">Unavailable</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="label">Payment status</label>
+        <input id="paymentStatus" class="field min-w-40" disabled>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CUSTOMER + PRODUCT -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+<section class="panel p-5">
+  <div class="accent-line"></div>
+  <h3 class="section-heading mb-5">Customer Information</h3>
+
+  <div class="space-y-5">
+    <div><p class="label">Customer name</p><p id="customerName" class="value font-semibold"></p></div>
+    <div><p class="label">WhatsApp number</p><p id="customerPhone" class="value"></p></div>
+    <div><p class="label">Email address</p><p id="customerEmail" class="value"></p></div>
+    <div><p class="label">Delivery location</p><p id="deliveryLocation" class="value"></p></div>
+
+    <div class="flex flex-wrap gap-3 pt-2">
+      <a id="whatsappBtn" href="#" target="_blank" rel="noopener noreferrer"
+        class="btn bg-green-600 hover:bg-green-700 text-white">
+        Contact on WhatsApp
+      </a>
+      <a id="emailBtn" href="#" class="btn btn-secondary">
+        Send Email
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="panel p-5">
+  <div class="accent-line"></div>
+  <h3 class="section-heading mb-5">Requested Product</h3>
+
+  <div class="space-y-5">
+    <div><p class="label">Product name</p><p id="productName" class="value font-semibold"></p></div>
+    <div><p class="label">Description</p><p id="productDescription" class="value whitespace-pre-wrap"></p></div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div><p class="label">Quantity</p><p id="quantity" class="value"></p></div>
+      <div><p class="label">Customer budget</p><p id="customerBudget" class="value"></p></div>
+    </div>
+
+    <div><p class="label">Budget type</p><p id="budgetType" class="value"></p></div>
+
+    <div>
+      <p class="label">Reference URL</p>
+      <a id="referenceUrl" href="#" target="_blank" rel="noopener noreferrer"
+        class="text-sm break-all hover:underline" style="color:var(--blue)">
+        No reference provided
+      </a>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- INVESTIGATION -->
+<section class="panel p-5">
+  <div class="accent-line"></div>
+  <h3 class="section-heading">Product Investigation</h3>
+  <p class="text-sm mt-1 mb-5" style="color:var(--muted)">
+    Record sourcing information and internal findings.
+  </p>
+
+  <label class="label">Investigation notes</label>
+  <textarea id="investigationNotes" rows="5" class="field"
+    placeholder="Record suppliers contacted, product availability, quality, sourcing prices and other findings..."></textarea>
+
+  <button id="saveBtn" class="btn btn-secondary mt-5">
+    Save Order Notes & Status
+  </button>
+</section>
+
+<!-- QUOTATION BUILDER -->
+<section class="panel p-5">
+
+  <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+    <div>
+      <div class="accent-line"></div>
+      <h3 class="section-heading">Quotation Builder</h3>
+      <p class="text-sm mt-1" style="color:var(--muted)">
+        Prepare and issue a secure customer quotation.
+      </p>
+    </div>
+
+    <span class="text-xs px-3 py-2 rounded-lg"
+      style="background:#e9edf9;color:var(--blue)">Currency: KES</span>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+    <div>
+      <label class="label">Offered product name</label>
+      <input id="offeredProductName" class="field" placeholder="Name of product being offered">
+    </div>
+
+    <div>
+      <label class="label">Product price (all items)</label>
+      <input id="offeredPrice" type="number" min="0" step="0.01" class="field" placeholder="0.00">
+      <p class="text-xs mt-2" style="color:var(--muted)">Total price for the entire requested quantity.</p>
+    </div>
+
+    <div>
+      <label class="label">Delivery fee</label>
+      <input id="deliveryFee" type="number" min="0" step="0.01" class="field" placeholder="0.00">
+    </div>
+
+    <div>
+      <label class="label">R-Buy service fee</label>
+      <input id="serviceFee" type="number" min="0" step="0.01" class="field" placeholder="0.00">
+    </div>
+
+    <div>
+      <label class="label">Delivery company</label>
+      <input id="deliveryCompany" class="field" placeholder="e.g. G4S, Fargo, local courier">
+    </div>
+
+    <div>
+      <label class="label">Estimated delivery time</label>
+      <input id="deliveryEstimate" class="field" placeholder="e.g. 2-3 working days">
+    </div>
+
+    <div>
+      <label class="label">Quotation expiry date</label>
+      <input id="offerExpiresAt" type="datetime-local" class="field">
+    </div>
+
+    <div>
+      <label class="label">Quotation version</label>
+      <input id="quotationVersion" class="field" value="No quotation issued" disabled>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="label">Offered product description</label>
+      <textarea id="offeredDescription" rows="4" class="field"
+        placeholder="Describe the exact product being offered, specifications, colour, size, model or alternatives..."></textarea>
+    </div>
+  </div>
+
+  <!-- TOTAL -->
+  <div class="mt-7 soft-panel p-5">
+    <h4 class="text-sm font-semibold mb-4">Quotation Breakdown</h4>
+
+    <div class="space-y-3 text-sm">
+      <div class="flex justify-between"><span style="color:var(--muted)">Product price</span><span id="displayProductPrice">KES 0.00</span></div>
+      <div class="flex justify-between"><span style="color:var(--muted)">Delivery fee</span><span id="displayDeliveryFee">KES 0.00</span></div>
+      <div class="flex justify-between"><span style="color:var(--muted)">R-Buy service fee</span><span id="displayServiceFee">KES 0.00</span></div>
+
+      <div class="border-t pt-4 mt-4 flex justify-between items-center" style="border-color:var(--line)">
+        <span class="font-bold">CUSTOMER TOTAL</span>
+        <span id="quotationTotal" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-3 mt-6">
+    <button id="issueQuoteBtn" class="btn btn-primary">
+      Generate & Send Secure Quotation
+    </button>
+    <button id="copyQuoteBtn" class="btn btn-secondary" disabled>
+      Copy Quotation Link
+    </button>
+  </div>
+
+  <div id="quotationLinkPanel" class="hidden mt-5 soft-panel p-5">
+    <p class="text-sm font-semibold text-green-700 mb-2">Secure quotation generated</p>
+    <p class="text-xs mb-3" style="color:var(--muted)">Unique customer link for this quotation version.</p>
+    <p id="quotationLink" class="text-sm break-all" style="color:var(--blue)"></p>
+  </div>
+
+  <div class="mt-5 soft-panel p-5">
+    <p class="label">Latest quotation status</p>
+    <div class="flex flex-wrap justify-between items-center gap-3">
+      <div>
+        <p id="quotationStatus" class="text-lg font-semibold">No quotation issued</p>
+        <p id="quotationResponseDetails" class="text-xs mt-2" style="color:var(--muted)">A customer response will appear here.</p>
+      </div>
+      <button id="refreshQuotationBtn" class="btn btn-secondary text-sm">Refresh status</button>
+    </div>
+  </div>
+
+  <p class="text-xs mt-4" style="color:var(--muted)">
+    A new quotation creates a new version and replaces previous unanswered quotations.
+    Customers must accept the latest version before payment can proceed.
+  </p>
+</section>
+
+<!-- PAYMENT METHODS -->
+<section class="panel p-5">
+
+  <div class="accent-line"></div>
+  <h3 class="section-heading">Payment Centre</h3>
+  <p class="text-sm mt-1 mb-6" style="color:var(--muted)">
+    Select a payment method after the customer accepts the quotation.
+  </p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+    <!-- MPESA -->
+    <div class="soft-panel p-5">
+      <div class="flex justify-between items-center mb-5">
+        <h4 class="font-bold text-lg">M-Pesa</h4>
+        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">STK Push</span>
+      </div>
+
+      <p class="label">Customer</p>
+      <p id="paymentCustomerName" class="font-semibold"></p>
+
+      <p class="label mt-4">M-Pesa phone number</p>
+      <p id="paymentPhone" class="text-lg font-bold text-green-700"></p>
+
+      <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
+        <p class="label">Quotation amount</p>
+        <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0</p>
+      </div>
+
+      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>
+        Send M-Pesa STK Push
+      </button>
+
+      <p class="text-xs mt-3" style="color:var(--muted)">
+        The customer receives a payment prompt on their phone.
+      </p>
+    </div>
+
+    <!-- BANK TRANSFER -->
+    <div class="soft-panel p-5">
+      <div class="flex justify-between items-center mb-5">
+        <h4 class="font-bold text-lg">Bank Transfer</h4>
+        <span class="text-xs px-3 py-2 rounded-lg"
+          style="background:#e9edf9;color:var(--blue)">Co-operative Bank</span>
+      </div>
+
+      <p class="label">Account name</p>
+      <p class="font-semibold">Benjamin Wanjihia</p>
+
+      <p class="label mt-4">Paybill number</p>
+      <p class="text-lg font-bold">400200</p>
+
+      <p class="label mt-4">Account number</p>
+      <p class="text-lg font-bold">01101509803001</p>
+
+      <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
+        <p class="label">Amount to transfer</p>
+        <p id="bankPaymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</p>
+      </div>
+
+      <p class="label mt-4">Payment reference</p>
+      <p id="bankPaymentReference" class="font-bold text-sm break-all">Loading...</p>
+
+      <button id="sendBankDetailsBtn" class="btn btn-bank w-full mt-5">
+        Send Bank Details via WhatsApp
+      </button>
+
+      <p class="text-xs mt-3" style="color:var(--muted)">
+        Sends the customer bank instructions, exact amount and order reference.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="mt-5 soft-panel p-4">
+    <p class="label">Payment readiness</p>
+    <p id="paymentReadiness" class="text-sm">Checking order...</p>
+  </div>
+
+  <div id="paymentResult" class="hidden mt-5 p-4 rounded-xl text-sm"></div>
+
+  <p class="text-xs mt-4" style="color:var(--muted)">
+    An STK Push or bank transfer instruction is not proof of payment.
+    Bank transfers must be checked against the actual bank transaction before marking an order as paid.
+  </p>
+
+</section>
+
+<!-- ORDER RECORD -->
+<section class="panel p-5">
+  <div class="accent-line"></div>
+  <h3 class="section-heading mb-5">Order Record</h3>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    <div><p class="label">Order UUID</p><p id="orderId" class="text-xs break-all"></p></div>
+    <div><p class="label">Created on</p><p id="createdAt" class="value"></p></div>
+    <div><p class="label">Last updated</p><p id="updatedAt" class="value"></p></div>
+  </div>
+</section>
+
+</div>
+</main>
+</div>
+
 <script>
-  // ==================================================
-  // SUPABASE CONFIGURATION
-  // ==================================================
+// ==================================================
+// CONFIGURATION
+// ==================================================
 
-  const SUPABASE_URL =
-    "https://ixuohpgqpuvjdbigmhje.supabase.co";
+const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
+const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
 
-  const SUPABASE_KEY =
-    "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+const PAYMENT_FUNCTION = "payment-script";
+const QUOTATION_FUNCTION = "quotation-response";
 
-  const PAYMENT_FUNCTION = "payment-script";
-  const QUOTATION_FUNCTION = "quotation-response";
+const BANK_DETAILS = {
+  bankName: "Co-operative Bank of Kenya",
+  accountName: "Benjamin Wanjihia",
+  paybill: "400200",
+  accountNumber: "01101509803001"
+};
 
-  const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-  // ==================================================
-  // STATE
-  // ==================================================
+// ==================================================
+// STATE
+// ==================================================
 
-  const orderId =
-    new URLSearchParams(window.location.search).get("id");
+const orderId = new URLSearchParams(window.location.search).get("id");
 
-  let currentOrder = null;
-  let latestQuotation = null;
-  let activeQuotationUrl = null;
+let currentOrder = null;
+let latestQuotation = null;
+let activeQuotationUrl = null;
 
-  let paymentRequestInProgress = false;
-  let quotationRequestInProgress = false;
+let paymentRequestInProgress = false;
+let quotationRequestInProgress = false;
 
-  const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
-  const loadingState = $("loadingState");
-  const pageContent = $("pageContent");
-  const messageBox = $("messageBox");
+const loadingState = $("loadingState");
+const pageContent = $("pageContent");
+const messageBox = $("messageBox");
 
-  // ==================================================
-  // UTILITIES
-  // ==================================================
+// ==================================================
+// UTILITIES
+// ==================================================
 
-  function formatKES(value) {
-    return "KES " + Number(value || 0).toLocaleString("en-KE", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+function formatKES(value) {
+  return "KES " + Number(value || 0).toLocaleString("en-KE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function formatDate(value) {
+  if (!value) return "Not available";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not available";
+
+  return date.toLocaleString("en-KE", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+function showMessage(message, type = "success") {
+  messageBox.classList.remove("hidden");
+  messageBox.className = "mb-6 p-4 rounded-xl text-sm";
+
+  if (type === "success") {
+    messageBox.classList.add("bg-green-100", "text-green-800");
+  } else if (type === "error") {
+    messageBox.classList.add("bg-red-100", "text-red-800");
+  } else {
+    messageBox.classList.add("bg-blue-100", "text-blue-800");
   }
 
-  function formatDate(value) {
-    if (!value) return "Not available";
+  messageBox.textContent = message;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-    const date = new Date(value);
+function showPaymentResult(message, type = "info") {
+  const box = $("paymentResult");
+  box.classList.remove("hidden");
+  box.className = "mt-5 p-4 rounded-xl text-sm";
 
-    if (Number.isNaN(date.getTime())) {
-      return "Not available";
-    }
-
-    return date.toLocaleString("en-KE", {
-      dateStyle: "medium",
-      timeStyle: "short"
-    });
+  if (type === "success") {
+    box.classList.add("bg-green-100", "text-green-800");
+  } else if (type === "error") {
+    box.classList.add("bg-red-100", "text-red-800");
+  } else {
+    box.classList.add("bg-blue-100", "text-blue-800");
   }
 
-  function showMessage(message, type = "success") {
+  box.textContent = message;
+}
 
-    messageBox.classList.remove("hidden");
+function getNumber(id) {
+  const value = $(id).value.trim();
+  if (value === "") return 0;
 
-    messageBox.className =
-      "mb-6 p-4 rounded-lg text-sm";
+  const number = Number(value);
 
-    if (type === "success") {
-      messageBox.classList.add(
-        "bg-green-500/10",
-        "text-green-400"
-      );
-    } else if (type === "error") {
-      messageBox.classList.add(
-        "bg-red-500/10",
-        "text-red-400"
-      );
-    } else {
-      messageBox.classList.add(
-        "bg-blue-500/10",
-        "text-blue-400"
-      );
-    }
-
-    messageBox.textContent = message;
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
+  if (!Number.isFinite(number) || number < 0) {
+    throw new Error("Please enter valid non-negative quotation amounts.");
   }
 
-  function showPaymentResult(message, type = "info") {
+  return number;
+}
 
-    const box = $("paymentResult");
+function normalizePhone(phone) {
+  let number = String(phone || "").replace(/\D/g, "");
 
-    box.classList.remove("hidden");
-
-    box.className = "mt-5 p-4 rounded-lg text-sm";
-
-    if (type === "success") {
-      box.classList.add(
-        "bg-green-500/10",
-        "text-green-400"
-      );
-    } else if (type === "error") {
-      box.classList.add(
-        "bg-red-500/10",
-        "text-red-400"
-      );
-    } else {
-      box.classList.add(
-        "bg-blue-500/10",
-        "text-blue-400"
-      );
-    }
-
-    box.textContent = message;
+  if (number.startsWith("0")) {
+    number = "254" + number.substring(1);
   }
 
-  function getNumber(id) {
-
-    const value = $(id).value.trim();
-
-    if (value === "") return 0;
-
-    const number = Number(value);
-
-    if (!Number.isFinite(number) || number < 0) {
-      throw new Error(
-        "Please enter valid non-negative quotation amounts."
-      );
-    }
-
-    return number;
+  if (number.startsWith("7") || number.startsWith("1")) {
+    number = "254" + number;
   }
 
-  function normalizePhone(phone) {
+  return number;
+}
 
-    let number = String(phone || "").replace(/\D/g, "");
-
-    if (number.startsWith("0")) {
-      number = "254" + number.substring(1);
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return url.href;
     }
+  } catch (error) {}
 
-    if (number.startsWith("7") || number.startsWith("1")) {
-      number = "254" + number;
-    }
+  return null;
+}
 
-    return number;
-  }
+function getOrderReference() {
+  if (!currentOrder) return "";
+  return "RBUY-" + currentOrder.id.substring(0, 8).toUpperCase();
+}
 
-  function safeExternalUrl(value) {
+function openWhatsAppTab() {
+  // Must be called directly during the user's click event.
+  const tab = window.open("about:blank", "_blank");
 
+  if (tab) {
     try {
-      const url = new URL(value);
-
-      if (
-        url.protocol === "http:" ||
-        url.protocol === "https:"
-      ) {
-        return url.href;
-      }
-
+      tab.document.title = "R-BUY WhatsApp";
+      tab.document.body.innerHTML =
+        "<p style='font-family:Arial;padding:30px'>Preparing your WhatsApp message...</p>";
     } catch (error) {}
-
-    return null;
   }
 
-  // ==================================================
-  // AUTHENTICATION
-  // ==================================================
+  return tab;
+}
 
-  async function checkAdmin() {
+function redirectWhatsAppTab(tab, url) {
+  if (tab && !tab.closed) {
+    tab.location.href = url;
+    return true;
+  }
 
-    const {
-      data: sessionData,
-      error: sessionError
-    } = await supabaseClient.auth.getSession();
+  return false;
+}
 
-    if (sessionError || !sessionData.session) {
-      window.location.href = "login.html";
-      return false;
-    }
+// ==================================================
+// AUTHENTICATION
+// ==================================================
 
-    const user = sessionData.session.user;
+async function checkAdmin() {
+  const { data: sessionData, error: sessionError } =
+    await supabaseClient.auth.getSession();
 
-    const {
-      data: adminRecord,
-      error: adminError
-    } = await supabaseClient
+  if (sessionError || !sessionData.session) {
+    window.location.href = "login.html";
+    return false;
+  }
+
+  const user = sessionData.session.user;
+
+  const { data: adminRecord, error: adminError } =
+    await supabaseClient
       .from("admin_users")
       .select("user_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (adminError || !adminRecord) {
-
-      await supabaseClient.auth.signOut();
-
-      window.location.href = "login.html";
-
-      return false;
-    }
-
-    return true;
+  if (adminError || !adminRecord) {
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+    return false;
   }
 
-  $("logoutBtn").addEventListener("click", async () => {
+  return true;
+}
 
-    await supabaseClient.auth.signOut();
+$("logoutBtn").addEventListener("click", async () => {
+  await supabaseClient.auth.signOut();
+  window.location.href = "login.html";
+});
 
-    window.location.href = "login.html";
+// ==================================================
+// LOAD ORDER
+// ==================================================
 
-  });
+async function loadOrder() {
+  if (!orderId) {
+    loadingState.textContent =
+      "No order ID was provided. Return to the Orders page.";
+    return;
+  }
 
-  // ==================================================
-  // LOAD ORDER
-  // ==================================================
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .single();
 
-  async function loadOrder() {
+  if (error || !data) {
+    loadingState.textContent =
+      "Unable to load this order. Check the order ID and your admin permissions.";
+    console.error("Order loading error:", error);
+    return;
+  }
 
-    if (!orderId) {
+  currentOrder = data;
+  renderOrder(data);
 
-      loadingState.textContent =
-        "No order ID was provided. Return to the Orders page.";
+  await loadLatestQuotation();
 
-      return;
-    }
+  loadingState.classList.add("hidden");
+  pageContent.classList.remove("hidden");
+}
 
-    const {
-      data,
-      error
-    } = await supabaseClient
+// ==================================================
+// DISPLAY ORDER
+// ==================================================
+
+function renderOrder(order) {
+  $("orderReference").textContent = getOrderReference();
+
+  $("summaryProduct").textContent =
+    order.product_name || "Unnamed product";
+
+  $("summaryDate").textContent =
+    "Submitted " + formatDate(order.created_at);
+
+  $("customerName").textContent =
+    order.customer_name || "Not provided";
+
+  $("customerPhone").textContent =
+    order.whatsapp || "Not provided";
+
+  $("customerEmail").textContent =
+    order.email || "Not provided";
+
+  $("deliveryLocation").textContent =
+    order.delivery_location || "Not provided";
+
+  $("productName").textContent =
+    order.product_name || "Not provided";
+
+  $("productDescription").textContent =
+    order.product_description || "No description";
+
+  $("quantity").textContent =
+    order.quantity ?? "Not provided";
+
+  $("customerBudget").textContent =
+    formatKES(order.budget);
+
+  $("budgetType").textContent =
+    order.budget_type === "per_item" ? "Per item" : "Total budget";
+
+  const referenceLink = safeExternalUrl(order.reference_url || "");
+
+  if (referenceLink) {
+    $("referenceUrl").href = referenceLink;
+    $("referenceUrl").textContent = order.reference_url;
+  } else {
+    $("referenceUrl").removeAttribute("href");
+    $("referenceUrl").textContent = "No valid reference provided";
+  }
+
+  $("investigationNotes").value =
+    order.investigation_notes || "";
+
+  $("offeredProductName").value =
+    order.offered_product_name || "";
+
+  $("offeredDescription").value =
+    order.offered_description || "";
+
+  $("offeredPrice").value =
+    order.offered_price ?? "";
+
+  $("deliveryFee").value =
+    order.delivery_fee ?? "";
+
+  $("serviceFee").value =
+    order.service_fee ?? "";
+
+  $("deliveryCompany").value =
+    order.delivery_company || "";
+
+  $("deliveryEstimate").value =
+    order.delivery_estimate || "";
+
+  if (order.offer_expires_at) {
+    const date = new Date(order.offer_expires_at);
+    const localDate = new Date(
+      date.getTime() - date.getTimezoneOffset() * 60000
+    );
+    $("offerExpiresAt").value = localDate.toISOString().slice(0, 16);
+  } else {
+    $("offerExpiresAt").value = "";
+  }
+
+  $("orderStatus").value =
+    order.status || "pending_review";
+
+  $("paymentStatus").value =
+    order.payment_status || "unpaid";
+
+  $("orderId").textContent = order.id;
+  $("createdAt").textContent = formatDate(order.created_at);
+  $("updatedAt").textContent = formatDate(order.updated_at);
+
+  const phone = normalizePhone(order.whatsapp);
+
+  if (phone) {
+    $("whatsappBtn").href = "https://wa.me/" + phone;
+    $("whatsappBtn").classList.remove("opacity-40", "pointer-events-none");
+  } else {
+    $("whatsappBtn").removeAttribute("href");
+    $("whatsappBtn").classList.add("opacity-40", "pointer-events-none");
+  }
+
+  if (order.email) {
+    $("emailBtn").href =
+      "mailto:" + encodeURIComponent(order.email) +
+      "?subject=" + encodeURIComponent("R-Buy Order " + getOrderReference());
+
+    $("emailBtn").classList.remove("opacity-40", "pointer-events-none");
+  } else {
+    $("emailBtn").removeAttribute("href");
+    $("emailBtn").classList.add("opacity-40", "pointer-events-none");
+  }
+
+  updateQuotationTotal();
+  updateBankReference();
+  updatePaymentPanel();
+}
+
+// ==================================================
+// QUOTATION CALCULATOR
+// ==================================================
+
+function getQuotation() {
+  const product = getNumber("offeredPrice");
+  const delivery = getNumber("deliveryFee");
+  const service = getNumber("serviceFee");
+
+  return {
+    product,
+    delivery,
+    service,
+    total: product + delivery + service
+  };
+}
+
+function updateQuotationTotal() {
+  try {
+    const quote = getQuotation();
+
+    $("displayProductPrice").textContent = formatKES(quote.product);
+    $("displayDeliveryFee").textContent = formatKES(quote.delivery);
+    $("displayServiceFee").textContent = formatKES(quote.service);
+    $("quotationTotal").textContent = formatKES(quote.total);
+    $("paymentAmount").textContent = formatKES(quote.total);
+    $("bankPaymentAmount").textContent = formatKES(quote.total);
+
+    updatePaymentPanel();
+  } catch (error) {
+    $("quotationTotal").textContent = "Invalid amount";
+    $("paymentAmount").textContent = "Invalid amount";
+    $("bankPaymentAmount").textContent = "Invalid amount";
+  }
+}
+
+[
+  "offeredPrice",
+  "deliveryFee",
+  "serviceFee"
+].forEach(id => {
+  $(id).addEventListener("input", updateQuotationTotal);
+});
+
+// ==================================================
+// BANK REFERENCE
+// ==================================================
+
+function updateBankReference() {
+  $("bankPaymentReference").textContent =
+    currentOrder ? getOrderReference() : "Loading...";
+}
+
+// ==================================================
+// SAVE ORDER NOTES AND STATUS
+// ==================================================
+
+async function saveOrder(showSuccess = true) {
+  if (!currentOrder) {
+    throw new Error("No order is currently loaded.");
+  }
+
+  const updates = {
+    investigation_notes: $("investigationNotes").value.trim(),
+    status: $("orderStatus").value,
+    updated_at: new Date().toISOString()
+  };
+
+  $("saveBtn").disabled = true;
+  $("saveBtn").textContent = "Saving...";
+
+  try {
+    const { data, error } = await supabaseClient
       .from("orders")
-      .select("*")
-      .eq("id", orderId)
+      .update(updates)
+      .eq("id", currentOrder.id)
+      .select()
       .single();
 
-    if (error || !data) {
+    if (error) throw error;
 
-      loadingState.textContent =
-        "Unable to load this order. Check the order ID and your admin permissions.";
+    currentOrder = { ...currentOrder, ...data };
 
-      console.error("Order loading error:", error);
-
-      return;
-    }
-
-    currentOrder = data;
-
-    renderOrder(data);
-
-    await loadLatestQuotation();
-
-    loadingState.classList.add("hidden");
-
-    pageContent.classList.remove("hidden");
-  }
-
-  // ==================================================
-  // DISPLAY ORDER
-  // ==================================================
-
-  function renderOrder(order) {
-
-    const reference =
-      "RBUY-" + order.id.substring(0, 8).toUpperCase();
-
-    $("orderReference").textContent = reference;
-
-    $("summaryProduct").textContent =
-      order.product_name || "Unnamed product";
-
-    $("summaryDate").textContent =
-      "Submitted " + formatDate(order.created_at);
-
-    $("customerName").textContent =
-      order.customer_name || "Not provided";
-
-    $("customerPhone").textContent =
-      order.whatsapp || "Not provided";
-
-    $("customerEmail").textContent =
-      order.email || "Not provided";
-
-    $("deliveryLocation").textContent =
-      order.delivery_location || "Not provided";
-
-    $("productName").textContent =
-      order.product_name || "Not provided";
-
-    $("productDescription").textContent =
-      order.product_description || "No description";
-
-    $("quantity").textContent =
-      order.quantity ?? "Not provided";
-
-    $("customerBudget").textContent =
-      formatKES(order.budget);
-
-    $("budgetType").textContent =
-      order.budget_type === "per_item"
-        ? "Per item"
-        : "Total budget";
-
-    const referenceLink =
-      safeExternalUrl(order.reference_url || "");
-
-    if (referenceLink) {
-
-      $("referenceUrl").href = referenceLink;
-
-      $("referenceUrl").textContent =
-        order.reference_url;
-
-    } else {
-
-      $("referenceUrl").removeAttribute("href");
-
-      $("referenceUrl").textContent =
-        "No valid reference provided";
-    }
-
-    $("investigationNotes").value =
-      order.investigation_notes || "";
-
-    $("offeredProductName").value =
-      order.offered_product_name || "";
-
-    $("offeredDescription").value =
-      order.offered_description || "";
-
-    $("offeredPrice").value =
-      order.offered_price ?? "";
-
-    $("deliveryFee").value =
-      order.delivery_fee ?? "";
-
-    $("serviceFee").value =
-      order.service_fee ?? "";
-
-    $("deliveryCompany").value =
-      order.delivery_company || "";
-
-    $("deliveryEstimate").value =
-      order.delivery_estimate || "";
-
-    if (order.offer_expires_at) {
-
-      const date = new Date(order.offer_expires_at);
-
-      const localDate = new Date(
-        date.getTime() -
-        date.getTimezoneOffset() * 60000
-      );
-
-      $("offerExpiresAt").value =
-        localDate.toISOString().slice(0, 16);
-
-    } else {
-
-      $("offerExpiresAt").value = "";
-    }
-
-    $("orderStatus").value =
-      order.status || "pending_review";
-
-    $("paymentStatus").value =
-      order.payment_status || "unpaid";
-
-    $("orderId").textContent = order.id;
-
-    $("createdAt").textContent =
-      formatDate(order.created_at);
-
-    $("updatedAt").textContent =
-      formatDate(order.updated_at);
-
-    const phone = normalizePhone(order.whatsapp);
-
-    if (phone) {
-
-      $("whatsappBtn").href =
-        "https://wa.me/" + phone;
-
-      $("whatsappBtn").classList.remove(
-        "opacity-40",
-        "pointer-events-none"
-      );
-
-    } else {
-
-      $("whatsappBtn").removeAttribute("href");
-
-      $("whatsappBtn").classList.add(
-        "opacity-40",
-        "pointer-events-none"
-      );
-    }
-
-    if (order.email) {
-
-      $("emailBtn").href =
-        "mailto:" + encodeURIComponent(order.email) +
-        "?subject=" +
-        encodeURIComponent("R-Buy Order " + reference);
-
-      $("emailBtn").classList.remove(
-        "opacity-40",
-        "pointer-events-none"
-      );
-
-    } else {
-
-      $("emailBtn").removeAttribute("href");
-
-      $("emailBtn").classList.add(
-        "opacity-40",
-        "pointer-events-none"
-      );
-    }
-
-    updateQuotationTotal();
+    $("updatedAt").textContent = formatDate(data.updated_at);
     updatePaymentPanel();
+
+    if (showSuccess) {
+      showMessage("Order notes and status saved successfully.");
+    }
+
+    return data;
+  } finally {
+    $("saveBtn").disabled = false;
+    $("saveBtn").textContent = "Save Order Notes & Status";
   }
+}
 
-  // ==================================================
-  // QUOTATION CALCULATOR
-  // ==================================================
-
-  function getQuotation() {
-
-    const product = getNumber("offeredPrice");
-    const delivery = getNumber("deliveryFee");
-    const service = getNumber("serviceFee");
-
-    return {
-      product,
-      delivery,
-      service,
-      total: product + delivery + service
-    };
+$("saveBtn").addEventListener("click", async () => {
+  try {
+    await saveOrder(true);
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message || "Unable to save order.", "error");
   }
-
-  function updateQuotationTotal() {
-
-    try {
-
-      const quote = getQuotation();
-
-      $("displayProductPrice").textContent =
-        formatKES(quote.product);
-
-      $("displayDeliveryFee").textContent =
-        formatKES(quote.delivery);
-
-      $("displayServiceFee").textContent =
-        formatKES(quote.service);
-
-      $("quotationTotal").textContent =
-        formatKES(quote.total);
-
-      $("paymentAmount").textContent =
-        formatKES(quote.total);
-
-      updatePaymentPanel();
-
-    } catch (error) {
-
-      $("quotationTotal").textContent =
-        "Invalid amount";
-
-      $("paymentAmount").textContent =
-        "Invalid amount";
-    }
-  }
-
-  [
-    "offeredPrice",
-    "deliveryFee",
-    "serviceFee"
-  ].forEach(id => {
-
-    $(id).addEventListener(
-      "input",
-      updateQuotationTotal
-    );
-
-  });
-
-  // ==================================================
-  // SAVE ORDER NOTES AND STATUS
-  // ==================================================
-
-  async function saveOrder(showSuccess = true) {
-
-    if (!currentOrder) {
-      throw new Error("No order is currently loaded.");
-    }
-
-    const updates = {
-
-      investigation_notes:
-        $("investigationNotes").value.trim(),
-
-      status:
-        $("orderStatus").value,
-
-      updated_at:
-        new Date().toISOString()
-    };
-
-    $("saveBtn").disabled = true;
-
-    $("saveBtn").textContent = "Saving...";
-
-    try {
-
-      const {
-        data,
-        error
-      } = await supabaseClient
-        .from("orders")
-        .update(updates)
-        .eq("id", currentOrder.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      currentOrder = {
-        ...currentOrder,
-        ...data
-      };
-
-      $("updatedAt").textContent =
-        formatDate(data.updated_at);
-
-      updatePaymentPanel();
-
-      if (showSuccess) {
-
-        showMessage(
-          "Order notes and status saved successfully."
-        );
-      }
-
-      return data;
-
-    } finally {
-
-      $("saveBtn").disabled = false;
-
-      $("saveBtn").textContent =
-        "Save Order Notes & Status";
-    }
-  }
-
-  $("saveBtn").addEventListener("click", async () => {
-
-    try {
-
-      await saveOrder(true);
-
-    } catch (error) {
-
-      console.error(error);
-
-      showMessage(
-        error.message || "Unable to save order.",
-        "error"
-      );
-    }
-
-  });
-
-  // ==================================================
-  // LOAD LATEST QUOTATION
-  // ==================================================
-
-  async function loadLatestQuotation() {
-
-    if (!currentOrder) return;
-
-    $("quotationStatus").textContent =
-      "Checking quotation...";
-
-    const {
-      data,
-      error
-    } = await supabaseClient
-      .from("order_quotations")
-      .select(`
-        id,
-        version,
-        status,
-        total_amount,
-        expires_at,
-        sent_at,
-        quotation_responses (
-          decision,
-          accepted_amount,
-          responded_at
-        )
-      `)
-      .eq("order_id", currentOrder.id)
-      .order("version", { ascending: false })
-      .limit(1);
-
-    if (error) {
-
-      console.error(
-        "Quotation status loading error:",
-        error
-      );
-
-      $("quotationStatus").textContent =
-        "Unable to retrieve quotation status";
-
-      $("quotationResponseDetails").textContent =
-        error.message;
-
-      latestQuotation = null;
-
-      updatePaymentPanel();
-
-      return;
-    }
-
-    latestQuotation =
-      data && data.length > 0
-        ? data[0]
-        : null;
-
-    if (!latestQuotation) {
-
-      $("quotationVersion").value =
-        "No quotation issued";
-
-      $("quotationStatus").textContent =
-        "No quotation issued";
-
-      $("quotationResponseDetails").textContent =
-        "Prepare and issue the first customer quotation.";
-
-      updatePaymentPanel();
-
-      return;
-    }
-
-    $("quotationVersion").value =
-      "Version " + latestQuotation.version;
-
-    const response =
-      Array.isArray(latestQuotation.quotation_responses)
-        ? latestQuotation.quotation_responses[0]
-        : null;
-
-    const status = latestQuotation.status;
-
-    if (status === "accepted") {
-
-      $("quotationStatus").textContent =
-        "Customer accepted quotation";
-
-      $("quotationStatus").className =
-        "text-lg font-semibold text-green-400";
-
-      $("quotationResponseDetails").textContent =
-        response
-          ? "Accepted " + formatDate(response.responded_at) +
-            " | Accepted amount: " +
-            formatKES(response.accepted_amount)
-          : "Accepted response recorded.";
-
-    } else if (status === "declined") {
-
-      $("quotationStatus").textContent =
-        "Customer declined quotation";
-
-      $("quotationStatus").className =
-        "text-lg font-semibold text-red-400";
-
-      $("quotationResponseDetails").textContent =
-        response
-          ? "Declined " + formatDate(response.responded_at)
-          : "Customer declined this quotation.";
-
-    } else if (status === "expired") {
-
-      $("quotationStatus").textContent =
-        "Quotation expired";
-
-      $("quotationStatus").className =
-        "text-lg font-semibold text-yellow-400";
-
-      $("quotationResponseDetails").textContent =
-        "Expired " + formatDate(latestQuotation.expires_at);
-
-    } else if (status === "replaced") {
-
-      $("quotationStatus").textContent =
-        "Quotation replaced";
-
-      $("quotationStatus").className =
-        "text-lg font-semibold text-yellow-400";
-
-      $("quotationResponseDetails").textContent =
-        "A newer quotation version exists.";
-
-    } else if (status === "sent") {
-
-      $("quotationStatus").textContent =
-        "Awaiting customer response";
-
-      $("quotationStatus").className =
-        "text-lg font-semibold text-blue-400";
-
-      $("quotationResponseDetails").textContent =
-        "Sent " + formatDate(latestQuotation.sent_at) +
-        " | Expires " + formatDate(latestQuotation.expires_at);
-
-    } else {
-
-      $("quotationStatus").textContent =
-        status || "Unknown status";
-
-      $("quotationResponseDetails").textContent =
-        "Quotation version " + latestQuotation.version;
-    }
-
+});
+
+// ==================================================
+// LOAD LATEST QUOTATION
+// ==================================================
+
+async function loadLatestQuotation() {
+  if (!currentOrder) return;
+
+  $("quotationStatus").textContent = "Checking quotation...";
+
+  const { data, error } = await supabaseClient
+    .from("order_quotations")
+    .select(`
+      id,
+      version,
+      status,
+      total_amount,
+      expires_at,
+      sent_at,
+      quotation_responses (
+        decision,
+        accepted_amount,
+        responded_at
+      )
+    `)
+    .eq("order_id", currentOrder.id)
+    .order("version", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Quotation status loading error:", error);
+    $("quotationStatus").textContent = "Unable to retrieve quotation status";
+    $("quotationResponseDetails").textContent = error.message;
+    latestQuotation = null;
     updatePaymentPanel();
+    return;
   }
 
-  $("refreshQuotationBtn").addEventListener(
-    "click",
-    async () => {
+  latestQuotation = data && data.length > 0 ? data[0] : null;
 
-      await loadLatestQuotation();
+  if (!latestQuotation) {
+    $("quotationVersion").value = "No quotation issued";
+    $("quotationStatus").textContent = "No quotation issued";
+    $("quotationResponseDetails").textContent =
+      "Prepare and issue the first customer quotation.";
+    updatePaymentPanel();
+    return;
+  }
 
-      showMessage(
-        "Quotation status refreshed.",
-        "info"
-      );
+  $("quotationVersion").value = "Version " + latestQuotation.version;
 
-    }
+  const response = Array.isArray(latestQuotation.quotation_responses)
+    ? latestQuotation.quotation_responses[0]
+    : null;
+
+  const status = latestQuotation.status;
+
+  const statusStyles = {
+    accepted: "text-green-700",
+    declined: "text-red-600",
+    expired: "text-yellow-700",
+    replaced: "text-yellow-700",
+    sent: "text-blue-700"
+  };
+
+  $("quotationStatus").className =
+    "text-lg font-semibold " + (statusStyles[status] || "");
+
+  if (status === "accepted") {
+    $("quotationStatus").textContent = "Customer accepted quotation";
+    $("quotationResponseDetails").textContent = response
+      ? "Accepted " + formatDate(response.responded_at) +
+        " | Accepted amount: " + formatKES(response.accepted_amount)
+      : "Accepted response recorded.";
+  } else if (status === "declined") {
+    $("quotationStatus").textContent = "Customer declined quotation";
+    $("quotationResponseDetails").textContent = response
+      ? "Declined " + formatDate(response.responded_at)
+      : "Customer declined this quotation.";
+  } else if (status === "expired") {
+    $("quotationStatus").textContent = "Quotation expired";
+    $("quotationResponseDetails").textContent =
+      "Expired " + formatDate(latestQuotation.expires_at);
+  } else if (status === "replaced") {
+    $("quotationStatus").textContent = "Quotation replaced";
+    $("quotationResponseDetails").textContent =
+      "A newer quotation version exists.";
+  } else if (status === "sent") {
+    $("quotationStatus").textContent = "Awaiting customer response";
+    $("quotationResponseDetails").textContent =
+      "Sent " + formatDate(latestQuotation.sent_at) +
+      " | Expires " + formatDate(latestQuotation.expires_at);
+  } else {
+    $("quotationStatus").textContent = status || "Unknown status";
+    $("quotationResponseDetails").textContent =
+      "Quotation version " + latestQuotation.version;
+  }
+
+  updatePaymentPanel();
+}
+
+$("refreshQuotationBtn").addEventListener("click", async () => {
+  await loadLatestQuotation();
+  showMessage("Quotation status refreshed.", "info");
+});
+
+// ==================================================
+// CREATE SECURE QUOTATION
+// ==================================================
+
+async function createQuotation() {
+  if (!currentOrder) throw new Error("No order is currently loaded.");
+
+  const productName = $("offeredProductName").value.trim();
+  const description = $("offeredDescription").value.trim();
+
+  if (!productName) throw new Error("Enter the name of the product being offered.");
+  if (!description) throw new Error("Enter a description of the product being offered.");
+
+  const quote = getQuotation();
+
+  if (quote.product <= 0 || quote.total <= 0) {
+    throw new Error("The product price and quotation total must be greater than zero.");
+  }
+
+  const expiryValue = $("offerExpiresAt").value;
+
+  if (!expiryValue) throw new Error("Please set a quotation expiry date.");
+
+  const expiryDate = new Date(expiryValue);
+
+  if (Number.isNaN(expiryDate.getTime()) || expiryDate.getTime() <= Date.now()) {
+    throw new Error("The quotation expiry must be a future date and time.");
+  }
+
+  const { data: sessionData, error: sessionError } =
+    await supabaseClient.auth.getSession();
+
+  if (sessionError || !sessionData.session) {
+    throw new Error("Your admin session has expired. Please log in again.");
+  }
+
+  await saveOrder(false);
+
+  const payload = {
+    action: "create",
+    order_id: currentOrder.id,
+    offered_product_name: productName,
+    offered_description: description,
+    offered_price: quote.product,
+    delivery_fee: quote.delivery,
+    service_fee: quote.service,
+    delivery_company: $("deliveryCompany").value.trim(),
+    delivery_estimate: $("deliveryEstimate").value.trim(),
+    expires_at: expiryDate.toISOString()
+  };
+
+  const { data, error } = await supabaseClient.functions.invoke(
+    QUOTATION_FUNCTION,
+    { body: payload }
   );
 
-  // ==================================================
-  // CREATE SECURE QUOTATION
-  // ==================================================
+  if (error) {
+    console.error("Quotation function error:", error);
 
-  async function createQuotation() {
+    let detail = error.message || "Unable to create quotation.";
 
-    if (!currentOrder) {
-      throw new Error("No order is currently loaded.");
+    if (error.context) {
+      try {
+        const responseBody = await error.context.json();
+        if (responseBody.error) detail = responseBody.error;
+      } catch (parseError) {}
     }
 
-    const productName =
-      $("offeredProductName").value.trim();
+    throw new Error(detail);
+  }
 
-    const description =
-      $("offeredDescription").value.trim();
+  if (!data || !data.success) {
+    throw new Error(data?.error || "The quotation function did not confirm creation.");
+  }
 
-    if (!productName) {
-      throw new Error(
-        "Enter the name of the product being offered."
+  const quotationUrl = data.quotation_url || data.url;
+
+  if (!quotationUrl) {
+    throw new Error("Quotation created, but no customer link was returned.");
+  }
+
+  activeQuotationUrl = quotationUrl;
+
+  $("quotationLink").textContent = quotationUrl;
+  $("quotationLinkPanel").classList.remove("hidden");
+  $("copyQuoteBtn").disabled = false;
+
+  await refreshOrderFromDatabase();
+  await loadLatestQuotation();
+
+  return quotationUrl;
+}
+
+async function refreshOrderFromDatabase() {
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("*")
+    .eq("id", currentOrder.id)
+    .single();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  currentOrder = data;
+  $("orderStatus").value = data.status || "pending_review";
+  $("paymentStatus").value = data.payment_status || "unpaid";
+  $("updatedAt").textContent = formatDate(data.updated_at);
+
+  updatePaymentPanel();
+}
+
+// ==================================================
+// SEND QUOTATION THROUGH WHATSAPP
+// ==================================================
+
+$("issueQuoteBtn").addEventListener("click", async () => {
+  if (quotationRequestInProgress) return;
+
+  const confirmed = window.confirm(
+    "Generate a new quotation version for this customer?\n\nAny previous unanswered quotation will be replaced."
+  );
+
+  if (!confirmed) return;
+
+  // Open the tab immediately while the click is still active.
+  // This prevents the browser from blocking the WhatsApp window.
+  const whatsappTab = openWhatsAppTab();
+
+  quotationRequestInProgress = true;
+
+  const button = $("issueQuoteBtn");
+  button.disabled = true;
+  button.textContent = "Generating secure quotation...";
+
+  try {
+    const quotationUrl = await createQuotation();
+    const phone = normalizePhone(currentOrder.whatsapp);
+
+    if (!phone) {
+      if (whatsappTab) whatsappTab.close();
+
+      showMessage(
+        "Quotation created, but this customer has no valid WhatsApp number. Copy the link and send it manually.",
+        "info"
       );
-    }
-
-    if (!description) {
-      throw new Error(
-        "Enter a description of the product being offered."
-      );
+      return;
     }
 
     const quote = getQuotation();
+    const reference = getOrderReference();
 
-    if (quote.product <= 0 || quote.total <= 0) {
-      throw new Error(
-        "The product price and quotation total must be greater than zero."
-      );
-    }
-
-    const expiryValue =
-      $("offerExpiresAt").value;
-
-    if (!expiryValue) {
-      throw new Error(
-        "Please set a quotation expiry date."
-      );
-    }
-
-    const expiryDate =
-      new Date(expiryValue);
-
-    if (
-      Number.isNaN(expiryDate.getTime()) ||
-      expiryDate.getTime() <= Date.now()
-    ) {
-      throw new Error(
-        "The quotation expiry must be a future date and time."
-      );
-    }
-
-    const {
-      data: sessionData,
-      error: sessionError
-    } = await supabaseClient.auth.getSession();
-
-    if (
-      sessionError ||
-      !sessionData.session
-    ) {
-      throw new Error(
-        "Your admin session has expired. Please log in again."
-      );
-    }
-
-    // Save investigation notes first.
-    await saveOrder(false);
-
-    const payload = {
-
-      action: "create",
-
-      order_id: currentOrder.id,
-
-      offered_product_name: productName,
-
-      offered_description: description,
-
-      offered_price: quote.product,
-
-      delivery_fee: quote.delivery,
-
-      service_fee: quote.service,
-
-      delivery_company:
-        $("deliveryCompany").value.trim(),
-
-      delivery_estimate:
-        $("deliveryEstimate").value.trim(),
-
-      expires_at:
-        expiryDate.toISOString()
-    };
-
-    const {
-      data,
-      error
-    } = await supabaseClient.functions.invoke(
-      QUOTATION_FUNCTION,
-      {
-        body: payload
-      }
-    );
-
-    if (error) {
-
-      console.error(
-        "Quotation function error:",
-        error
-      );
-
-      let detail =
-        error.message ||
-        "Unable to create quotation.";
-
-      if (error.context) {
-
-        try {
-
-          const responseBody =
-            await error.context.json();
-
-          if (responseBody.error) {
-            detail = responseBody.error;
-          }
-
-        } catch (parseError) {}
-      }
-
-      throw new Error(detail);
-    }
-
-    if (!data || !data.success) {
-
-      throw new Error(
-        data?.error ||
-        "The quotation function did not confirm creation."
-      );
-    }
-
-    const quotationUrl =
-      data.quotation_url || data.url;
-
-    if (!quotationUrl) {
-
-      throw new Error(
-        "Quotation was created, but the function did not return a customer link. Check the Edge Function response before creating another quotation."
-      );
-    }
-
-    activeQuotationUrl = quotationUrl;
-
-    $("quotationLink").textContent =
-      quotationUrl;
-
-    $("quotationLinkPanel").classList.remove("hidden");
-
-    $("copyQuoteBtn").disabled = false;
-
-    // The Edge Function updates the order quotation fields
-    // and sets its status to awaiting_customer.
-    await refreshOrderFromDatabase();
-
-    await loadLatestQuotation();
-
-    return quotationUrl;
-  }
-
-  async function refreshOrderFromDatabase() {
-
-    const {
-      data,
-      error
-    } = await supabaseClient
-      .from("orders")
-      .select("*")
-      .eq("id", currentOrder.id)
-      .single();
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    currentOrder = data;
-
-    $("orderStatus").value =
-      data.status || "pending_review";
-
-    $("paymentStatus").value =
-      data.payment_status || "unpaid";
-
-    $("updatedAt").textContent =
-      formatDate(data.updated_at);
-
-    updatePaymentPanel();
-  }
-
-  $("issueQuoteBtn").addEventListener(
-    "click",
-    async () => {
-
-      if (quotationRequestInProgress) return;
-
-      const confirmed = window.confirm(
-        "Generate a new quotation version for this customer?\n\nAny previous unanswered quotation will be replaced."
-      );
-
-      if (!confirmed) return;
-
-      quotationRequestInProgress = true;
-
-      const button = $("issueQuoteBtn");
-
-      button.disabled = true;
-
-      button.textContent =
-        "Generating secure quotation...";
-
-      try {
-
-        const quotationUrl =
-          await createQuotation();
-
-        const phone =
-          normalizePhone(currentOrder.whatsapp);
-
-        if (!phone) {
-
-          showMessage(
-            "Quotation created successfully, but this customer has no valid WhatsApp number. Copy the link and send it through another channel.",
-            "info"
-          );
-
-          return;
-        }
-
-        const reference =
-          "RBUY-" +
-          currentOrder.id.substring(0, 8).toUpperCase();
-
-        const message =
+    const message =
 `Hello ${currentOrder.customer_name || "there"},
 
 Thank you for choosing R-Buy!
@@ -1674,7 +1283,7 @@ ORDER REFERENCE: ${reference}
 PRODUCT: ${$("offeredProductName").value.trim()}
 QUANTITY: ${currentOrder.quantity}
 
-TOTAL: ${formatKES(getQuotation().total)}
+TOTAL: ${formatKES(quote.total)}
 
 Please open the secure quotation link below to review the full breakdown and accept or decline the offer.
 
@@ -1685,418 +1294,368 @@ Quotation expiry: ${formatDate($("offerExpiresAt").value)}
 Thank you for choosing R-Buy.
 You can buy anything.`;
 
-        const whatsappUrl =
-          "https://wa.me/" +
-          phone +
-          "?text=" +
-          encodeURIComponent(message);
+    const whatsappUrl =
+      "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
 
-        // Open WhatsApp after the secure link has been generated.
-        const whatsappWindow =
-          window.open(
-            whatsappUrl,
-            "_blank",
-            "noopener,noreferrer"
-          );
+    const opened = redirectWhatsAppTab(whatsappTab, whatsappUrl);
 
-        showMessage(
-          "Quotation created successfully. Version " +
-          (latestQuotation?.version || "") +
-          " is now awaiting the customer's response.",
-          "success"
-        );
+    showMessage(
+      opened
+        ? "Quotation generated successfully. WhatsApp is ready with the secure quotation message. Review it and press Send."
+        : "Quotation created successfully, but the browser blocked WhatsApp. Copy the quotation link and send it manually.",
+      opened ? "success" : "info"
+    );
 
-        if (!whatsappWindow) {
+  } catch (error) {
+    console.error("Quotation creation error:", error);
 
-          showMessage(
-            "Quotation created. Your browser blocked the WhatsApp window. Use Copy Quotation Link to send the customer link manually.",
-            "info"
-          );
-        }
-
-      } catch (error) {
-
-        console.error(
-          "Quotation creation error:",
-          error
-        );
-
-        showMessage(
-          error.message ||
-          "Unable to create quotation.",
-          "error"
-        );
-
-      } finally {
-
-        quotationRequestInProgress = false;
-
-        button.disabled = false;
-
-        button.textContent =
-          "Generate & Send Secure Quotation";
-      }
-
-    }
-  );
-
-  // ==================================================
-  // COPY SECURE QUOTATION LINK
-  // ==================================================
-
-  $("copyQuoteBtn").addEventListener(
-    "click",
-    async () => {
-
-      if (!activeQuotationUrl) {
-
-        showMessage(
-          "Generate a quotation before copying its link.",
-          "error"
-        );
-
-        return;
-      }
-
-      try {
-
-        await navigator.clipboard.writeText(
-          activeQuotationUrl
-        );
-
-        showMessage(
-          "Secure quotation link copied successfully."
-        );
-
-      } catch (error) {
-
-        showMessage(
-          "Unable to copy link. Select and copy the link displayed in the quotation panel.",
-          "error"
-        );
-      }
-
-    }
-  );
-
-  // ==================================================
-  // PAYMENT PANEL
-  // ==================================================
-
-  function updatePaymentPanel() {
-
-    if (!currentOrder) return;
-
-    const phone =
-      normalizePhone(currentOrder.whatsapp);
-
-    $("paymentCustomerName").textContent =
-      currentOrder.customer_name || "Not provided";
-
-    $("paymentPhone").textContent =
-      phone || "Invalid or missing phone number";
-
-    const button = $("sendMpesaBtn");
-
-    const readiness = $("paymentReadiness");
-
-    const quote = latestQuotation;
-
-    let reason = "";
-
-    if (!quote) {
-
-      reason =
-        "A quotation must be issued before payment can be requested.";
-
-    } else if (quote.status !== "accepted") {
-
-      reason =
-        "The latest quotation has not been accepted by the customer.";
-
-    } else if (
-      currentOrder.status !== "awaiting_payment"
-    ) {
-
-      reason =
-        "The quotation is accepted, but the order status is not Awaiting payment.";
-
-    } else if (
-      !phone ||
-      !/^254[71]\d{8}$/.test(phone)
-    ) {
-
-      reason =
-        "The customer's saved WhatsApp number is not a valid Kenyan M-Pesa number.";
-
-    } else if (
-      currentOrder.payment_status === "paid" ||
-      currentOrder.payment_status === "refunded"
-    ) {
-
-      reason =
-        "This order is already marked as paid or refunded.";
-
-    } else if (
-      quote.expires_at &&
-      new Date(quote.expires_at).getTime() <= Date.now()
-    ) {
-
-      reason =
-        "The accepted quotation has expired. A new quotation is required.";
-
+    if (whatsappTab && !whatsappTab.closed) {
+      whatsappTab.close();
     }
 
-    if (reason) {
+    showMessage(error.message || "Unable to create quotation.", "error");
 
-      readiness.textContent = reason;
+  } finally {
+    quotationRequestInProgress = false;
+    button.disabled = false;
+    button.textContent = "Generate & Send Secure Quotation";
+  }
+});
 
-      readiness.className =
-        "text-sm text-yellow-400";
+// ==================================================
+// COPY QUOTATION LINK
+// ==================================================
 
-      button.disabled = true;
-
-    } else {
-
-      readiness.textContent =
-        "Customer accepted the latest quotation. Ready for payment request.";
-
-      readiness.className =
-        "text-sm text-green-400";
-
-      button.disabled =
-        paymentRequestInProgress;
-    }
-
-    if (paymentRequestInProgress) {
-      button.disabled = true;
-    }
+$("copyQuoteBtn").addEventListener("click", async () => {
+  if (!activeQuotationUrl) {
+    showMessage("Generate a quotation before copying its link.", "error");
+    return;
   }
 
-  // ==================================================
-  // M-PESA STK PUSH
-  // ==================================================
+  try {
+    await navigator.clipboard.writeText(activeQuotationUrl);
+    showMessage("Secure quotation link copied successfully.");
+  } catch (error) {
+    showMessage(
+      "Unable to copy link. Select and copy the link displayed in the quotation panel.",
+      "error"
+    );
+  }
+});
 
-  $("sendMpesaBtn").addEventListener(
-    "click",
-    async () => {
+// ==================================================
+// PAYMENT READINESS
+// ==================================================
 
-      if (paymentRequestInProgress) return;
+function updatePaymentPanel() {
+  if (!currentOrder) return;
 
-      if (!currentOrder) {
+  const phone = normalizePhone(currentOrder.whatsapp);
 
-        showPaymentResult(
-          "No order is loaded.",
-          "error"
-        );
+  $("paymentCustomerName").textContent =
+    currentOrder.customer_name || "Not provided";
 
-        return;
-      }
+  $("paymentPhone").textContent =
+    phone || "Invalid or missing phone number";
 
-      // Recheck quotation status before proceeding.
-      await loadLatestQuotation();
+  const mpesaButton = $("sendMpesaBtn");
+  const bankButton = $("sendBankDetailsBtn");
+  const readiness = $("paymentReadiness");
 
-      if (
-        !latestQuotation ||
-        latestQuotation.status !== "accepted"
-      ) {
+  let reason = "";
 
-        showPaymentResult(
-          "Payment cannot proceed because the latest quotation has not been accepted.",
-          "error"
-        );
-
-        return;
-      }
-
-      const confirmed = window.confirm(
-        "Send an M-Pesa STK Push to " +
-        currentOrder.whatsapp +
-        " for the accepted quotation?\n\n" +
-        "Amount: " +
-        formatKES(latestQuotation.total_amount)
-      );
-
-      if (!confirmed) return;
-
-      paymentRequestInProgress = true;
-
-      const button = $("sendMpesaBtn");
-
-      button.disabled = true;
-
-      button.textContent =
-        "Preparing payment request...";
-
-      try {
-
-        const savedOrder =
-          await saveOrder(false);
-
-        if (
-          savedOrder.status !== "awaiting_payment"
-        ) {
-
-          throw new Error(
-            "The order must be marked Awaiting payment before sending an STK Push."
-          );
-        }
-
-        if (
-          savedOrder.payment_status === "paid" ||
-          savedOrder.payment_status === "refunded"
-        ) {
-
-          throw new Error(
-            "This order is already marked as paid or refunded."
-          );
-        }
-
-        const {
-          data: sessionData,
-          error: sessionError
-        } = await supabaseClient.auth.getSession();
-
-        if (
-          sessionError ||
-          !sessionData.session
-        ) {
-
-          throw new Error(
-            "Your admin session has expired. Please log in again."
-          );
-        }
-
-        button.textContent =
-          "Contacting IntaSend...";
-
-        const {
-          data,
-          error
-        } = await supabaseClient.functions.invoke(
-          PAYMENT_FUNCTION,
-          {
-            body: {
-              order_id: currentOrder.id
-            }
-          }
-        );
-
-        if (error) {
-
-          console.error(
-            "Payment function error:",
-            error
-          );
-
-          let detail =
-            error.message ||
-            "The payment request could not be completed.";
-
-          if (error.context) {
-
-            try {
-
-              const responseBody =
-                await error.context.json();
-
-              if (responseBody.error) {
-                detail = responseBody.error;
-              }
-
-            } catch (parseError) {}
-          }
-
-          throw new Error(detail);
-        }
-
-        if (!data || !data.success) {
-
-          throw new Error(
-            data?.error ||
-            "IntaSend did not confirm the payment request."
-          );
-        }
-
-        showPaymentResult(
-          "STK Push request successfully initiated.\n\n" +
-          "Order: RBUY-" +
-          String(data.order_number) +
-          "\nAmount: " +
-          formatKES(data.amount) +
-          "\nPhone: " +
-          data.phone +
-          "\nInvoice reference: " +
-          data.invoice_id +
-          "\n\nThe customer should check their phone and enter their M-Pesa PIN if they wish to pay. Payment is still awaiting provider confirmation.",
-          "success"
-        );
-
-        $("paymentStatus").value = "pending";
-
-        currentOrder.payment_status = "pending";
-
-        updatePaymentPanel();
-
-        showMessage(
-          "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
-          "success"
-        );
-
-      } catch (error) {
-
-        console.error(
-          "STK Push error:",
-          error
-        );
-
-        showPaymentResult(
-          error.message ||
-          "Unable to initiate the M-Pesa payment request.",
-          "error"
-        );
-
-      } finally {
-
-        paymentRequestInProgress = false;
-
-        button.textContent =
-          "Send M-Pesa STK Push";
-
-        updatePaymentPanel();
-      }
-
-    }
-  );
-
-  // ==================================================
-  // INITIALIZE
-  // ==================================================
-
-  async function initializePage() {
-
-    try {
-
-      const authorized =
-        await checkAdmin();
-
-      if (!authorized) return;
-
-      await loadOrder();
-
-    } catch (error) {
-
-      console.error(
-        "Page initialization error:",
-        error
-      );
-
-      loadingState.textContent =
-        "An unexpected error occurred while loading this order.";
-    }
+  if (!latestQuotation) {
+    reason = "A quotation must be issued before payment can be requested.";
+  } else if (latestQuotation.status !== "accepted") {
+    reason = "The latest quotation has not been accepted by the customer.";
+  } else if (currentOrder.status !== "awaiting_payment") {
+    reason = "The quotation is accepted, but the order status is not Awaiting payment.";
+  } else if (
+    latestQuotation.expires_at &&
+    new Date(latestQuotation.expires_at).getTime() <= Date.now()
+  ) {
+    reason = "The accepted quotation has expired. A new quotation is required.";
+  } else if (
+    currentOrder.payment_status === "paid" ||
+    currentOrder.payment_status === "refunded"
+  ) {
+    reason = "This order is already marked as paid or refunded.";
   }
 
-  initializePage();
+  if (reason) {
+    readiness.textContent = reason;
+    readiness.className = "text-sm text-yellow-700";
+    mpesaButton.disabled = true;
+    bankButton.disabled = true;
+  } else {
+    readiness.textContent =
+      "Customer accepted the latest quotation. Payment methods are ready.";
+
+    readiness.className = "text-sm text-green-700";
+
+    mpesaButton.disabled =
+      paymentRequestInProgress || !/^254[71]\d{8}$/.test(phone);
+
+    bankButton.disabled = false;
+  }
+
+  if (paymentRequestInProgress) {
+    mpesaButton.disabled = true;
+    bankButton.disabled = true;
+  }
+}
+
+// ==================================================
+// M-PESA STK PUSH
+// ==================================================
+
+$("sendMpesaBtn").addEventListener("click", async () => {
+  if (paymentRequestInProgress) return;
+
+  if (!currentOrder) {
+    showPaymentResult("No order is loaded.", "error");
+    return;
+  }
+
+  await loadLatestQuotation();
+
+  if (!latestQuotation || latestQuotation.status !== "accepted") {
+    showPaymentResult(
+      "Payment cannot proceed because the latest quotation has not been accepted.",
+      "error"
+    );
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Send an M-Pesa STK Push to " +
+    currentOrder.whatsapp +
+    " for the accepted quotation?\n\nAmount: " +
+    formatKES(latestQuotation.total_amount)
+  );
+
+  if (!confirmed) return;
+
+  paymentRequestInProgress = true;
+
+  const button = $("sendMpesaBtn");
+  button.disabled = true;
+  button.textContent = "Preparing payment request...";
+
+  updatePaymentPanel();
+
+  try {
+    const savedOrder = await saveOrder(false);
+
+    if (savedOrder.status !== "awaiting_payment") {
+      throw new Error(
+        "The order must be marked Awaiting payment before sending an STK Push."
+      );
+    }
+
+    if (
+      savedOrder.payment_status === "paid" ||
+      savedOrder.payment_status === "refunded"
+    ) {
+      throw new Error("This order is already marked as paid or refunded.");
+    }
+
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Your admin session has expired. Please log in again.");
+    }
+
+    button.textContent = "Contacting IntaSend...";
+
+    const { data, error } = await supabaseClient.functions.invoke(
+      PAYMENT_FUNCTION,
+      {
+        body: { order_id: currentOrder.id }
+      }
+    );
+
+    if (error) {
+      console.error("Payment function error:", error);
+
+      let detail = error.message || "The payment request could not be completed.";
+
+      if (error.context) {
+        try {
+          const responseBody = await error.context.json();
+          if (responseBody.error) detail = responseBody.error;
+        } catch (parseError) {}
+      }
+
+      throw new Error(detail);
+    }
+
+    if (!data || !data.success) {
+      throw new Error(
+        data?.error || "IntaSend did not confirm the payment request."
+      );
+    }
+
+    showPaymentResult(
+      "STK Push request successfully initiated.\n\n" +
+      "Order: RBUY-" + String(data.order_number) +
+      "\nAmount: " + formatKES(data.amount) +
+      "\nPhone: " + data.phone +
+      "\nInvoice reference: " + data.invoice_id +
+      "\n\nThe customer should check their phone and enter their M-Pesa PIN if they wish to pay. Payment is still awaiting provider confirmation.",
+      "success"
+    );
+
+    $("paymentStatus").value = "pending";
+    currentOrder.payment_status = "pending";
+
+    showMessage(
+      "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
+      "success"
+    );
+
+  } catch (error) {
+    console.error("STK Push error:", error);
+
+    showPaymentResult(
+      error.message || "Unable to initiate the M-Pesa payment request.",
+      "error"
+    );
+
+  } finally {
+    paymentRequestInProgress = false;
+    button.textContent = "Send M-Pesa STK Push";
+    updatePaymentPanel();
+  }
+});
+
+// ==================================================
+// SEND BANK DETAILS THROUGH WHATSAPP
+// ==================================================
+
+$("sendBankDetailsBtn").addEventListener("click", async () => {
+  if (!currentOrder) {
+    showPaymentResult("No order is loaded.", "error");
+    return;
+  }
+
+  // Check the latest quotation before sending bank details.
+  await loadLatestQuotation();
+
+  if (!latestQuotation || latestQuotation.status !== "accepted") {
+    showMessage(
+      "The customer must accept the latest quotation before payment instructions can be sent.",
+      "error"
+    );
+    return;
+  }
+
+  if (currentOrder.status !== "awaiting_payment") {
+    showMessage(
+      "Change the order status to Awaiting payment before sending bank details.",
+      "error"
+    );
+    return;
+  }
+
+  if (
+    currentOrder.payment_status === "paid" ||
+    currentOrder.payment_status === "refunded"
+  ) {
+    showMessage("This order is already marked as paid or refunded.", "error");
+    return;
+  }
+
+  const phone = normalizePhone(currentOrder.whatsapp);
+
+  if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+    showMessage("The customer's WhatsApp number is invalid.", "error");
+    return;
+  }
+
+  const amount = Number(latestQuotation.total_amount || 0);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showMessage("The accepted quotation amount is invalid.", "error");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Send Co-operative Bank payment details to " +
+    (currentOrder.customer_name || "this customer") +
+    "?\n\nAmount: " + formatKES(amount) +
+    "\nReference: " + getOrderReference()
+  );
+
+  if (!confirmed) return;
+
+  const tab = openWhatsAppTab();
+
+  const message =
+`Hello ${currentOrder.customer_name || "there"},
+
+Thank you for choosing R-Buy!
+
+Your quotation has been accepted. You can now complete payment using the bank transfer option below.
+
+ORDER REFERENCE: ${getOrderReference()}
+
+ACCEPTED QUOTATION AMOUNT: ${formatKES(amount)}
+
+BANK: ${BANK_DETAILS.bankName}
+ACCOUNT NAME: ${BANK_DETAILS.accountName}
+
+PAYBILL: ${BANK_DETAILS.paybill}
+ACCOUNT NUMBER: ${BANK_DETAILS.accountNumber}
+
+PAYMENT REFERENCE: ${getOrderReference()}
+
+Please use the payment reference above when making your transfer so we can identify your payment.
+
+Once you have completed the transfer, kindly share your transaction confirmation/reference with us.
+
+Please note that your order will proceed once the payment has been verified.
+
+Thank you for choosing R-Buy.
+You can buy anything.`;
+
+  const whatsappUrl =
+    "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+
+  const opened = redirectWhatsAppTab(tab, whatsappUrl);
+
+  if (opened) {
+    showMessage(
+      "Bank transfer instructions prepared in WhatsApp. Review the details and press Send.",
+      "success"
+    );
+  } else {
+    showMessage(
+      "The browser blocked WhatsApp. Please contact the customer manually using the bank details displayed on this page.",
+      "error"
+    );
+  }
+});
+
+// ==================================================
+// INITIALIZE
+// ==================================================
+
+async function initializePage() {
+  try {
+    const authorized = await checkAdmin();
+    if (!authorized) return;
+
+    await loadOrder();
+  } catch (error) {
+    console.error("Page initialization error:", error);
+    loadingState.textContent =
+      "An unexpected error occurred while loading this order.";
+  }
+}
+
+initializePage();
 
 </script>
 
