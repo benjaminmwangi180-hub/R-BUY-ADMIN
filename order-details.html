@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,6 +188,10 @@ body {
   font-weight:700;
 }
 
+.product-card button {
+  min-width:72px;
+}
+
 @media(max-width:768px) {
   main { padding:16px!important; }
 }
@@ -357,10 +360,7 @@ body {
   <button id="saveBtn" class="btn btn-secondary mt-5">Save Order Notes & Status</button>
 </section>
 
-<!-- ================================================= -->
 <!-- PRODUCT DISCOVERY -->
-<!-- ================================================= -->
-
 <section class="panel p-5" id="productDiscoverySection">
 
   <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
@@ -378,7 +378,6 @@ body {
     </span>
   </div>
 
-  <!-- PRODUCT FORM -->
   <div class="soft-panel p-5 mb-6">
 
     <div class="flex justify-between items-center gap-3 mb-5">
@@ -459,11 +458,12 @@ Condition: Brand new"></textarea>
     </div>
   </div>
 
-  <!-- SAVED PRODUCT OPTIONS -->
   <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
     <div>
       <h4 class="font-bold">Sourced Product Alternatives</h4>
-      <p class="text-xs mt-1" style="color:var(--muted)">These products will be visible to the customer after publishing.</p>
+      <p class="text-xs mt-1" style="color:var(--muted)">
+        These products will be visible to the customer after publishing.
+      </p>
     </div>
 
     <button id="refreshOptionsBtn" class="btn btn-secondary">Refresh products</button>
@@ -473,7 +473,6 @@ Condition: Brand new"></textarea>
     <div class="soft-panel p-5 text-sm" style="color:var(--muted)">Loading product alternatives...</div>
   </div>
 
-  <!-- PUBLISH -->
   <div class="border-t mt-7 pt-6" style="border-color:var(--line)">
     <div class="flex flex-wrap justify-between items-center gap-4">
       <div>
@@ -500,13 +499,15 @@ Condition: Brand new"></textarea>
         <button id="sendSelectionEmailBtn" class="btn btn-email">Send via Email</button>
       </div>
     </div>
+
+    <p id="selectionLinkRecoveryNote" class="hidden text-xs mt-4 text-amber-700">
+      The private link is not stored in readable form. If you reload this page after publishing,
+      publish again to generate a fresh link.
+    </p>
   </div>
 </section>
 
-<!-- ================================================= -->
 <!-- CUSTOMER SELECTION REVIEW -->
-<!-- ================================================= -->
-
 <section class="panel p-5" id="selectionReviewSection">
 
   <div class="accent-line"></div>
@@ -538,10 +539,7 @@ Condition: Brand new"></textarea>
   </div>
 </section>
 
-<!-- ================================================= -->
 <!-- QUOTATION BUILDER -->
-<!-- ================================================= -->
-
 <section class="panel p-5">
 
   <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
@@ -652,10 +650,7 @@ Condition: Brand new"></textarea>
   </p>
 </section>
 
-<!-- ================================================= -->
 <!-- PAYMENT CENTRE -->
-<!-- ================================================= -->
-
 <section class="panel p-5">
 
   <div class="accent-line"></div>
@@ -679,8 +674,8 @@ Condition: Brand new"></textarea>
       <p id="paymentPhone" class="text-lg font-bold text-green-700"></p>
 
       <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
-        <p class="label">Quotation amount</p>
-        <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0</p>
+        <p class="label">Accepted quotation amount</p>
+        <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</p>
       </div>
 
       <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send M-Pesa STK Push</button>
@@ -703,16 +698,16 @@ Condition: Brand new"></textarea>
       <p class="text-lg font-bold">01101509803001</p>
 
       <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
-        <p class="label">Amount to transfer</p>
+        <p class="label">Accepted quotation amount</p>
         <p id="bankPaymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</p>
       </div>
 
       <p class="label mt-4">Payment reference</p>
       <p id="bankPaymentReference" class="font-bold text-sm break-all">Loading...</p>
 
-      <button id="sendBankDetailsBtn" class="btn btn-bank w-full mt-5">Send Bank Details via WhatsApp</button>
+      <button id="sendBankDetailsBtn" class="btn btn-bank w-full mt-5" disabled>Send Bank Details via WhatsApp</button>
       <p class="text-xs mt-3" style="color:var(--muted)">
-        Prepares payment instructions with the exact amount and order reference.
+        Prepares payment instructions with the exact accepted amount and order reference.
       </p>
     </div>
 
@@ -791,6 +786,7 @@ let paymentRequestInProgress = false;
 let quotationRequestInProgress = false;
 let bankRequestInProgress = false;
 let productRequestInProgress = false;
+let selectionReviewInProgress = false;
 
 const $ = id => document.getElementById(id);
 
@@ -984,6 +980,32 @@ async function callProductFunction(payload) {
   return data;
 }
 
+async function callQuotationFunction(payload) {
+  const { data, error } = await supabaseClient.functions.invoke(
+    QUOTATION_FUNCTION,
+    { body: payload }
+  );
+
+  if (error) {
+    let detail = error.message || "Quotation operation failed.";
+
+    if (error.context) {
+      try {
+        const responseBody = await error.context.json();
+        if (responseBody.error) detail = responseBody.error;
+      } catch (e) {}
+    }
+
+    throw new Error(detail);
+  }
+
+  if (!data || !data.success) {
+    throw new Error(data?.error || "The quotation function did not confirm the operation.");
+  }
+
+  return data;
+}
+
 // ==================================================
 // AUTHENTICATION
 // ==================================================
@@ -1037,7 +1059,8 @@ async function loadOrder() {
     .single();
 
   if (error || !data) {
-    loadingState.textContent = "Unable to load this order. Check the order ID and your admin permissions.";
+    loadingState.textContent =
+      "Unable to load this order. Check the order ID and your admin permissions.";
     console.error("Order loading error:", error);
     return;
   }
@@ -1046,9 +1069,14 @@ async function loadOrder() {
 
   renderOrder(data);
 
-  await loadProductOptions();
-  await loadCustomerSelection();
-  await loadLatestQuotation();
+  await Promise.all([
+    loadProductOptions(),
+    loadCustomerSelection(),
+    loadLatestQuotation()
+  ]);
+
+  updateQuotationGate();
+  updatePaymentPanel();
 
   loadingState.classList.add("hidden");
   pageContent.classList.remove("hidden");
@@ -1072,7 +1100,8 @@ function renderOrder(order) {
   $("productDescription").textContent = order.product_description || "No description";
   $("quantity").textContent = order.quantity ?? "Not provided";
   $("customerBudget").textContent = formatKES(order.budget);
-  $("budgetType").textContent = order.budget_type === "per_item" ? "Per item" : "Total budget";
+  $("budgetType").textContent =
+    order.budget_type === "per_item" ? "Per item" : "Total budget";
 
   const referenceLink = safeExternalUrl(order.reference_url || "");
 
@@ -1133,6 +1162,8 @@ function renderOrder(order) {
 
   updateQuotationTotal();
   updateBankReference();
+  updateSelectionStatusBadge();
+  updateQuotationGate();
   updatePaymentPanel();
 }
 
@@ -1205,6 +1236,7 @@ async function saveOrder(showSuccess = true) {
 
     currentOrder = { ...currentOrder, ...data };
     $("updatedAt").textContent = formatDate(data.updated_at);
+    $("paymentStatus").value = data.payment_status || "unpaid";
 
     updatePaymentPanel();
 
@@ -1322,8 +1354,7 @@ async function uploadProductImages(files) {
       ? "jpg"
       : file.type.split("/")[1];
 
-    const path =
-      `${currentOrder.id}/${crypto.randomUUID()}.${extension}`;
+    const path = `${currentOrder.id}/${crypto.randomUUID()}.${extension}`;
 
     const { error: uploadError } = await supabaseClient.storage
       .from(IMAGE_BUCKET)
@@ -1353,7 +1384,8 @@ $("saveOptionBtn").addEventListener("click", async () => {
 
   const productName = $("optionProductName").value.trim();
   const description = $("optionDescription").value.trim();
-  const price = Number($("optionPrice").value);
+  const priceValue = $("optionPrice").value.trim();
+  const price = Number(priceValue);
 
   if (!productName) {
     showMessage("Enter the product name.", "error");
@@ -1365,8 +1397,12 @@ $("saveOptionBtn").addEventListener("click", async () => {
     return;
   }
 
-  if (!Number.isFinite(price) || price < 0 || $("optionPrice").value === "") {
-    showMessage("Enter a valid product price.", "error");
+  if (
+    priceValue === "" ||
+    !Number.isFinite(price) ||
+    price <= 0
+  ) {
+    showMessage("Enter a valid product price greater than zero.", "error");
     return;
   }
 
@@ -1412,9 +1448,7 @@ $("saveOptionBtn").addEventListener("click", async () => {
     await refreshOrderFromDatabase();
     await loadProductOptions();
 
-    showMessage(
-      result.message || "Product alternative saved successfully."
-    );
+    showMessage(result.message || "Product alternative saved successfully.");
 
   } catch (error) {
     console.error(error);
@@ -1445,7 +1479,8 @@ async function loadProductOptions() {
 
   if (error) {
     console.error(error);
-    $("productOptionsList").textContent = "Unable to load product alternatives: " + error.message;
+    $("productOptionsList").textContent =
+      "Unable to load product alternatives: " + error.message;
     return;
   }
 
@@ -1472,10 +1507,10 @@ function renderProductOptions() {
     const card = document.createElement("div");
     card.className = "product-card";
 
-    if (option.image_urls && option.image_urls.length) {
+    if (Array.isArray(option.image_urls) && option.image_urls.length) {
       const img = document.createElement("img");
       img.src = option.image_urls[0];
-      img.alt = option.product_name;
+      img.alt = option.product_name || "Product photograph";
       img.className = "product-image";
       card.appendChild(img);
     } else {
@@ -1490,12 +1525,12 @@ function renderProductOptions() {
 
     const title = document.createElement("h4");
     title.className = "font-bold";
-    title.textContent = option.product_name;
+    title.textContent = option.product_name || "Unnamed product";
 
     const brand = document.createElement("p");
     brand.className = "text-xs mt-1";
     brand.style.color = "var(--muted)";
-    brand.textContent = [option.brand, option.model].filter(Boolean).join(" · ");
+    brand.textContent = [option.brand, option.model].filter(Boolean).join(" · ") || "Brand/model not specified";
 
     const price = document.createElement("p");
     price.className = "text-xl font-bold mt-3";
@@ -1504,7 +1539,7 @@ function renderProductOptions() {
 
     const description = document.createElement("p");
     description.className = "text-sm mt-3 whitespace-pre-wrap";
-    description.textContent = option.description;
+    description.textContent = option.description || "No description provided.";
 
     const supplier = document.createElement("p");
     supplier.className = "text-xs mt-3";
@@ -1610,7 +1645,7 @@ $("publishSelectionBtn").addEventListener("click", async () => {
   }
 
   const confirmed = window.confirm(
-    "Publish the product shortlist for this customer?\n\nAll saved product alternatives will become visible to the customer."
+    "Publish the product shortlist for this customer?\n\nAll saved product alternatives will become visible to the customer. If a previous link exists, this may generate a new private link."
   );
 
   if (!confirmed) return;
@@ -1625,10 +1660,15 @@ $("publishSelectionBtn").addEventListener("click", async () => {
       order_id: currentOrder.id
     });
 
+    if (!result.selection_url) {
+      throw new Error("The shortlist was published, but no customer link was returned.");
+    }
+
     activeSelectionUrl = result.selection_url;
 
     $("selectionLinkText").textContent = activeSelectionUrl;
     $("selectionLinkPanel").classList.remove("hidden");
+    $("selectionLinkRecoveryNote").classList.add("hidden");
 
     await refreshOrderFromDatabase();
     await loadProductOptions();
@@ -1649,7 +1689,10 @@ $("publishSelectionBtn").addEventListener("click", async () => {
 // ==================================================
 
 $("copySelectionLinkBtn").addEventListener("click", async () => {
-  if (!activeSelectionUrl) return;
+  if (!activeSelectionUrl) {
+    showMessage("Publish the shortlist again to generate a fresh private link.", "error");
+    return;
+  }
 
   try {
     await copyText(activeSelectionUrl);
@@ -1665,7 +1708,7 @@ $("copySelectionLinkBtn").addEventListener("click", async () => {
 
 $("sendSelectionWhatsAppBtn").addEventListener("click", () => {
   if (!activeSelectionUrl) {
-    showMessage("Publish the shortlist first.", "error");
+    showMessage("Publish the shortlist again to generate a fresh private link.", "error");
     return;
   }
 
@@ -1706,7 +1749,7 @@ You can buy anything.`;
 
 $("sendSelectionEmailBtn").addEventListener("click", () => {
   if (!activeSelectionUrl) {
-    showMessage("Publish the shortlist first.", "error");
+    showMessage("Publish the shortlist again to generate a fresh private link.", "error");
     return;
   }
 
@@ -1834,7 +1877,7 @@ async function loadCustomerSelection() {
 
   const status = document.createElement("span");
   status.className = "status-pill mt-3";
-  status.textContent = latest.status.replaceAll("_", " ");
+  status.textContent = String(latest.status || "unknown").replaceAll("_", " ");
 
   const statusColors = {
     pending_review: ["#fff4df", "#8a5a00"],
@@ -1876,14 +1919,14 @@ async function loadCustomerSelection() {
 
   card.append(heading, status, details);
 
-  if (option?.image_urls?.length) {
+  if (Array.isArray(option?.image_urls) && option.image_urls.length) {
     const images = document.createElement("div");
     images.className = "flex flex-wrap gap-3 mt-4";
 
     option.image_urls.forEach(url => {
       const image = document.createElement("img");
       image.src = url;
-      image.alt = option.product_name;
+      image.alt = option.product_name || "Selected product";
       image.className = "w-24 h-24 object-cover rounded-lg";
       images.appendChild(image);
     });
@@ -1894,14 +1937,18 @@ async function loadCustomerSelection() {
   container.appendChild(card);
 
   if (latest.status === "pending_review") {
-    $("reviewWorkflowStatus").textContent = "Customer selection submitted. Admin review required.";
+    $("reviewWorkflowStatus").textContent =
+      "Customer selection submitted. Admin review required.";
     $("selectionDecisionPanel").classList.remove("hidden");
   } else if (latest.status === "approved") {
-    $("reviewWorkflowStatus").textContent = "Customer selection approved. Quotation can be prepared.";
+    $("reviewWorkflowStatus").textContent =
+      "Customer selection approved. Quotation can be prepared.";
   } else if (latest.status === "rejected") {
-    $("reviewWorkflowStatus").textContent = "Selection rejected. Customer may submit another choice.";
+    $("reviewWorkflowStatus").textContent =
+      "Selection rejected. Customer may submit another choice.";
   } else {
-    $("reviewWorkflowStatus").textContent = "This selection has been superseded.";
+    $("reviewWorkflowStatus").textContent =
+      "This selection has been superseded.";
   }
 
   updateQuotationGate();
@@ -1912,6 +1959,8 @@ async function loadCustomerSelection() {
 // ==================================================
 
 async function reviewCustomerSelection(decision) {
+  if (selectionReviewInProgress) return;
+
   if (!pendingSelection) {
     showMessage("There is no pending customer selection to review.", "error");
     return;
@@ -1925,6 +1974,7 @@ async function reviewCustomerSelection(decision) {
 
   if (!confirmed) return;
 
+  selectionReviewInProgress = true;
   $("approveSelectionBtn").disabled = true;
   $("rejectSelectionBtn").disabled = true;
 
@@ -1944,6 +1994,7 @@ async function reviewCustomerSelection(decision) {
   } catch (error) {
     showMessage(error.message || "Unable to review selection.", "error");
   } finally {
+    selectionReviewInProgress = false;
     $("approveSelectionBtn").disabled = false;
     $("rejectSelectionBtn").disabled = false;
   }
@@ -1959,7 +2010,8 @@ $("rejectSelectionBtn").addEventListener("click", () => reviewCustomerSelection(
 function updateQuotationGate() {
   const approved = currentOrder?.product_selection_status === "approved";
 
-  $("issueQuoteBtn").disabled = !approved || quotationRequestInProgress;
+  $("issueQuoteBtn").disabled =
+    !approved || quotationRequestInProgress;
 
   if (approved) {
     $("quotationApprovalNotice").textContent =
@@ -2001,15 +2053,12 @@ function updateQuotationTotal() {
     $("displayDeliveryFee").textContent = formatKES(quote.delivery);
     $("displayServiceFee").textContent = formatKES(quote.service);
     $("quotationTotal").textContent = formatKES(quote.total);
-    $("paymentAmount").textContent = formatKES(quote.total);
-    $("bankPaymentAmount").textContent = formatKES(quote.total);
 
-    updatePaymentPanel();
   } catch (error) {
     $("quotationTotal").textContent = "Invalid amount";
-    $("paymentAmount").textContent = "Invalid amount";
-    $("bankPaymentAmount").textContent = "Invalid amount";
   }
+
+  updatePaymentPanel();
 }
 
 ["offeredPrice", "deliveryFee", "serviceFee"].forEach(id => {
@@ -2069,7 +2118,8 @@ async function loadLatestQuotation() {
   if (!latestQuotation) {
     $("quotationVersion").value = "No quotation issued";
     $("quotationStatus").textContent = "No quotation issued";
-    $("quotationResponseDetails").textContent = "Prepare and issue the first customer quotation.";
+    $("quotationResponseDetails").textContent =
+      "Prepare and issue the first customer quotation.";
     updatePaymentPanel();
     return;
   }
@@ -2106,10 +2156,12 @@ async function loadLatestQuotation() {
       : "Customer declined this quotation.";
   } else if (status === "expired") {
     $("quotationStatus").textContent = "Quotation expired";
-    $("quotationResponseDetails").textContent = "Expired " + formatDate(latestQuotation.expires_at);
+    $("quotationResponseDetails").textContent =
+      "Expired " + formatDate(latestQuotation.expires_at);
   } else if (status === "replaced") {
     $("quotationStatus").textContent = "Quotation replaced";
-    $("quotationResponseDetails").textContent = "A newer quotation version exists.";
+    $("quotationResponseDetails").textContent =
+      "A newer quotation version exists.";
   } else if (status === "sent") {
     $("quotationStatus").textContent = "Awaiting customer response";
     $("quotationResponseDetails").textContent =
@@ -2117,7 +2169,8 @@ async function loadLatestQuotation() {
       " | Expires " + formatDate(latestQuotation.expires_at);
   } else {
     $("quotationStatus").textContent = status || "Unknown status";
-    $("quotationResponseDetails").textContent = "Quotation version " + latestQuotation.version;
+    $("quotationResponseDetails").textContent =
+      "Quotation version " + latestQuotation.version;
   }
 
   updatePaymentPanel();
@@ -2129,11 +2182,43 @@ $("refreshQuotationBtn").addEventListener("click", async () => {
 });
 
 // ==================================================
+// REFRESH ORDER FROM DATABASE
+// ==================================================
+
+async function refreshOrderFromDatabase() {
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("*")
+    .eq("id", currentOrder.id)
+    .single();
+
+  if (error) {
+    console.error("Order refresh error:", error);
+    throw new Error("Unable to refresh the order from the database.");
+  }
+
+  currentOrder = data;
+
+  $("orderStatus").value = data.status || "pending_review";
+  $("paymentStatus").value = data.payment_status || "unpaid";
+  $("updatedAt").textContent = formatDate(data.updated_at);
+
+  updatePaymentPanel();
+  updateSelectionStatusBadge();
+  updateQuotationGate();
+
+  return data;
+}
+
+// ==================================================
 // CREATE SECURE QUOTATION
 // ==================================================
 
 async function createQuotation() {
   if (!currentOrder) throw new Error("No order is currently loaded.");
+
+  // Refresh approval status before creating the quotation.
+  await refreshOrderFromDatabase();
 
   if (currentOrder.product_selection_status !== "approved") {
     throw new Error("The customer's product selection must be approved first.");
@@ -2142,8 +2227,13 @@ async function createQuotation() {
   const productName = $("offeredProductName").value.trim();
   const description = $("offeredDescription").value.trim();
 
-  if (!productName) throw new Error("Enter the name of the product being offered.");
-  if (!description) throw new Error("Enter a description of the product being offered.");
+  if (!productName) {
+    throw new Error("Enter the name of the product being offered.");
+  }
+
+  if (!description) {
+    throw new Error("Enter a description of the product being offered.");
+  }
 
   const quote = getQuotation();
 
@@ -2152,11 +2242,17 @@ async function createQuotation() {
   }
 
   const expiryValue = $("offerExpiresAt").value;
-  if (!expiryValue) throw new Error("Please set a quotation expiry date.");
+
+  if (!expiryValue) {
+    throw new Error("Please set a quotation expiry date.");
+  }
 
   const expiryDate = new Date(expiryValue);
 
-  if (Number.isNaN(expiryDate.getTime()) || expiryDate.getTime() <= Date.now()) {
+  if (
+    Number.isNaN(expiryDate.getTime()) ||
+    expiryDate.getTime() <= Date.now()
+  ) {
     throw new Error("The quotation expiry must be a future date and time.");
   }
 
@@ -2182,27 +2278,7 @@ async function createQuotation() {
     expires_at: expiryDate.toISOString()
   };
 
-  const { data, error } = await supabaseClient.functions.invoke(
-    QUOTATION_FUNCTION,
-    { body: payload }
-  );
-
-  if (error) {
-    let detail = error.message || "Unable to create quotation.";
-
-    if (error.context) {
-      try {
-        const responseBody = await error.context.json();
-        if (responseBody.error) detail = responseBody.error;
-      } catch (e) {}
-    }
-
-    throw new Error(detail);
-  }
-
-  if (!data || !data.success) {
-    throw new Error(data?.error || "The quotation function did not confirm creation.");
-  }
+  const data = await callQuotationFunction(payload);
 
   const quotationUrl = data.quotation_url || data.url;
 
@@ -2222,29 +2298,6 @@ async function createQuotation() {
   return quotationUrl;
 }
 
-async function refreshOrderFromDatabase() {
-  const { data, error } = await supabaseClient
-    .from("orders")
-    .select("*")
-    .eq("id", currentOrder.id)
-    .single();
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  currentOrder = data;
-
-  $("orderStatus").value = data.status || "pending_review";
-  $("paymentStatus").value = data.payment_status || "unpaid";
-  $("updatedAt").textContent = formatDate(data.updated_at);
-
-  updatePaymentPanel();
-  updateSelectionStatusBadge();
-  updateQuotationGate();
-}
-
 // ==================================================
 // SEND QUOTATION THROUGH WHATSAPP
 // ==================================================
@@ -2252,8 +2305,15 @@ async function refreshOrderFromDatabase() {
 $("issueQuoteBtn").addEventListener("click", async () => {
   if (quotationRequestInProgress) return;
 
+  await refreshOrderFromDatabase().catch(error => {
+    showMessage(error.message, "error");
+  });
+
   if (currentOrder?.product_selection_status !== "approved") {
-    showMessage("Approve the customer's product selection before generating a quotation.", "error");
+    showMessage(
+      "Approve the customer's product selection before generating a quotation.",
+      "error"
+    );
     return;
   }
 
@@ -2355,17 +2415,45 @@ $("copyQuoteBtn").addEventListener("click", async () => {
 // PAYMENT READINESS
 // ==================================================
 
+function isAcceptedQuotationValid() {
+  if (!latestQuotation || latestQuotation.status !== "accepted") {
+    return false;
+  }
+
+  if (
+    latestQuotation.expires_at &&
+    new Date(latestQuotation.expires_at).getTime() <= Date.now()
+  ) {
+    return false;
+  }
+
+  const amount = Number(latestQuotation.total_amount || 0);
+  return Number.isFinite(amount) && amount > 0;
+}
+
 function updatePaymentPanel() {
   if (!currentOrder) return;
 
   const phone = normalizePhone(currentOrder.whatsapp);
 
-  $("paymentCustomerName").textContent = currentOrder.customer_name || "Not provided";
-  $("paymentPhone").textContent = phone || "Invalid or missing phone number";
+  $("paymentCustomerName").textContent =
+    currentOrder.customer_name || "Not provided";
+
+  $("paymentPhone").textContent =
+    phone || "Invalid or missing phone number";
 
   const mpesaButton = $("sendMpesaBtn");
   const bankButton = $("sendBankDetailsBtn");
   const readiness = $("paymentReadiness");
+
+  const acceptedAmount = isAcceptedQuotationValid()
+    ? Number(latestQuotation.total_amount)
+    : 0;
+
+  // Always display the accepted quotation amount here.
+  // The editable quotation builder must never change the payment amount.
+  $("paymentAmount").textContent = formatKES(acceptedAmount);
+  $("bankPaymentAmount").textContent = formatKES(acceptedAmount);
 
   let reason = "";
 
@@ -2373,13 +2461,15 @@ function updatePaymentPanel() {
     reason = "A quotation must be issued before payment can be requested.";
   } else if (latestQuotation.status !== "accepted") {
     reason = "The latest quotation has not been accepted by the customer.";
-  } else if (currentOrder.status !== "awaiting_payment") {
-    reason = "The quotation is accepted, but the order status is not Awaiting payment.";
   } else if (
     latestQuotation.expires_at &&
     new Date(latestQuotation.expires_at).getTime() <= Date.now()
   ) {
     reason = "The accepted quotation has expired. A new quotation is required.";
+  } else if (!acceptedAmount) {
+    reason = "The accepted quotation amount is invalid.";
+  } else if (currentOrder.status !== "awaiting_payment") {
+    reason = "The quotation is accepted, but the order status is not Awaiting payment.";
   } else if (
     currentOrder.payment_status === "paid" ||
     currentOrder.payment_status === "refunded"
@@ -2410,7 +2500,6 @@ function updatePaymentPanel() {
     bankButton.disabled = true;
   }
 }
-
 // ==================================================
 // M-PESA STK PUSH
 // ==================================================
@@ -2423,60 +2512,97 @@ $("sendMpesaBtn").addEventListener("click", async () => {
     return;
   }
 
-  await loadLatestQuotation();
-
-  if (!latestQuotation || latestQuotation.status !== "accepted") {
-    showPaymentResult("The latest quotation has not been accepted.", "error");
-    return;
-  }
-
-  const confirmed = window.confirm(
-    "Send an M-Pesa STK Push to " +
-    currentOrder.whatsapp +
-    " for the accepted quotation?\n\nAmount: " +
-    formatKES(latestQuotation.total_amount)
-  );
-
-  if (!confirmed) return;
-
   paymentRequestInProgress = true;
-
-  const button = $("sendMpesaBtn");
-  button.disabled = true;
-  button.textContent = "Preparing payment request...";
-
   updatePaymentPanel();
 
+  const button = $("sendMpesaBtn");
+  button.textContent = "Checking payment readiness...";
+
   try {
+    await refreshOrderFromDatabase();
+    await loadLatestQuotation();
+
+    if (!isAcceptedQuotationValid()) {
+      throw new Error(
+        "The latest quotation has not been accepted or is no longer valid."
+      );
+    }
+
+    if (currentOrder.status !== "awaiting_payment") {
+      throw new Error(
+        "The order must be marked Awaiting payment before sending an STK Push."
+      );
+    }
+
+    if (
+      currentOrder.payment_status === "paid" ||
+      currentOrder.payment_status === "refunded"
+    ) {
+      throw new Error(
+        "This order is already marked as paid or refunded."
+      );
+    }
+
+    const phone = normalizePhone(currentOrder.whatsapp);
+
+    if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+      throw new Error("The customer's M-Pesa phone number is invalid.");
+    }
+
+    const amount = Number(latestQuotation.total_amount);
+
+    const confirmed = window.confirm(
+      "Send an M-Pesa STK Push to " +
+      currentOrder.whatsapp +
+      " for the accepted quotation?\n\nAmount: " +
+      formatKES(amount)
+    );
+
+    if (!confirmed) return;
+
+    button.textContent = "Preparing payment request...";
+
+    // Save the current investigation notes and order status.
     const savedOrder = await saveOrder(false);
 
     if (savedOrder.status !== "awaiting_payment") {
-      throw new Error("The order must be marked Awaiting payment before sending an STK Push.");
+      throw new Error(
+        "The order must be marked Awaiting payment before sending an STK Push."
+      );
     }
 
     if (
       savedOrder.payment_status === "paid" ||
       savedOrder.payment_status === "refunded"
     ) {
-      throw new Error("This order is already marked as paid or refunded.");
+      throw new Error(
+        "This order is already marked as paid or refunded."
+      );
     }
 
     const { data: sessionData, error: sessionError } =
       await supabaseClient.auth.getSession();
 
     if (sessionError || !sessionData.session) {
-      throw new Error("Your admin session has expired. Please log in again.");
+      throw new Error(
+        "Your admin session has expired. Please log in again."
+      );
     }
 
     button.textContent = "Contacting IntaSend...";
 
     const { data, error } = await supabaseClient.functions.invoke(
       PAYMENT_FUNCTION,
-      { body: { order_id: currentOrder.id } }
+      {
+        body: {
+          order_id: currentOrder.id
+        }
+      }
     );
 
     if (error) {
-      let detail = error.message || "The payment request could not be completed.";
+      let detail = error.message ||
+        "The payment request could not be completed.";
 
       if (error.context) {
         try {
@@ -2489,7 +2615,10 @@ $("sendMpesaBtn").addEventListener("click", async () => {
     }
 
     if (!data || !data.success) {
-      throw new Error(data?.error || "IntaSend did not confirm the payment request.");
+      throw new Error(
+        data?.error ||
+        "IntaSend did not confirm the payment request."
+      );
     }
 
     showPaymentResult(
@@ -2505,11 +2634,19 @@ $("sendMpesaBtn").addEventListener("click", async () => {
     $("paymentStatus").value = "pending";
     currentOrder.payment_status = "pending";
 
-    showMessage("M-Pesa payment prompt initiated. Awaiting payment confirmation.", "success");
+    showMessage(
+      "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
+      "success"
+    );
 
   } catch (error) {
-    console.error(error);
-    showPaymentResult(error.message || "Unable to initiate payment.", "error");
+    console.error("M-Pesa payment error:", error);
+
+    showPaymentResult(
+      error.message || "Unable to initiate payment.",
+      "error"
+    );
+
   } finally {
     paymentRequestInProgress = false;
     button.textContent = "Send M-Pesa STK Push";
@@ -2534,22 +2671,32 @@ $("sendBankDetailsBtn").addEventListener("click", async () => {
   bankRequestInProgress = true;
   updatePaymentPanel();
 
+  const button = $("sendBankDetailsBtn");
+  button.textContent = "Checking payment readiness...";
+
   try {
+    await refreshOrderFromDatabase();
     await loadLatestQuotation();
 
-    if (!latestQuotation || latestQuotation.status !== "accepted") {
-      throw new Error("The customer must accept the latest quotation before payment instructions can be sent.");
+    if (!isAcceptedQuotationValid()) {
+      throw new Error(
+        "The customer must accept the latest valid quotation before payment instructions can be sent."
+      );
     }
 
     if (currentOrder.status !== "awaiting_payment") {
-      throw new Error("Change the order status to Awaiting payment before sending bank details.");
+      throw new Error(
+        "Change the order status to Awaiting payment before sending bank details."
+      );
     }
 
     if (
       currentOrder.payment_status === "paid" ||
       currentOrder.payment_status === "refunded"
     ) {
-      throw new Error("This order is already marked as paid or refunded.");
+      throw new Error(
+        "This order is already marked as paid or refunded."
+      );
     }
 
     const phone = normalizePhone(currentOrder.whatsapp);
@@ -2558,7 +2705,7 @@ $("sendBankDetailsBtn").addEventListener("click", async () => {
       throw new Error("The customer's WhatsApp number is invalid.");
     }
 
-    const amount = Number(latestQuotation.total_amount || 0);
+    const amount = Number(latestQuotation.total_amount);
 
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new Error("The accepted quotation amount is invalid.");
@@ -2605,21 +2752,32 @@ Thank you for choosing R-Buy.
 You can buy anything.`;
 
     const whatsappUrl =
-      "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+      "https://wa.me/" + phone +
+      "?text=" + encodeURIComponent(message);
 
     const opened = redirectWhatsAppTab(tab, whatsappUrl);
 
     if (!opened) {
-      throw new Error("The browser blocked WhatsApp. Please contact the customer manually.");
+      throw new Error(
+        "The browser blocked WhatsApp. Please contact the customer manually."
+      );
     }
 
-    showMessage("Bank transfer instructions prepared in WhatsApp. Review the details and press Send.");
+    showMessage(
+      "Bank transfer instructions prepared in WhatsApp. Review the details and press Send."
+    );
 
   } catch (error) {
     closeWhatsAppTab(tab);
-    showMessage(error.message || "Unable to prepare bank transfer instructions.", "error");
+
+    showMessage(
+      error.message || "Unable to prepare bank transfer instructions.",
+      "error"
+    );
+
   } finally {
     bankRequestInProgress = false;
+    button.textContent = "Send Bank Details via WhatsApp";
     updatePaymentPanel();
   }
 });
@@ -2631,13 +2789,29 @@ You can buy anything.`;
 async function initializePage() {
   try {
     const authorized = await checkAdmin();
+
     if (!authorized) return;
 
     await loadOrder();
 
+    // A published selection token is intentionally not recoverable
+    // from the database because only its hash is stored.
+    // Publishing again generates a fresh customer link.
+    if (
+      currentOrder &&
+      ["published", "submitted", "approved"].includes(
+        currentOrder.product_selection_status
+      )
+    ) {
+      $("selectionLinkRecoveryNote").classList.remove("hidden");
+    }
+
   } catch (error) {
     console.error("Page initialization error:", error);
-    loadingState.textContent = "An unexpected error occurred while loading this order.";
+
+    loadingState.textContent =
+      error.message ||
+      "An unexpected error occurred while loading this order.";
   }
 }
 
