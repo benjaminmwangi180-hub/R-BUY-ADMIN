@@ -93,6 +93,18 @@ body {
 }
 .btn-bank:hover { background: #182139; }
 
+.btn-whatsapp {
+  background: #16834a;
+  color: white;
+}
+.btn-whatsapp:hover { background: #116b3c; }
+
+.btn-email {
+  background: #3157d5;
+  color: white;
+}
+.btn-email:hover { background: #2445b5; }
+
 .btn:disabled {
   opacity: .45;
   cursor: not-allowed;
@@ -282,14 +294,33 @@ body {
     <div><p class="label">Email address</p><p id="customerEmail" class="value"></p></div>
     <div><p class="label">Delivery location</p><p id="deliveryLocation" class="value"></p></div>
 
-    <div class="flex flex-wrap gap-3 pt-2">
-      <a id="whatsappBtn" href="#" target="_blank" rel="noopener noreferrer"
-        class="btn bg-green-600 hover:bg-green-700 text-white">
-        Contact on WhatsApp
-      </a>
-      <a id="emailBtn" href="#" class="btn btn-secondary">
-        Send Email
-      </a>
+    <div class="border-t pt-5" style="border-color:var(--line)">
+      <p class="label mb-3">Customer communication</p>
+
+      <div class="flex flex-wrap gap-3">
+        <button id="sendOrderWhatsAppBtn" class="btn btn-whatsapp">
+          Send Order Confirmation
+        </button>
+
+        <button id="sendOrderEmailBtn" class="btn btn-email">
+          Send Confirmation Email
+        </button>
+      </div>
+
+      <div class="flex flex-wrap gap-3 mt-3">
+        <a id="whatsappBtn" href="#" target="_blank" rel="noopener noreferrer"
+          class="btn btn-secondary">
+          Open WhatsApp Chat
+        </a>
+
+        <a id="emailBtn" href="#" class="btn btn-secondary">
+          Open Email
+        </a>
+      </div>
+
+      <p class="text-xs mt-3" style="color:var(--muted)">
+        Messages are prepared for your review. You must press Send in WhatsApp or your email application.
+      </p>
     </div>
   </div>
 </section>
@@ -519,7 +550,7 @@ body {
       </button>
 
       <p class="text-xs mt-3" style="color:var(--muted)">
-        Sends the customer bank instructions, exact amount and order reference.
+        Prepares payment instructions with the exact amount and order reference.
       </p>
     </div>
 
@@ -590,6 +621,7 @@ let activeQuotationUrl = null;
 
 let paymentRequestInProgress = false;
 let quotationRequestInProgress = false;
+let bankRequestInProgress = false;
 
 const $ = id => document.getElementById(id);
 
@@ -610,7 +642,9 @@ function formatKES(value) {
 
 function formatDate(value) {
   if (!value) return "Not available";
+
   const date = new Date(value);
+
   if (Number.isNaN(date.getTime())) return "Not available";
 
   return date.toLocaleString("en-KE", {
@@ -637,6 +671,7 @@ function showMessage(message, type = "success") {
 
 function showPaymentResult(message, type = "info") {
   const box = $("paymentResult");
+
   box.classList.remove("hidden");
   box.className = "mt-5 p-4 rounded-xl text-sm";
 
@@ -653,6 +688,7 @@ function showPaymentResult(message, type = "info") {
 
 function getNumber(id) {
   const value = $(id).value.trim();
+
   if (value === "") return 0;
 
   const number = Number(value);
@@ -681,6 +717,7 @@ function normalizePhone(phone) {
 function safeExternalUrl(value) {
   try {
     const url = new URL(value);
+
     if (url.protocol === "http:" || url.protocol === "https:") {
       return url.href;
     }
@@ -691,22 +728,14 @@ function safeExternalUrl(value) {
 
 function getOrderReference() {
   if (!currentOrder) return "";
+
   return "RBUY-" + currentOrder.id.substring(0, 8).toUpperCase();
 }
 
 function openWhatsAppTab() {
-  // Must be called directly during the user's click event.
-  const tab = window.open("about:blank", "_blank");
-
-  if (tab) {
-    try {
-      tab.document.title = "R-BUY WhatsApp";
-      tab.document.body.innerHTML =
-        "<p style='font-family:Arial;padding:30px'>Preparing your WhatsApp message...</p>";
-    } catch (error) {}
-  }
-
-  return tab;
+  // Open synchronously during the original click event.
+  // This avoids most browser popup blockers.
+  return window.open("about:blank", "_blank");
 }
 
 function redirectWhatsAppTab(tab, url) {
@@ -716,6 +745,55 @@ function redirectWhatsAppTab(tab, url) {
   }
 
   return false;
+}
+
+function closeWhatsAppTab(tab) {
+  if (tab && !tab.closed) {
+    tab.close();
+  }
+}
+
+function getOrderConfirmationMessage() {
+  if (!currentOrder) {
+    throw new Error("No order is currently loaded.");
+  }
+
+  return `Hello ${currentOrder.customer_name || "there"},
+
+Thank you for choosing R-Buy!
+
+We have successfully received your order request.
+
+Here are your order details:
+
+ORDER REFERENCE: ${getOrderReference()}
+
+CUSTOMER: ${currentOrder.customer_name || "Not provided"}
+
+PRODUCT: ${currentOrder.product_name || "Not provided"}
+
+DESCRIPTION: ${currentOrder.product_description || "Not provided"}
+
+QUANTITY: ${currentOrder.quantity ?? "Not provided"}
+
+BUDGET: ${formatKES(currentOrder.budget)}
+
+DELIVERY LOCATION: ${currentOrder.delivery_location || "Not provided"}
+
+Our team will review your request, investigate availability and prepare a quotation.
+
+We will contact you with the next steps.
+
+Thank you for choosing R-Buy.
+You can buy anything.`;
+}
+
+function getOrderConfirmationEmailSubject() {
+  return "R-Buy Order Received - " + getOrderReference();
+}
+
+function getOrderConfirmationEmailBody() {
+  return getOrderConfirmationMessage();
 }
 
 // ==================================================
@@ -774,11 +852,13 @@ async function loadOrder() {
   if (error || !data) {
     loadingState.textContent =
       "Unable to load this order. Check the order ID and your admin permissions.";
+
     console.error("Order loading error:", error);
     return;
   }
 
   currentOrder = data;
+
   renderOrder(data);
 
   await loadLatestQuotation();
@@ -863,9 +943,11 @@ function renderOrder(order) {
 
   if (order.offer_expires_at) {
     const date = new Date(order.offer_expires_at);
+
     const localDate = new Date(
       date.getTime() - date.getTimezoneOffset() * 60000
     );
+
     $("offerExpiresAt").value = localDate.toISOString().slice(0, 16);
   } else {
     $("offerExpiresAt").value = "";
@@ -883,29 +965,95 @@ function renderOrder(order) {
 
   const phone = normalizePhone(order.whatsapp);
 
-  if (phone) {
+  if (phone && /^254[71]\d{8}$/.test(phone)) {
     $("whatsappBtn").href = "https://wa.me/" + phone;
     $("whatsappBtn").classList.remove("opacity-40", "pointer-events-none");
+    $("sendOrderWhatsAppBtn").disabled = false;
   } else {
     $("whatsappBtn").removeAttribute("href");
     $("whatsappBtn").classList.add("opacity-40", "pointer-events-none");
+    $("sendOrderWhatsAppBtn").disabled = true;
   }
 
-  if (order.email) {
+  if (order.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(order.email)) {
     $("emailBtn").href =
-      "mailto:" + encodeURIComponent(order.email) +
-      "?subject=" + encodeURIComponent("R-Buy Order " + getOrderReference());
+      "mailto:" + encodeURIComponent(order.email);
 
     $("emailBtn").classList.remove("opacity-40", "pointer-events-none");
+    $("sendOrderEmailBtn").disabled = false;
   } else {
     $("emailBtn").removeAttribute("href");
     $("emailBtn").classList.add("opacity-40", "pointer-events-none");
+    $("sendOrderEmailBtn").disabled = true;
   }
 
   updateQuotationTotal();
   updateBankReference();
   updatePaymentPanel();
 }
+
+// ==================================================
+// MANUAL ORDER CONFIRMATION - WHATSAPP
+// ==================================================
+
+$("sendOrderWhatsAppBtn").addEventListener("click", () => {
+  if (!currentOrder) {
+    showMessage("No order is currently loaded.", "error");
+    return;
+  }
+
+  const phone = normalizePhone(currentOrder.whatsapp);
+
+  if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+    showMessage("The customer's WhatsApp number is invalid.", "error");
+    return;
+  }
+
+  const message = getOrderConfirmationMessage();
+
+  const whatsappUrl =
+    "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+
+  const tab = window.open(whatsappUrl, "_blank");
+
+  if (tab) {
+    showMessage(
+      "Order confirmation prepared in WhatsApp. Review the message and press Send.",
+      "success"
+    );
+  } else {
+    showMessage(
+      "Your browser blocked the WhatsApp window. Use Open WhatsApp Chat instead.",
+      "error"
+    );
+  }
+});
+
+// ==================================================
+// MANUAL ORDER CONFIRMATION - EMAIL
+// ==================================================
+
+$("sendOrderEmailBtn").addEventListener("click", () => {
+  if (!currentOrder || !currentOrder.email) {
+    showMessage("This customer has no valid email address.", "error");
+    return;
+  }
+
+  const subject = getOrderConfirmationEmailSubject();
+  const body = getOrderConfirmationEmailBody();
+
+  const mailtoUrl =
+    "mailto:" + encodeURIComponent(currentOrder.email) +
+    "?subject=" + encodeURIComponent(subject) +
+    "&body=" + encodeURIComponent(body);
+
+  window.location.href = mailtoUrl;
+
+  showMessage(
+    "Confirmation email prepared in your email application. Review it and press Send.",
+    "info"
+  );
+});
 
 // ==================================================
 // QUOTATION CALCULATOR
@@ -991,6 +1139,7 @@ async function saveOrder(showSuccess = true) {
     currentOrder = { ...currentOrder, ...data };
 
     $("updatedAt").textContent = formatDate(data.updated_at);
+
     updatePaymentPanel();
 
     if (showSuccess) {
@@ -1043,10 +1192,15 @@ async function loadLatestQuotation() {
 
   if (error) {
     console.error("Quotation status loading error:", error);
-    $("quotationStatus").textContent = "Unable to retrieve quotation status";
+
+    $("quotationStatus").textContent =
+      "Unable to retrieve quotation status";
+
     $("quotationResponseDetails").textContent = error.message;
+
     latestQuotation = null;
     updatePaymentPanel();
+
     return;
   }
 
@@ -1054,14 +1208,18 @@ async function loadLatestQuotation() {
 
   if (!latestQuotation) {
     $("quotationVersion").value = "No quotation issued";
+
     $("quotationStatus").textContent = "No quotation issued";
+
     $("quotationResponseDetails").textContent =
       "Prepare and issue the first customer quotation.";
+
     updatePaymentPanel();
     return;
   }
 
-  $("quotationVersion").value = "Version " + latestQuotation.version;
+  $("quotationVersion").value =
+    "Version " + latestQuotation.version;
 
   const response = Array.isArray(latestQuotation.quotation_responses)
     ? latestQuotation.quotation_responses[0]
@@ -1082,30 +1240,41 @@ async function loadLatestQuotation() {
 
   if (status === "accepted") {
     $("quotationStatus").textContent = "Customer accepted quotation";
+
     $("quotationResponseDetails").textContent = response
       ? "Accepted " + formatDate(response.responded_at) +
         " | Accepted amount: " + formatKES(response.accepted_amount)
       : "Accepted response recorded.";
+
   } else if (status === "declined") {
     $("quotationStatus").textContent = "Customer declined quotation";
+
     $("quotationResponseDetails").textContent = response
       ? "Declined " + formatDate(response.responded_at)
       : "Customer declined this quotation.";
+
   } else if (status === "expired") {
     $("quotationStatus").textContent = "Quotation expired";
+
     $("quotationResponseDetails").textContent =
       "Expired " + formatDate(latestQuotation.expires_at);
+
   } else if (status === "replaced") {
     $("quotationStatus").textContent = "Quotation replaced";
+
     $("quotationResponseDetails").textContent =
       "A newer quotation version exists.";
+
   } else if (status === "sent") {
     $("quotationStatus").textContent = "Awaiting customer response";
+
     $("quotationResponseDetails").textContent =
       "Sent " + formatDate(latestQuotation.sent_at) +
       " | Expires " + formatDate(latestQuotation.expires_at);
+
   } else {
     $("quotationStatus").textContent = status || "Unknown status";
+
     $("quotationResponseDetails").textContent =
       "Quotation version " + latestQuotation.version;
   }
@@ -1123,13 +1292,20 @@ $("refreshQuotationBtn").addEventListener("click", async () => {
 // ==================================================
 
 async function createQuotation() {
-  if (!currentOrder) throw new Error("No order is currently loaded.");
+  if (!currentOrder) {
+    throw new Error("No order is currently loaded.");
+  }
 
   const productName = $("offeredProductName").value.trim();
   const description = $("offeredDescription").value.trim();
 
-  if (!productName) throw new Error("Enter the name of the product being offered.");
-  if (!description) throw new Error("Enter a description of the product being offered.");
+  if (!productName) {
+    throw new Error("Enter the name of the product being offered.");
+  }
+
+  if (!description) {
+    throw new Error("Enter a description of the product being offered.");
+  }
 
   const quote = getQuotation();
 
@@ -1139,7 +1315,9 @@ async function createQuotation() {
 
   const expiryValue = $("offerExpiresAt").value;
 
-  if (!expiryValue) throw new Error("Please set a quotation expiry date.");
+  if (!expiryValue) {
+    throw new Error("Please set a quotation expiry date.");
+  }
 
   const expiryDate = new Date(expiryValue);
 
@@ -1182,7 +1360,10 @@ async function createQuotation() {
     if (error.context) {
       try {
         const responseBody = await error.context.json();
-        if (responseBody.error) detail = responseBody.error;
+
+        if (responseBody.error) {
+          detail = responseBody.error;
+        }
       } catch (parseError) {}
     }
 
@@ -1190,7 +1371,9 @@ async function createQuotation() {
   }
 
   if (!data || !data.success) {
-    throw new Error(data?.error || "The quotation function did not confirm creation.");
+    throw new Error(
+      data?.error || "The quotation function did not confirm creation."
+    );
   }
 
   const quotationUrl = data.quotation_url || data.url;
@@ -1224,6 +1407,7 @@ async function refreshOrderFromDatabase() {
   }
 
   currentOrder = data;
+
   $("orderStatus").value = data.status || "pending_review";
   $("paymentStatus").value = data.payment_status || "unpaid";
   $("updatedAt").textContent = formatDate(data.updated_at);
@@ -1244,27 +1428,29 @@ $("issueQuoteBtn").addEventListener("click", async () => {
 
   if (!confirmed) return;
 
-  // Open the tab immediately while the click is still active.
-  // This prevents the browser from blocking the WhatsApp window.
+  // Open before asynchronous operations to avoid popup blocking.
   const whatsappTab = openWhatsAppTab();
 
   quotationRequestInProgress = true;
 
   const button = $("issueQuoteBtn");
+
   button.disabled = true;
   button.textContent = "Generating secure quotation...";
 
   try {
     const quotationUrl = await createQuotation();
+
     const phone = normalizePhone(currentOrder.whatsapp);
 
-    if (!phone) {
-      if (whatsappTab) whatsappTab.close();
+    if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+      closeWhatsAppTab(whatsappTab);
 
       showMessage(
-        "Quotation created, but this customer has no valid WhatsApp number. Copy the link and send it manually.",
+        "Quotation created, but this customer has no valid WhatsApp number. Copy the link and contact them manually.",
         "info"
       );
+
       return;
     }
 
@@ -1301,7 +1487,7 @@ You can buy anything.`;
 
     showMessage(
       opened
-        ? "Quotation generated successfully. WhatsApp is ready with the secure quotation message. Review it and press Send."
+        ? "Quotation generated successfully. WhatsApp is ready with the quotation message. Review it and press Send."
         : "Quotation created successfully, but the browser blocked WhatsApp. Copy the quotation link and send it manually.",
       opened ? "success" : "info"
     );
@@ -1309,14 +1495,16 @@ You can buy anything.`;
   } catch (error) {
     console.error("Quotation creation error:", error);
 
-    if (whatsappTab && !whatsappTab.closed) {
-      whatsappTab.close();
-    }
+    closeWhatsAppTab(whatsappTab);
 
-    showMessage(error.message || "Unable to create quotation.", "error");
+    showMessage(
+      error.message || "Unable to create quotation.",
+      "error"
+    );
 
   } finally {
     quotationRequestInProgress = false;
+
     button.disabled = false;
     button.textContent = "Generate & Send Secure Quotation";
   }
@@ -1334,7 +1522,9 @@ $("copyQuoteBtn").addEventListener("click", async () => {
 
   try {
     await navigator.clipboard.writeText(activeQuotationUrl);
+
     showMessage("Secure quotation link copied successfully.");
+
   } catch (error) {
     showMessage(
       "Unable to copy link. Select and copy the link displayed in the quotation panel.",
@@ -1366,15 +1556,19 @@ function updatePaymentPanel() {
 
   if (!latestQuotation) {
     reason = "A quotation must be issued before payment can be requested.";
+
   } else if (latestQuotation.status !== "accepted") {
     reason = "The latest quotation has not been accepted by the customer.";
+
   } else if (currentOrder.status !== "awaiting_payment") {
     reason = "The quotation is accepted, but the order status is not Awaiting payment.";
+
   } else if (
     latestQuotation.expires_at &&
     new Date(latestQuotation.expires_at).getTime() <= Date.now()
   ) {
     reason = "The accepted quotation has expired. A new quotation is required.";
+
   } else if (
     currentOrder.payment_status === "paid" ||
     currentOrder.payment_status === "refunded"
@@ -1385,8 +1579,10 @@ function updatePaymentPanel() {
   if (reason) {
     readiness.textContent = reason;
     readiness.className = "text-sm text-yellow-700";
+
     mpesaButton.disabled = true;
     bankButton.disabled = true;
+
   } else {
     readiness.textContent =
       "Customer accepted the latest quotation. Payment methods are ready.";
@@ -1396,10 +1592,11 @@ function updatePaymentPanel() {
     mpesaButton.disabled =
       paymentRequestInProgress || !/^254[71]\d{8}$/.test(phone);
 
-    bankButton.disabled = false;
+    bankButton.disabled =
+      paymentRequestInProgress || bankRequestInProgress;
   }
 
-  if (paymentRequestInProgress) {
+  if (paymentRequestInProgress || bankRequestInProgress) {
     mpesaButton.disabled = true;
     bankButton.disabled = true;
   }
@@ -1439,6 +1636,7 @@ $("sendMpesaBtn").addEventListener("click", async () => {
   paymentRequestInProgress = true;
 
   const button = $("sendMpesaBtn");
+
   button.disabled = true;
   button.textContent = "Preparing payment request...";
 
@@ -1484,7 +1682,10 @@ $("sendMpesaBtn").addEventListener("click", async () => {
       if (error.context) {
         try {
           const responseBody = await error.context.json();
-          if (responseBody.error) detail = responseBody.error;
+
+          if (responseBody.error) {
+            detail = responseBody.error;
+          }
         } catch (parseError) {}
       }
 
@@ -1525,7 +1726,9 @@ $("sendMpesaBtn").addEventListener("click", async () => {
 
   } finally {
     paymentRequestInProgress = false;
+
     button.textContent = "Send M-Pesa STK Push";
+
     updatePaymentPanel();
   }
 });
@@ -1535,64 +1738,66 @@ $("sendMpesaBtn").addEventListener("click", async () => {
 // ==================================================
 
 $("sendBankDetailsBtn").addEventListener("click", async () => {
+  if (bankRequestInProgress) return;
+
   if (!currentOrder) {
     showPaymentResult("No order is loaded.", "error");
     return;
   }
 
-  // Check the latest quotation before sending bank details.
-  await loadLatestQuotation();
-
-  if (!latestQuotation || latestQuotation.status !== "accepted") {
-    showMessage(
-      "The customer must accept the latest quotation before payment instructions can be sent.",
-      "error"
-    );
-    return;
-  }
-
-  if (currentOrder.status !== "awaiting_payment") {
-    showMessage(
-      "Change the order status to Awaiting payment before sending bank details.",
-      "error"
-    );
-    return;
-  }
-
-  if (
-    currentOrder.payment_status === "paid" ||
-    currentOrder.payment_status === "refunded"
-  ) {
-    showMessage("This order is already marked as paid or refunded.", "error");
-    return;
-  }
-
-  const phone = normalizePhone(currentOrder.whatsapp);
-
-  if (!phone || !/^254[71]\d{8}$/.test(phone)) {
-    showMessage("The customer's WhatsApp number is invalid.", "error");
-    return;
-  }
-
-  const amount = Number(latestQuotation.total_amount || 0);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    showMessage("The accepted quotation amount is invalid.", "error");
-    return;
-  }
-
-  const confirmed = window.confirm(
-    "Send Co-operative Bank payment details to " +
-    (currentOrder.customer_name || "this customer") +
-    "?\n\nAmount: " + formatKES(amount) +
-    "\nReference: " + getOrderReference()
-  );
-
-  if (!confirmed) return;
-
+  // Open the blank tab immediately within the click event.
   const tab = openWhatsAppTab();
 
-  const message =
+  bankRequestInProgress = true;
+  updatePaymentPanel();
+
+  try {
+    await loadLatestQuotation();
+
+    if (!latestQuotation || latestQuotation.status !== "accepted") {
+      throw new Error(
+        "The customer must accept the latest quotation before payment instructions can be sent."
+      );
+    }
+
+    if (currentOrder.status !== "awaiting_payment") {
+      throw new Error(
+        "Change the order status to Awaiting payment before sending bank details."
+      );
+    }
+
+    if (
+      currentOrder.payment_status === "paid" ||
+      currentOrder.payment_status === "refunded"
+    ) {
+      throw new Error("This order is already marked as paid or refunded.");
+    }
+
+    const phone = normalizePhone(currentOrder.whatsapp);
+
+    if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+      throw new Error("The customer's WhatsApp number is invalid.");
+    }
+
+    const amount = Number(latestQuotation.total_amount || 0);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error("The accepted quotation amount is invalid.");
+    }
+
+    const confirmed = window.confirm(
+      "Prepare Co-operative Bank payment details for " +
+      (currentOrder.customer_name || "this customer") +
+      "?\n\nAmount: " + formatKES(amount) +
+      "\nReference: " + getOrderReference()
+    );
+
+    if (!confirmed) {
+      closeWhatsAppTab(tab);
+      return;
+    }
+
+    const message =
 `Hello ${currentOrder.customer_name || "there"},
 
 Thank you for choosing R-Buy!
@@ -1615,26 +1820,38 @@ Please use the payment reference above when making your transfer so we can ident
 
 Once you have completed the transfer, kindly share your transaction confirmation/reference with us.
 
-Please note that your order will proceed once the payment has been verified.
+Your order will proceed once the payment has been verified.
 
 Thank you for choosing R-Buy.
 You can buy anything.`;
 
-  const whatsappUrl =
-    "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+    const whatsappUrl =
+      "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
 
-  const opened = redirectWhatsAppTab(tab, whatsappUrl);
+    const opened = redirectWhatsAppTab(tab, whatsappUrl);
 
-  if (opened) {
+    if (opened) {
+      showMessage(
+        "Bank transfer instructions prepared in WhatsApp. Review the details and press Send.",
+        "success"
+      );
+    } else {
+      throw new Error(
+        "The browser blocked WhatsApp. Please contact the customer manually."
+      );
+    }
+
+  } catch (error) {
+    closeWhatsAppTab(tab);
+
     showMessage(
-      "Bank transfer instructions prepared in WhatsApp. Review the details and press Send.",
-      "success"
-    );
-  } else {
-    showMessage(
-      "The browser blocked WhatsApp. Please contact the customer manually using the bank details displayed on this page.",
+      error.message || "Unable to prepare bank transfer instructions.",
       "error"
     );
+
+  } finally {
+    bankRequestInProgress = false;
+    updatePaymentPanel();
   }
 });
 
@@ -1645,11 +1862,14 @@ You can buy anything.`;
 async function initializePage() {
   try {
     const authorized = await checkAdmin();
+
     if (!authorized) return;
 
     await loadOrder();
+
   } catch (error) {
     console.error("Page initialization error:", error);
+
     loadingState.textContent =
       "An unexpected error occurred while loading this order.";
   }
