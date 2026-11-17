@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f3ed">
 <title>Order Details | R-BUY Admin</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -11,171 +12,185 @@
 
 <style>
 :root {
-  --cream: #f5f3ed;
-  --paper: #ffffff;
-  --ink: #242424;
-  --muted: #77756f;
-  --blue: #3157d5;
-  --orange: #e58b52;
-  --line: #e8e5dc;
+  --cream:#f5f3ed;
+  --paper:#fff;
+  --ink:#242424;
+  --muted:#77756f;
+  --blue:#3157d5;
+  --orange:#e58b52;
+  --line:#e8e5dc;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing:border-box; }
 
 body {
-  background: var(--cream);
-  color: var(--ink);
-  font-family: Arial, sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  font-family:Arial,sans-serif;
 }
 
 .panel {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(25,25,25,.035);
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 5px 20px rgba(25,25,25,.035);
 }
 
 .field {
-  width: 100%;
-  background: #faf9f6;
-  border: 1px solid #dedbd2;
-  border-radius: 9px;
-  padding: 12px;
-  color: var(--ink);
-  outline: none;
+  width:100%;
+  background:#faf9f6;
+  border:1px solid #dedbd2;
+  border-radius:9px;
+  padding:12px;
+  color:var(--ink);
+  outline:none;
 }
 
 .field:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(49,87,213,.09);
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(49,87,213,.09);
 }
 
 .field:disabled {
-  opacity: .65;
-  cursor: not-allowed;
+  opacity:.65;
+  cursor:not-allowed;
 }
 
 .btn {
-  padding: 11px 16px;
-  border-radius: 9px;
-  font-weight: 600;
-  font-size: 13px;
-  transition: .2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  cursor: pointer;
+  padding:11px 16px;
+  border-radius:9px;
+  font-weight:600;
+  font-size:13px;
+  transition:.2s;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  cursor:pointer;
 }
 
-.btn-primary {
-  background: var(--blue);
-  color: white;
-}
-.btn-primary:hover { background: #2445b5; }
+.btn-primary { background:var(--blue);color:white; }
+.btn-primary:hover { background:#2445b5; }
 
 .btn-secondary {
-  background: #f0eee8;
-  color: #34332f;
-  border: 1px solid #e2dfd6;
+  background:#f0eee8;
+  color:#34332f;
+  border:1px solid #e2dfd6;
 }
-.btn-secondary:hover { background: #e7e4dc; }
 
-.btn-mpesa {
-  background: #16834a;
-  color: white;
-}
-.btn-mpesa:hover { background: #116b3c; }
+.btn-secondary:hover { background:#e7e4dc; }
 
-.btn-bank {
-  background: #252e48;
-  color: white;
-}
-.btn-bank:hover { background: #182139; }
+.btn-mpesa,.btn-whatsapp { background:#16834a;color:white; }
+.btn-mpesa:hover,.btn-whatsapp:hover { background:#116b3c; }
 
-.btn-whatsapp {
-  background: #16834a;
-  color: white;
-}
-.btn-whatsapp:hover { background: #116b3c; }
+.btn-bank { background:#252e48;color:white; }
+.btn-bank:hover { background:#182139; }
 
-.btn-email {
-  background: #3157d5;
-  color: white;
-}
-.btn-email:hover { background: #2445b5; }
+.btn-email { background:#3157d5;color:white; }
 
-.btn:disabled {
-  opacity: .45;
-  cursor: not-allowed;
+.btn-danger {
+  background:#fff0ee;
+  color:#b42318;
+  border:1px solid #f5d1cd;
 }
+
+.btn:disabled { opacity:.45;cursor:not-allowed; }
 
 .label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .055em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 8px;
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
 }
 
 .value {
-  color: var(--ink);
-  font-size: 14px;
-  overflow-wrap: anywhere;
+  color:var(--ink);
+  font-size:14px;
+  overflow-wrap:anywhere;
 }
 
 .nav-link {
-  display: block;
-  padding: 12px 14px;
-  border-radius: 9px;
-  color: #77756f;
-  margin-bottom: 5px;
-  font-size: 14px;
-  transition: .2s;
+  display:block;
+  padding:12px 14px;
+  border-radius:9px;
+  color:#77756f;
+  margin-bottom:5px;
+  font-size:14px;
+  transition:.2s;
 }
 
-.nav-link:hover, .nav-active {
-  background: #e9edf9;
-  color: var(--blue);
+.nav-link:hover,.nav-active {
+  background:#e9edf9;
+  color:var(--blue);
 }
 
-.sidebar {
-  background: #fff;
-  border-color: var(--line);
-}
+.sidebar { background:#fff;border-color:var(--line); }
 
 .soft-panel {
-  background: #faf9f6;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  background:#faf9f6;
+  border:1px solid var(--line);
+  border-radius:12px;
 }
 
 .section-heading {
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -.025em;
+  font-weight:700;
+  font-size:18px;
+  letter-spacing:-.025em;
 }
 
 .eyebrow {
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  font-size: 10px;
-  font-weight: 700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-size:10px;
+  font-weight:700;
 }
 
 .accent-line {
-  height: 3px;
-  width: 38px;
-  background: var(--orange);
-  border-radius: 5px;
-  margin-bottom: 14px;
+  height:3px;
+  width:38px;
+  background:var(--orange);
+  border-radius:5px;
+  margin-bottom:14px;
 }
 
-@media (max-width: 768px) {
-  main { padding: 16px !important; }
+.product-card {
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:13px;
+  overflow:hidden;
+}
+
+.product-image {
+  width:100%;
+  height:190px;
+  object-fit:cover;
+  background:#f0eee8;
+}
+
+.product-placeholder {
+  height:190px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f0eee8;
+  color:#999;
+  font-size:13px;
+}
+
+.status-pill {
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:700;
+}
+
+@media(max-width:768px) {
+  main { padding:16px!important; }
 }
 </style>
 </head>
@@ -207,33 +222,24 @@ body {
       Log out
     </button>
   </div>
-
 </aside>
 
 <!-- MAIN -->
 <main class="flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full">
 
 <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
-
   <div>
-    <a href="orders.html" class="text-sm hover:underline"
-       style="color:var(--blue)">← Back to Orders</a>
-
-    <h2 class="text-3xl font-bold mt-3 tracking-tight">
-      Order Details
-    </h2>
-
+    <a href="orders.html" class="text-sm hover:underline" style="color:var(--blue)">← Back to Orders</a>
+    <h2 class="text-3xl font-bold mt-3 tracking-tight">Order Details</h2>
     <p class="text-sm mt-1" style="color:var(--muted)">
-      Investigate, quote and manage this customer order.
+      Investigate, source, quote and manage this customer order.
     </p>
   </div>
 
-  <span id="orderReference"
-    class="text-sm px-4 py-3 rounded-xl font-semibold"
+  <span id="orderReference" class="text-sm px-4 py-3 rounded-xl font-semibold"
     style="background:#e9edf9;color:var(--blue)">
     Loading order...
   </span>
-
 </div>
 
 <div id="messageBox" class="hidden mb-6 p-4 rounded-xl text-sm"></div>
@@ -246,9 +252,7 @@ body {
 
 <!-- ORDER STATUS -->
 <section class="panel p-5">
-
   <div class="flex flex-wrap justify-between items-center gap-4">
-
     <div>
       <p class="eyebrow">Order progress</p>
       <h3 id="summaryProduct" class="text-xl font-bold mt-2">Product</h3>
@@ -256,7 +260,6 @@ body {
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3">
-
       <div>
         <label class="label">Order status</label>
         <select id="orderStatus" class="field min-w-48">
@@ -276,7 +279,6 @@ body {
         <label class="label">Payment status</label>
         <input id="paymentStatus" class="field min-w-40" disabled>
       </div>
-
     </div>
   </div>
 </section>
@@ -298,24 +300,13 @@ body {
       <p class="label mb-3">Customer communication</p>
 
       <div class="flex flex-wrap gap-3">
-        <button id="sendOrderWhatsAppBtn" class="btn btn-whatsapp">
-          Send Order Confirmation
-        </button>
-
-        <button id="sendOrderEmailBtn" class="btn btn-email">
-          Send Confirmation Email
-        </button>
+        <button id="sendOrderWhatsAppBtn" class="btn btn-whatsapp">Send Order Confirmation</button>
+        <button id="sendOrderEmailBtn" class="btn btn-email">Send Confirmation Email</button>
       </div>
 
       <div class="flex flex-wrap gap-3 mt-3">
-        <a id="whatsappBtn" href="#" target="_blank" rel="noopener noreferrer"
-          class="btn btn-secondary">
-          Open WhatsApp Chat
-        </a>
-
-        <a id="emailBtn" href="#" class="btn btn-secondary">
-          Open Email
-        </a>
+        <a id="whatsappBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Open WhatsApp Chat</a>
+        <a id="emailBtn" href="#" class="btn btn-secondary">Open Email</a>
       </div>
 
       <p class="text-xs mt-3" style="color:var(--muted)">
@@ -363,12 +354,194 @@ body {
   <textarea id="investigationNotes" rows="5" class="field"
     placeholder="Record suppliers contacted, product availability, quality, sourcing prices and other findings..."></textarea>
 
-  <button id="saveBtn" class="btn btn-secondary mt-5">
-    Save Order Notes & Status
-  </button>
+  <button id="saveBtn" class="btn btn-secondary mt-5">Save Order Notes & Status</button>
 </section>
 
+<!-- ================================================= -->
+<!-- PRODUCT DISCOVERY -->
+<!-- ================================================= -->
+
+<section class="panel p-5" id="productDiscoverySection">
+
+  <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+    <div>
+      <div class="accent-line"></div>
+      <h3 class="section-heading">Product Discovery & Selection</h3>
+      <p class="text-sm mt-2" style="color:var(--muted)">
+        Add sourced alternatives for the customer to compare.
+      </p>
+    </div>
+
+    <span id="selectionStatusBadge" class="status-pill"
+      style="background:#f0eee8;color:#77756f">
+      Not started
+    </span>
+  </div>
+
+  <!-- PRODUCT FORM -->
+  <div class="soft-panel p-5 mb-6">
+
+    <div class="flex justify-between items-center gap-3 mb-5">
+      <h4 id="productFormHeading" class="font-bold">Add a product alternative</h4>
+      <button id="cancelEditBtn" class="text-xs text-red-600 hidden">Cancel editing</button>
+    </div>
+
+    <input type="hidden" id="editingOptionId">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+      <div>
+        <label class="label">Product name *</label>
+        <input id="optionProductName" class="field" placeholder="e.g. Samsung Galaxy A55">
+      </div>
+
+      <div>
+        <label class="label">Brand</label>
+        <input id="optionBrand" class="field" placeholder="e.g. Samsung">
+      </div>
+
+      <div>
+        <label class="label">Model</label>
+        <input id="optionModel" class="field" placeholder="e.g. SM-A556E">
+      </div>
+
+      <div>
+        <label class="label">Price (KES) *</label>
+        <input id="optionPrice" type="number" min="0" step="0.01" class="field" placeholder="0.00">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="label">Product description *</label>
+        <textarea id="optionDescription" rows="3" class="field"
+          placeholder="Describe the product, condition and important details..."></textarea>
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="label">Specifications</label>
+        <textarea id="optionSpecifications" rows="4" class="field"
+          placeholder="Enter one specification per line:
+Storage: 256GB
+RAM: 8GB
+Colour: Black
+Condition: Brand new"></textarea>
+      </div>
+
+      <div>
+        <label class="label">Supplier name</label>
+        <input id="optionSupplier" class="field" placeholder="Supplier or shop name">
+      </div>
+
+      <div>
+        <label class="label">Supplier URL</label>
+        <input id="optionSupplierUrl" class="field" placeholder="https://...">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="label">Availability notes</label>
+        <textarea id="optionAvailability" rows="2" class="field"
+          placeholder="e.g. Available immediately, limited stock..."></textarea>
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="label">Product photographs</label>
+        <input id="optionImages" type="file" accept="image/jpeg,image/png,image/webp" multiple class="field">
+        <p class="text-xs mt-2" style="color:var(--muted)">
+          Maximum 5MB per image. JPEG, PNG and WebP supported.
+        </p>
+        <div id="existingImages" class="flex flex-wrap gap-3 mt-3"></div>
+      </div>
+
+    </div>
+
+    <div class="flex flex-wrap gap-3 mt-5">
+      <button id="saveOptionBtn" class="btn btn-primary">Save Product Alternative</button>
+      <button id="clearOptionBtn" class="btn btn-secondary">Clear Form</button>
+    </div>
+  </div>
+
+  <!-- SAVED PRODUCT OPTIONS -->
+  <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+    <div>
+      <h4 class="font-bold">Sourced Product Alternatives</h4>
+      <p class="text-xs mt-1" style="color:var(--muted)">These products will be visible to the customer after publishing.</p>
+    </div>
+
+    <button id="refreshOptionsBtn" class="btn btn-secondary">Refresh products</button>
+  </div>
+
+  <div id="productOptionsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div class="soft-panel p-5 text-sm" style="color:var(--muted)">Loading product alternatives...</div>
+  </div>
+
+  <!-- PUBLISH -->
+  <div class="border-t mt-7 pt-6" style="border-color:var(--line)">
+    <div class="flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <h4 class="font-bold">Publish customer shortlist</h4>
+        <p class="text-xs mt-1" style="color:var(--muted)">
+          Publishing makes the saved alternatives available through a private customer link.
+        </p>
+      </div>
+
+      <button id="publishSelectionBtn" class="btn btn-primary">
+        Publish Product Shortlist
+      </button>
+    </div>
+
+    <div id="selectionLinkPanel" class="hidden soft-panel p-5 mt-5">
+      <p class="text-sm font-semibold text-green-700">Customer selection link generated</p>
+      <p class="text-xs mt-2" style="color:var(--muted)">
+        Copy this link and send it to the customer. The link is private and expires after 30 days.
+      </p>
+      <p id="selectionLinkText" class="text-sm break-all mt-3" style="color:var(--blue)"></p>
+      <div class="flex flex-wrap gap-3 mt-4">
+        <button id="copySelectionLinkBtn" class="btn btn-secondary">Copy selection link</button>
+        <button id="sendSelectionWhatsAppBtn" class="btn btn-whatsapp">Send via WhatsApp</button>
+        <button id="sendSelectionEmailBtn" class="btn btn-email">Send via Email</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================= -->
+<!-- CUSTOMER SELECTION REVIEW -->
+<!-- ================================================= -->
+
+<section class="panel p-5" id="selectionReviewSection">
+
+  <div class="accent-line"></div>
+  <h3 class="section-heading">Customer Selection Review & Approval</h3>
+  <p class="text-sm mt-2 mb-5" style="color:var(--muted)">
+    Review the customer's submitted choice before preparing a quotation.
+  </p>
+
+  <div class="soft-panel p-4 mb-5">
+    <p class="label">Selection workflow status</p>
+    <p id="reviewWorkflowStatus" class="font-semibold">Checking selection status...</p>
+  </div>
+
+  <div id="customerSelectionReview">
+    <div class="soft-panel p-5 text-sm" style="color:var(--muted)">
+      No customer selection loaded yet.
+    </div>
+  </div>
+
+  <div id="selectionDecisionPanel" class="hidden soft-panel p-5 mt-5">
+    <label class="label">Internal review note</label>
+    <textarea id="adminSelectionNote" rows="3" class="field"
+      placeholder="Optional note explaining your approval or rejection..."></textarea>
+
+    <div class="flex flex-wrap gap-3 mt-4">
+      <button id="approveSelectionBtn" class="btn btn-primary">Approve Customer Selection</button>
+      <button id="rejectSelectionBtn" class="btn btn-danger">Reject Selection</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================= -->
 <!-- QUOTATION BUILDER -->
+<!-- ================================================= -->
+
 <section class="panel p-5">
 
   <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
@@ -380,8 +553,12 @@ body {
       </p>
     </div>
 
-    <span class="text-xs px-3 py-2 rounded-lg"
-      style="background:#e9edf9;color:var(--blue)">Currency: KES</span>
+    <span class="text-xs px-3 py-2 rounded-lg" style="background:#e9edf9;color:var(--blue)">Currency: KES</span>
+  </div>
+
+  <div id="quotationApprovalNotice" class="rounded-xl p-4 mb-5 text-sm"
+    style="background:#fff4df;color:#8a5a00">
+    A customer product selection must be approved before a new quotation can be generated.
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -434,15 +611,12 @@ body {
     </div>
   </div>
 
-  <!-- TOTAL -->
   <div class="mt-7 soft-panel p-5">
     <h4 class="text-sm font-semibold mb-4">Quotation Breakdown</h4>
-
     <div class="space-y-3 text-sm">
       <div class="flex justify-between"><span style="color:var(--muted)">Product price</span><span id="displayProductPrice">KES 0.00</span></div>
       <div class="flex justify-between"><span style="color:var(--muted)">Delivery fee</span><span id="displayDeliveryFee">KES 0.00</span></div>
       <div class="flex justify-between"><span style="color:var(--muted)">R-Buy service fee</span><span id="displayServiceFee">KES 0.00</span></div>
-
       <div class="border-t pt-4 mt-4 flex justify-between items-center" style="border-color:var(--line)">
         <span class="font-bold">CUSTOMER TOTAL</span>
         <span id="quotationTotal" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</span>
@@ -451,12 +625,8 @@ body {
   </div>
 
   <div class="flex flex-wrap gap-3 mt-6">
-    <button id="issueQuoteBtn" class="btn btn-primary">
-      Generate & Send Secure Quotation
-    </button>
-    <button id="copyQuoteBtn" class="btn btn-secondary" disabled>
-      Copy Quotation Link
-    </button>
+    <button id="issueQuoteBtn" class="btn btn-primary" disabled>Generate & Send Secure Quotation</button>
+    <button id="copyQuoteBtn" class="btn btn-secondary" disabled>Copy Quotation Link</button>
   </div>
 
   <div id="quotationLinkPanel" class="hidden mt-5 soft-panel p-5">
@@ -482,7 +652,10 @@ body {
   </p>
 </section>
 
-<!-- PAYMENT METHODS -->
+<!-- ================================================= -->
+<!-- PAYMENT CENTRE -->
+<!-- ================================================= -->
+
 <section class="panel p-5">
 
   <div class="accent-line"></div>
@@ -493,7 +666,6 @@ body {
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-    <!-- MPESA -->
     <div class="soft-panel p-5">
       <div class="flex justify-between items-center mb-5">
         <h4 class="font-bold text-lg">M-Pesa</h4>
@@ -511,21 +683,14 @@ body {
         <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0</p>
       </div>
 
-      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>
-        Send M-Pesa STK Push
-      </button>
-
-      <p class="text-xs mt-3" style="color:var(--muted)">
-        The customer receives a payment prompt on their phone.
-      </p>
+      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send M-Pesa STK Push</button>
+      <p class="text-xs mt-3" style="color:var(--muted)">The customer receives a payment prompt on their phone.</p>
     </div>
 
-    <!-- BANK TRANSFER -->
     <div class="soft-panel p-5">
       <div class="flex justify-between items-center mb-5">
         <h4 class="font-bold text-lg">Bank Transfer</h4>
-        <span class="text-xs px-3 py-2 rounded-lg"
-          style="background:#e9edf9;color:var(--blue)">Co-operative Bank</span>
+        <span class="text-xs px-3 py-2 rounded-lg" style="background:#e9edf9;color:var(--blue)">Co-operative Bank</span>
       </div>
 
       <p class="label">Account name</p>
@@ -545,10 +710,7 @@ body {
       <p class="label mt-4">Payment reference</p>
       <p id="bankPaymentReference" class="font-bold text-sm break-all">Loading...</p>
 
-      <button id="sendBankDetailsBtn" class="btn btn-bank w-full mt-5">
-        Send Bank Details via WhatsApp
-      </button>
-
+      <button id="sendBankDetailsBtn" class="btn btn-bank w-full mt-5">Send Bank Details via WhatsApp</button>
       <p class="text-xs mt-3" style="color:var(--muted)">
         Prepares payment instructions with the exact amount and order reference.
       </p>
@@ -567,14 +729,12 @@ body {
     An STK Push or bank transfer instruction is not proof of payment.
     Bank transfers must be checked against the actual bank transaction before marking an order as paid.
   </p>
-
 </section>
 
 <!-- ORDER RECORD -->
 <section class="panel p-5">
   <div class="accent-line"></div>
   <h3 class="section-heading mb-5">Order Record</h3>
-
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
     <div><p class="label">Order UUID</p><p id="orderId" class="text-xs break-all"></p></div>
     <div><p class="label">Created on</p><p id="createdAt" class="value"></p></div>
@@ -596,6 +756,8 @@ const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
 
 const PAYMENT_FUNCTION = "payment-script";
 const QUOTATION_FUNCTION = "quotation-response";
+const PRODUCT_FUNCTION = "product-selection";
+const IMAGE_BUCKET = "r-buy-product-images";
 
 const BANK_DETAILS = {
   bankName: "Co-operative Bank of Kenya",
@@ -618,10 +780,17 @@ const orderId = new URLSearchParams(window.location.search).get("id");
 let currentOrder = null;
 let latestQuotation = null;
 let activeQuotationUrl = null;
+let activeSelectionUrl = null;
+
+let productOptions = [];
+let pendingSelection = null;
+let selectedOptionForReview = null;
+let editingImageUrls = [];
 
 let paymentRequestInProgress = false;
 let quotationRequestInProgress = false;
 let bankRequestInProgress = false;
+let productRequestInProgress = false;
 
 const $ = id => document.getElementById(id);
 
@@ -644,7 +813,6 @@ function formatDate(value) {
   if (!value) return "Not available";
 
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) return "Not available";
 
   return date.toLocaleString("en-KE", {
@@ -671,7 +839,6 @@ function showMessage(message, type = "success") {
 
 function showPaymentResult(message, type = "info") {
   const box = $("paymentResult");
-
   box.classList.remove("hidden");
   box.className = "mt-5 p-4 rounded-xl text-sm";
 
@@ -688,7 +855,6 @@ function showPaymentResult(message, type = "info") {
 
 function getNumber(id) {
   const value = $(id).value.trim();
-
   if (value === "") return 0;
 
   const number = Number(value);
@@ -703,13 +869,8 @@ function getNumber(id) {
 function normalizePhone(phone) {
   let number = String(phone || "").replace(/\D/g, "");
 
-  if (number.startsWith("0")) {
-    number = "254" + number.substring(1);
-  }
-
-  if (number.startsWith("7") || number.startsWith("1")) {
-    number = "254" + number;
-  }
+  if (number.startsWith("0")) number = "254" + number.substring(1);
+  if (number.startsWith("7") || number.startsWith("1")) number = "254" + number;
 
   return number;
 }
@@ -717,24 +878,19 @@ function normalizePhone(phone) {
 function safeExternalUrl(value) {
   try {
     const url = new URL(value);
-
-    if (url.protocol === "http:" || url.protocol === "https:") {
-      return url.href;
-    }
+    if (url.protocol === "http:" || url.protocol === "https:") return url.href;
   } catch (error) {}
 
   return null;
 }
 
 function getOrderReference() {
-  if (!currentOrder) return "";
-
-  return "RBUY-" + currentOrder.id.substring(0, 8).toUpperCase();
+  return currentOrder
+    ? "RBUY-" + currentOrder.id.substring(0, 8).toUpperCase()
+    : "";
 }
 
 function openWhatsAppTab() {
-  // Open synchronously during the original click event.
-  // This avoids most browser popup blockers.
   return window.open("about:blank", "_blank");
 }
 
@@ -743,28 +899,38 @@ function redirectWhatsAppTab(tab, url) {
     tab.location.href = url;
     return true;
   }
-
   return false;
 }
 
 function closeWhatsAppTab(tab) {
-  if (tab && !tab.closed) {
-    tab.close();
+  if (tab && !tab.closed) tab.close();
+}
+
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
   }
+
+  const temporary = document.createElement("textarea");
+  temporary.value = text;
+  temporary.style.position = "fixed";
+  temporary.style.opacity = "0";
+  document.body.appendChild(temporary);
+  temporary.select();
+
+  const successful = document.execCommand("copy");
+  temporary.remove();
+
+  if (!successful) throw new Error("Copy failed.");
 }
 
 function getOrderConfirmationMessage() {
-  if (!currentOrder) {
-    throw new Error("No order is currently loaded.");
-  }
-
   return `Hello ${currentOrder.customer_name || "there"},
 
 Thank you for choosing R-Buy!
 
 We have successfully received your order request.
-
-Here are your order details:
 
 ORDER REFERENCE: ${getOrderReference()}
 
@@ -780,20 +946,42 @@ BUDGET: ${formatKES(currentOrder.budget)}
 
 DELIVERY LOCATION: ${currentOrder.delivery_location || "Not provided"}
 
-Our team will review your request, investigate availability and prepare a quotation.
-
-We will contact you with the next steps.
+Our team will review your request, investigate availability and prepare the next steps.
 
 Thank you for choosing R-Buy.
 You can buy anything.`;
 }
 
-function getOrderConfirmationEmailSubject() {
-  return "R-Buy Order Received - " + getOrderReference();
-}
+// ==================================================
+// EDGE FUNCTION CALL
+// ==================================================
 
-function getOrderConfirmationEmailBody() {
-  return getOrderConfirmationMessage();
+async function callProductFunction(payload) {
+  const { data, error } = await supabaseClient.functions.invoke(
+    PRODUCT_FUNCTION,
+    { body: payload }
+  );
+
+  if (error) {
+    console.error("Product function error:", error);
+
+    let detail = error.message || "Product operation failed.";
+
+    if (error.context) {
+      try {
+        const body = await error.context.json();
+        if (body.error) detail = body.error;
+      } catch (e) {}
+    }
+
+    throw new Error(detail);
+  }
+
+  if (!data || data.success === false) {
+    throw new Error(data?.error || "The product operation failed.");
+  }
+
+  return data;
 }
 
 // ==================================================
@@ -838,8 +1026,7 @@ $("logoutBtn").addEventListener("click", async () => {
 
 async function loadOrder() {
   if (!orderId) {
-    loadingState.textContent =
-      "No order ID was provided. Return to the Orders page.";
+    loadingState.textContent = "No order ID was provided. Return to the Orders page.";
     return;
   }
 
@@ -850,9 +1037,7 @@ async function loadOrder() {
     .single();
 
   if (error || !data) {
-    loadingState.textContent =
-      "Unable to load this order. Check the order ID and your admin permissions.";
-
+    loadingState.textContent = "Unable to load this order. Check the order ID and your admin permissions.";
     console.error("Order loading error:", error);
     return;
   }
@@ -861,6 +1046,8 @@ async function loadOrder() {
 
   renderOrder(data);
 
+  await loadProductOptions();
+  await loadCustomerSelection();
   await loadLatestQuotation();
 
   loadingState.classList.add("hidden");
@@ -873,39 +1060,19 @@ async function loadOrder() {
 
 function renderOrder(order) {
   $("orderReference").textContent = getOrderReference();
+  $("summaryProduct").textContent = order.product_name || "Unnamed product";
+  $("summaryDate").textContent = "Submitted " + formatDate(order.created_at);
 
-  $("summaryProduct").textContent =
-    order.product_name || "Unnamed product";
+  $("customerName").textContent = order.customer_name || "Not provided";
+  $("customerPhone").textContent = order.whatsapp || "Not provided";
+  $("customerEmail").textContent = order.email || "Not provided";
+  $("deliveryLocation").textContent = order.delivery_location || "Not provided";
 
-  $("summaryDate").textContent =
-    "Submitted " + formatDate(order.created_at);
-
-  $("customerName").textContent =
-    order.customer_name || "Not provided";
-
-  $("customerPhone").textContent =
-    order.whatsapp || "Not provided";
-
-  $("customerEmail").textContent =
-    order.email || "Not provided";
-
-  $("deliveryLocation").textContent =
-    order.delivery_location || "Not provided";
-
-  $("productName").textContent =
-    order.product_name || "Not provided";
-
-  $("productDescription").textContent =
-    order.product_description || "No description";
-
-  $("quantity").textContent =
-    order.quantity ?? "Not provided";
-
-  $("customerBudget").textContent =
-    formatKES(order.budget);
-
-  $("budgetType").textContent =
-    order.budget_type === "per_item" ? "Per item" : "Total budget";
+  $("productName").textContent = order.product_name || "Not provided";
+  $("productDescription").textContent = order.product_description || "No description";
+  $("quantity").textContent = order.quantity ?? "Not provided";
+  $("customerBudget").textContent = formatKES(order.budget);
+  $("budgetType").textContent = order.budget_type === "per_item" ? "Per item" : "Total budget";
 
   const referenceLink = safeExternalUrl(order.reference_url || "");
 
@@ -917,47 +1084,26 @@ function renderOrder(order) {
     $("referenceUrl").textContent = "No valid reference provided";
   }
 
-  $("investigationNotes").value =
-    order.investigation_notes || "";
+  $("investigationNotes").value = order.investigation_notes || "";
 
-  $("offeredProductName").value =
-    order.offered_product_name || "";
-
-  $("offeredDescription").value =
-    order.offered_description || "";
-
-  $("offeredPrice").value =
-    order.offered_price ?? "";
-
-  $("deliveryFee").value =
-    order.delivery_fee ?? "";
-
-  $("serviceFee").value =
-    order.service_fee ?? "";
-
-  $("deliveryCompany").value =
-    order.delivery_company || "";
-
-  $("deliveryEstimate").value =
-    order.delivery_estimate || "";
+  $("offeredProductName").value = order.offered_product_name || "";
+  $("offeredDescription").value = order.offered_description || "";
+  $("offeredPrice").value = order.offered_price ?? "";
+  $("deliveryFee").value = order.delivery_fee ?? "";
+  $("serviceFee").value = order.service_fee ?? "";
+  $("deliveryCompany").value = order.delivery_company || "";
+  $("deliveryEstimate").value = order.delivery_estimate || "";
 
   if (order.offer_expires_at) {
     const date = new Date(order.offer_expires_at);
-
-    const localDate = new Date(
-      date.getTime() - date.getTimezoneOffset() * 60000
-    );
-
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     $("offerExpiresAt").value = localDate.toISOString().slice(0, 16);
   } else {
     $("offerExpiresAt").value = "";
   }
 
-  $("orderStatus").value =
-    order.status || "pending_review";
-
-  $("paymentStatus").value =
-    order.payment_status || "unpaid";
+  $("orderStatus").value = order.status || "pending_review";
+  $("paymentStatus").value = order.payment_status || "unpaid";
 
   $("orderId").textContent = order.id;
   $("createdAt").textContent = formatDate(order.created_at);
@@ -976,9 +1122,7 @@ function renderOrder(order) {
   }
 
   if (order.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(order.email)) {
-    $("emailBtn").href =
-      "mailto:" + encodeURIComponent(order.email);
-
+    $("emailBtn").href = "mailto:" + encodeURIComponent(order.email);
     $("emailBtn").classList.remove("opacity-40", "pointer-events-none");
     $("sendOrderEmailBtn").disabled = false;
   } else {
@@ -993,12 +1137,535 @@ function renderOrder(order) {
 }
 
 // ==================================================
-// MANUAL ORDER CONFIRMATION - WHATSAPP
+// ORDER COMMUNICATION
 // ==================================================
 
 $("sendOrderWhatsAppBtn").addEventListener("click", () => {
-  if (!currentOrder) {
-    showMessage("No order is currently loaded.", "error");
+  const phone = normalizePhone(currentOrder?.whatsapp);
+
+  if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+    showMessage("The customer's WhatsApp number is invalid.", "error");
+    return;
+  }
+
+  const url = "https://wa.me/" + phone +
+    "?text=" + encodeURIComponent(getOrderConfirmationMessage());
+
+  const tab = window.open(url, "_blank");
+
+  if (tab) {
+    showMessage("Order confirmation prepared in WhatsApp. Review it and press Send.");
+  } else {
+    showMessage("Your browser blocked the WhatsApp window.", "error");
+  }
+});
+
+$("sendOrderEmailBtn").addEventListener("click", () => {
+  if (!currentOrder?.email) {
+    showMessage("This customer has no valid email address.", "error");
+    return;
+  }
+
+  const subject = "R-Buy Order Received - " + getOrderReference();
+  const body = getOrderConfirmationMessage();
+
+  window.location.href =
+    "mailto:" + encodeURIComponent(currentOrder.email) +
+    "?subject=" + encodeURIComponent(subject) +
+    "&body=" + encodeURIComponent(body);
+
+  showMessage("Confirmation email prepared. Review it and press Send.", "info");
+});
+
+// ==================================================
+// SAVE ORDER NOTES AND STATUS
+// ==================================================
+
+async function saveOrder(showSuccess = true) {
+  if (!currentOrder) throw new Error("No order is currently loaded.");
+
+  const updates = {
+    investigation_notes: $("investigationNotes").value.trim(),
+    status: $("orderStatus").value,
+    updated_at: new Date().toISOString()
+  };
+
+  $("saveBtn").disabled = true;
+  $("saveBtn").textContent = "Saving...";
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .update(updates)
+      .eq("id", currentOrder.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    currentOrder = { ...currentOrder, ...data };
+    $("updatedAt").textContent = formatDate(data.updated_at);
+
+    updatePaymentPanel();
+
+    if (showSuccess) showMessage("Order notes and status saved successfully.");
+
+    return data;
+  } finally {
+    $("saveBtn").disabled = false;
+    $("saveBtn").textContent = "Save Order Notes & Status";
+  }
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  try {
+    await saveOrder(true);
+  } catch (error) {
+    showMessage(error.message || "Unable to save order.", "error");
+  }
+});
+
+// ==================================================
+// PRODUCT DISCOVERY: FORM
+// ==================================================
+
+function resetProductForm() {
+  $("editingOptionId").value = "";
+  $("optionProductName").value = "";
+  $("optionBrand").value = "";
+  $("optionModel").value = "";
+  $("optionPrice").value = "";
+  $("optionDescription").value = "";
+  $("optionSpecifications").value = "";
+  $("optionSupplier").value = "";
+  $("optionSupplierUrl").value = "";
+  $("optionAvailability").value = "";
+  $("optionImages").value = "";
+
+  editingImageUrls = [];
+  $("existingImages").innerHTML = "";
+
+  $("productFormHeading").textContent = "Add a product alternative";
+  $("saveOptionBtn").textContent = "Save Product Alternative";
+  $("cancelEditBtn").classList.add("hidden");
+}
+
+$("clearOptionBtn").addEventListener("click", resetProductForm);
+$("cancelEditBtn").addEventListener("click", resetProductForm);
+
+function specificationsToObject(text) {
+  const result = {};
+
+  text.split("\n").forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+
+    const separator = trimmed.indexOf(":");
+
+    if (separator > 0) {
+      const key = trimmed.substring(0, separator).trim();
+      const value = trimmed.substring(separator + 1).trim();
+
+      if (key && value) result[key] = value;
+    } else {
+      result["Specification " + (Object.keys(result).length + 1)] = trimmed;
+    }
+  });
+
+  return result;
+}
+
+function objectToSpecifications(value) {
+  if (!value || typeof value !== "object") return "";
+
+  return Object.entries(value)
+    .map(([key, val]) => `${key}: ${val}`)
+    .join("\n");
+}
+
+function showExistingImages(urls) {
+  const container = $("existingImages");
+  container.innerHTML = "";
+
+  urls.forEach(url => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "w-20";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "Existing product photograph";
+    img.className = "w-20 h-20 object-cover rounded-lg border";
+    img.style.borderColor = "var(--line)";
+
+    wrapper.appendChild(img);
+    container.appendChild(wrapper);
+  });
+}
+
+// ==================================================
+// PRODUCT IMAGE UPLOAD
+// ==================================================
+
+async function uploadProductImages(files) {
+  const urls = [];
+
+  for (const file of files) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      throw new Error("Only JPEG, PNG and WebP images are supported.");
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("Each image must be 5MB or smaller.");
+    }
+
+    const extension = file.type === "image/jpeg"
+      ? "jpg"
+      : file.type.split("/")[1];
+
+    const path =
+      `${currentOrder.id}/${crypto.randomUUID()}.${extension}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from(IMAGE_BUCKET)
+      .upload(path, file, {
+        contentType: file.type,
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabaseClient.storage
+      .from(IMAGE_BUCKET)
+      .getPublicUrl(path);
+
+    if (data?.publicUrl) urls.push(data.publicUrl);
+  }
+
+  return urls;
+}
+
+// ==================================================
+// SAVE PRODUCT OPTION
+// ==================================================
+
+$("saveOptionBtn").addEventListener("click", async () => {
+  if (productRequestInProgress) return;
+
+  const productName = $("optionProductName").value.trim();
+  const description = $("optionDescription").value.trim();
+  const price = Number($("optionPrice").value);
+
+  if (!productName) {
+    showMessage("Enter the product name.", "error");
+    return;
+  }
+
+  if (!description) {
+    showMessage("Enter a product description.", "error");
+    return;
+  }
+
+  if (!Number.isFinite(price) || price < 0 || $("optionPrice").value === "") {
+    showMessage("Enter a valid product price.", "error");
+    return;
+  }
+
+  const supplierUrl = $("optionSupplierUrl").value.trim();
+
+  if (supplierUrl && !safeExternalUrl(supplierUrl)) {
+    showMessage("Enter a valid supplier URL beginning with http:// or https://.", "error");
+    return;
+  }
+
+  const button = $("saveOptionBtn");
+  productRequestInProgress = true;
+  button.disabled = true;
+  button.textContent = "Saving product...";
+
+  try {
+    const newImages = await uploadProductImages(
+      Array.from($("optionImages").files || [])
+    );
+
+    const imageUrls = [...editingImageUrls, ...newImages];
+
+    const payload = {
+      action: "save_option",
+      order_id: currentOrder.id,
+      option_id: $("editingOptionId").value || undefined,
+      product_name: productName,
+      brand: $("optionBrand").value.trim(),
+      model: $("optionModel").value.trim(),
+      description,
+      specifications: specificationsToObject($("optionSpecifications").value),
+      price,
+      currency: "KES",
+      supplier_name: $("optionSupplier").value.trim(),
+      supplier_url: supplierUrl || null,
+      image_urls: imageUrls,
+      availability_notes: $("optionAvailability").value.trim()
+    };
+
+    const result = await callProductFunction(payload);
+
+    resetProductForm();
+    await refreshOrderFromDatabase();
+    await loadProductOptions();
+
+    showMessage(
+      result.message || "Product alternative saved successfully."
+    );
+
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message || "Unable to save product alternative.", "error");
+  } finally {
+    productRequestInProgress = false;
+    button.disabled = false;
+    button.textContent = "Save Product Alternative";
+  }
+});
+
+// ==================================================
+// LOAD PRODUCT OPTIONS
+// ==================================================
+
+async function loadProductOptions() {
+  if (!currentOrder) return;
+
+  $("productOptionsList").innerHTML =
+    '<div class="soft-panel p-5 text-sm">Loading product alternatives...</div>';
+
+  const { data, error } = await supabaseClient
+    .from("order_product_options")
+    .select("*")
+    .eq("order_id", currentOrder.id)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    $("productOptionsList").textContent = "Unable to load product alternatives: " + error.message;
+    return;
+  }
+
+  productOptions = data || [];
+
+  renderProductOptions();
+  updateSelectionStatusBadge();
+}
+
+function renderProductOptions() {
+  const container = $("productOptionsList");
+  container.innerHTML = "";
+
+  if (!productOptions.length) {
+    const empty = document.createElement("div");
+    empty.className = "soft-panel p-6 text-sm";
+    empty.style.color = "var(--muted)";
+    empty.textContent = "No product alternatives have been added yet.";
+    container.appendChild(empty);
+    return;
+  }
+
+  productOptions.forEach(option => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    if (option.image_urls && option.image_urls.length) {
+      const img = document.createElement("img");
+      img.src = option.image_urls[0];
+      img.alt = option.product_name;
+      img.className = "product-image";
+      card.appendChild(img);
+    } else {
+      const placeholder = document.createElement("div");
+      placeholder.className = "product-placeholder";
+      placeholder.textContent = "No product photograph";
+      card.appendChild(placeholder);
+    }
+
+    const content = document.createElement("div");
+    content.className = "p-4";
+
+    const title = document.createElement("h4");
+    title.className = "font-bold";
+    title.textContent = option.product_name;
+
+    const brand = document.createElement("p");
+    brand.className = "text-xs mt-1";
+    brand.style.color = "var(--muted)";
+    brand.textContent = [option.brand, option.model].filter(Boolean).join(" · ");
+
+    const price = document.createElement("p");
+    price.className = "text-xl font-bold mt-3";
+    price.style.color = "var(--blue)";
+    price.textContent = formatKES(option.price);
+
+    const description = document.createElement("p");
+    description.className = "text-sm mt-3 whitespace-pre-wrap";
+    description.textContent = option.description;
+
+    const supplier = document.createElement("p");
+    supplier.className = "text-xs mt-3";
+    supplier.style.color = "var(--muted)";
+    supplier.textContent = option.supplier_name
+      ? "Supplier: " + option.supplier_name
+      : "Supplier not specified";
+
+    const status = document.createElement("span");
+    status.className = "status-pill mt-3";
+    status.style.background = option.is_published ? "#e8f7ed" : "#f0eee8";
+    status.style.color = option.is_published ? "#16834a" : "#77756f";
+    status.textContent = option.is_published ? "Published" : "Draft";
+
+    const buttons = document.createElement("div");
+    buttons.className = "flex flex-wrap gap-2 mt-4";
+
+    const editButton = document.createElement("button");
+    editButton.className = "btn btn-secondary";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", () => editProductOption(option));
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "btn btn-danger";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", () => deleteProductOption(option));
+
+    buttons.append(editButton, deleteButton);
+    content.append(title, brand, price, description, supplier, status, buttons);
+
+    card.appendChild(content);
+    container.appendChild(card);
+  });
+}
+
+// ==================================================
+// EDIT PRODUCT OPTION
+// ==================================================
+
+function editProductOption(option) {
+  $("editingOptionId").value = option.id;
+  $("optionProductName").value = option.product_name || "";
+  $("optionBrand").value = option.brand || "";
+  $("optionModel").value = option.model || "";
+  $("optionPrice").value = option.price ?? "";
+  $("optionDescription").value = option.description || "";
+  $("optionSpecifications").value = objectToSpecifications(option.specifications);
+  $("optionSupplier").value = option.supplier_name || "";
+  $("optionSupplierUrl").value = option.supplier_url || "";
+  $("optionAvailability").value = option.availability_notes || "";
+
+  editingImageUrls = Array.isArray(option.image_urls)
+    ? [...option.image_urls]
+    : [];
+
+  showExistingImages(editingImageUrls);
+
+  $("productFormHeading").textContent = "Edit product alternative";
+  $("saveOptionBtn").textContent = "Update Product Alternative";
+  $("cancelEditBtn").classList.remove("hidden");
+
+  $("productDiscoverySection").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
+// ==================================================
+// DELETE PRODUCT OPTION
+// ==================================================
+
+async function deleteProductOption(option) {
+  const confirmed = window.confirm(
+    `Delete "${option.product_name}"?\n\nThis cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await callProductFunction({
+      action: "delete_option",
+      option_id: option.id
+    });
+
+    await loadProductOptions();
+    showMessage("Product alternative deleted.");
+
+  } catch (error) {
+    showMessage(error.message || "Unable to delete product.", "error");
+  }
+}
+
+$("refreshOptionsBtn").addEventListener("click", loadProductOptions);
+
+// ==================================================
+// PUBLISH PRODUCT SHORTLIST
+// ==================================================
+
+$("publishSelectionBtn").addEventListener("click", async () => {
+  if (!productOptions.length) {
+    showMessage("Add at least one product alternative before publishing.", "error");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Publish the product shortlist for this customer?\n\nAll saved product alternatives will become visible to the customer."
+  );
+
+  if (!confirmed) return;
+
+  const button = $("publishSelectionBtn");
+  button.disabled = true;
+  button.textContent = "Publishing...";
+
+  try {
+    const result = await callProductFunction({
+      action: "publish_selection",
+      order_id: currentOrder.id
+    });
+
+    activeSelectionUrl = result.selection_url;
+
+    $("selectionLinkText").textContent = activeSelectionUrl;
+    $("selectionLinkPanel").classList.remove("hidden");
+
+    await refreshOrderFromDatabase();
+    await loadProductOptions();
+
+    showMessage("Product shortlist published. Your private customer link is ready.");
+
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message || "Unable to publish shortlist.", "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Publish Product Shortlist";
+  }
+});
+
+// ==================================================
+// COPY SELECTION LINK
+// ==================================================
+
+$("copySelectionLinkBtn").addEventListener("click", async () => {
+  if (!activeSelectionUrl) return;
+
+  try {
+    await copyText(activeSelectionUrl);
+    showMessage("Customer selection link copied.");
+  } catch (error) {
+    showMessage("Unable to copy the link.", "error");
+  }
+});
+
+// ==================================================
+// SEND SELECTION LINK VIA WHATSAPP
+// ==================================================
+
+$("sendSelectionWhatsAppBtn").addEventListener("click", () => {
+  if (!activeSelectionUrl) {
+    showMessage("Publish the shortlist first.", "error");
     return;
   }
 
@@ -1009,51 +1676,305 @@ $("sendOrderWhatsAppBtn").addEventListener("click", () => {
     return;
   }
 
-  const message = getOrderConfirmationMessage();
+  const message =
+`Hello ${currentOrder.customer_name || "there"},
 
-  const whatsappUrl =
-    "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+We have researched your product request and prepared a shortlist of available options.
 
-  const tab = window.open(whatsappUrl, "_blank");
+ORDER REFERENCE: ${getOrderReference()}
 
-  if (tab) {
-    showMessage(
-      "Order confirmation prepared in WhatsApp. Review the message and press Send.",
-      "success"
-    );
-  } else {
-    showMessage(
-      "Your browser blocked the WhatsApp window. Use Open WhatsApp Chat instead.",
-      "error"
-    );
-  }
+You can view the product photographs, descriptions, specifications and prices using the private link below:
+
+${activeSelectionUrl}
+
+Please review the alternatives and select your preferred product.
+
+Our team will review your choice before preparing your quotation.
+
+Thank you for choosing R-Buy.
+You can buy anything.`;
+
+  window.open(
+    "https://wa.me/" + phone + "?text=" + encodeURIComponent(message),
+    "_blank"
+  );
 });
 
 // ==================================================
-// MANUAL ORDER CONFIRMATION - EMAIL
+// SEND SELECTION LINK VIA EMAIL
 // ==================================================
 
-$("sendOrderEmailBtn").addEventListener("click", () => {
-  if (!currentOrder || !currentOrder.email) {
-    showMessage("This customer has no valid email address.", "error");
+$("sendSelectionEmailBtn").addEventListener("click", () => {
+  if (!activeSelectionUrl) {
+    showMessage("Publish the shortlist first.", "error");
     return;
   }
 
-  const subject = getOrderConfirmationEmailSubject();
-  const body = getOrderConfirmationEmailBody();
+  if (!currentOrder.email) {
+    showMessage("The customer has no email address.", "error");
+    return;
+  }
 
-  const mailtoUrl =
+  const subject = "Your R-Buy Product Selection - " + getOrderReference();
+
+  const body =
+`Hello ${currentOrder.customer_name || "there"},
+
+We have researched your product request and prepared a shortlist of available alternatives.
+
+Order reference: ${getOrderReference()}
+
+Please use the private link below to review the products and select your preferred option:
+
+${activeSelectionUrl}
+
+Our team will review your selection before preparing your quotation.
+
+Thank you for choosing R-Buy.
+You can buy anything.`;
+
+  window.location.href =
     "mailto:" + encodeURIComponent(currentOrder.email) +
     "?subject=" + encodeURIComponent(subject) +
     "&body=" + encodeURIComponent(body);
-
-  window.location.href = mailtoUrl;
-
-  showMessage(
-    "Confirmation email prepared in your email application. Review it and press Send.",
-    "info"
-  );
 });
+
+// ==================================================
+// SELECTION STATUS DISPLAY
+// ==================================================
+
+function updateSelectionStatusBadge() {
+  const status = currentOrder?.product_selection_status || "not_started";
+
+  const labels = {
+    not_started: "Not started",
+    draft: "Draft",
+    published: "Published",
+    submitted: "Awaiting admin review",
+    approved: "Approved",
+    rejected: "Rejected"
+  };
+
+  const badge = $("selectionStatusBadge");
+  badge.textContent = labels[status] || status;
+
+  const styles = {
+    not_started: ["#f0eee8", "#77756f"],
+    draft: ["#f0eee8", "#77756f"],
+    published: ["#e9edf9", "#3157d5"],
+    submitted: ["#fff4df", "#8a5a00"],
+    approved: ["#e8f7ed", "#16834a"],
+    rejected: ["#fff0ee", "#b42318"]
+  };
+
+  const colors = styles[status] || styles.not_started;
+  badge.style.background = colors[0];
+  badge.style.color = colors[1];
+}
+
+// ==================================================
+// LOAD CUSTOMER SELECTION
+// ==================================================
+
+async function loadCustomerSelection() {
+  if (!currentOrder) return;
+
+  selectedOptionForReview = null;
+  pendingSelection = null;
+
+  const container = $("customerSelectionReview");
+  container.innerHTML = "";
+
+  $("selectionDecisionPanel").classList.add("hidden");
+
+  const { data: selections, error } = await supabaseClient
+    .from("order_product_selections")
+    .select("*")
+    .eq("order_id", currentOrder.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error(error);
+    container.textContent = "Unable to load customer selections: " + error.message;
+    return;
+  }
+
+  if (!selections || !selections.length) {
+    const empty = document.createElement("div");
+    empty.className = "soft-panel p-5 text-sm";
+    empty.style.color = "var(--muted)";
+    empty.textContent = "The customer has not submitted a product selection yet.";
+    container.appendChild(empty);
+
+    $("reviewWorkflowStatus").textContent = "Waiting for customer selection.";
+    updateQuotationGate();
+    return;
+  }
+
+  const latest = selections[0];
+
+  const { data: option, error: optionError } = await supabaseClient
+    .from("order_product_options")
+    .select("*")
+    .eq("id", latest.product_option_id)
+    .maybeSingle();
+
+  if (optionError) console.error(optionError);
+
+  selectedOptionForReview = latest;
+  pendingSelection = latest.status === "pending_review" ? latest : null;
+
+  const card = document.createElement("div");
+  card.className = "soft-panel p-5";
+
+  const heading = document.createElement("h4");
+  heading.className = "font-bold text-lg";
+  heading.textContent = option?.product_name || "Selected product";
+
+  const status = document.createElement("span");
+  status.className = "status-pill mt-3";
+  status.textContent = latest.status.replaceAll("_", " ");
+
+  const statusColors = {
+    pending_review: ["#fff4df", "#8a5a00"],
+    approved: ["#e8f7ed", "#16834a"],
+    rejected: ["#fff0ee", "#b42318"],
+    superseded: ["#f0eee8", "#77756f"]
+  };
+
+  const colors = statusColors[latest.status] || statusColors.pending_review;
+  status.style.background = colors[0];
+  status.style.color = colors[1];
+
+  const details = document.createElement("div");
+  details.className = "mt-4 space-y-3 text-sm";
+
+  const productDetails = [
+    ["Brand", option?.brand],
+    ["Model", option?.model],
+    ["Price", option ? formatKES(option.price) : ""],
+    ["Submitted", formatDate(latest.submitted_at)],
+    ["Customer note", latest.customer_note || "No note provided"],
+    ["Admin note", latest.admin_note || "No review note"]
+  ];
+
+  productDetails.forEach(([label, value]) => {
+    const row = document.createElement("div");
+
+    const labelElement = document.createElement("p");
+    labelElement.className = "label";
+    labelElement.textContent = label;
+
+    const valueElement = document.createElement("p");
+    valueElement.className = "whitespace-pre-wrap";
+    valueElement.textContent = value || "Not provided";
+
+    row.append(labelElement, valueElement);
+    details.appendChild(row);
+  });
+
+  card.append(heading, status, details);
+
+  if (option?.image_urls?.length) {
+    const images = document.createElement("div");
+    images.className = "flex flex-wrap gap-3 mt-4";
+
+    option.image_urls.forEach(url => {
+      const image = document.createElement("img");
+      image.src = url;
+      image.alt = option.product_name;
+      image.className = "w-24 h-24 object-cover rounded-lg";
+      images.appendChild(image);
+    });
+
+    card.appendChild(images);
+  }
+
+  container.appendChild(card);
+
+  if (latest.status === "pending_review") {
+    $("reviewWorkflowStatus").textContent = "Customer selection submitted. Admin review required.";
+    $("selectionDecisionPanel").classList.remove("hidden");
+  } else if (latest.status === "approved") {
+    $("reviewWorkflowStatus").textContent = "Customer selection approved. Quotation can be prepared.";
+  } else if (latest.status === "rejected") {
+    $("reviewWorkflowStatus").textContent = "Selection rejected. Customer may submit another choice.";
+  } else {
+    $("reviewWorkflowStatus").textContent = "This selection has been superseded.";
+  }
+
+  updateQuotationGate();
+}
+
+// ==================================================
+// APPROVE OR REJECT CUSTOMER SELECTION
+// ==================================================
+
+async function reviewCustomerSelection(decision) {
+  if (!pendingSelection) {
+    showMessage("There is no pending customer selection to review.", "error");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    decision === "approved"
+      ? "Approve this customer's product selection?"
+      : "Reject this customer's product selection?"
+  );
+
+  if (!confirmed) return;
+
+  $("approveSelectionBtn").disabled = true;
+  $("rejectSelectionBtn").disabled = true;
+
+  try {
+    const result = await callProductFunction({
+      action: "review_selection",
+      selection_id: pendingSelection.id,
+      decision,
+      admin_note: $("adminSelectionNote").value.trim()
+    });
+
+    await refreshOrderFromDatabase();
+    await loadCustomerSelection();
+
+    showMessage(result.message || "Selection review saved.");
+
+  } catch (error) {
+    showMessage(error.message || "Unable to review selection.", "error");
+  } finally {
+    $("approveSelectionBtn").disabled = false;
+    $("rejectSelectionBtn").disabled = false;
+  }
+}
+
+$("approveSelectionBtn").addEventListener("click", () => reviewCustomerSelection("approved"));
+$("rejectSelectionBtn").addEventListener("click", () => reviewCustomerSelection("rejected"));
+
+// ==================================================
+// QUOTATION APPROVAL GATE
+// ==================================================
+
+function updateQuotationGate() {
+  const approved = currentOrder?.product_selection_status === "approved";
+
+  $("issueQuoteBtn").disabled = !approved || quotationRequestInProgress;
+
+  if (approved) {
+    $("quotationApprovalNotice").textContent =
+      "Product selection approved. You can now prepare the quotation.";
+
+    $("quotationApprovalNotice").style.background = "#e8f7ed";
+    $("quotationApprovalNotice").style.color = "#16834a";
+  } else {
+    $("quotationApprovalNotice").textContent =
+      "A customer product selection must be approved before a new quotation can be generated.";
+
+    $("quotationApprovalNotice").style.background = "#fff4df";
+    $("quotationApprovalNotice").style.color = "#8a5a00";
+  }
+}
 
 // ==================================================
 // QUOTATION CALCULATOR
@@ -1091,11 +2012,7 @@ function updateQuotationTotal() {
   }
 }
 
-[
-  "offeredPrice",
-  "deliveryFee",
-  "serviceFee"
-].forEach(id => {
+["offeredPrice", "deliveryFee", "serviceFee"].forEach(id => {
   $(id).addEventListener("input", updateQuotationTotal);
 });
 
@@ -1107,60 +2024,6 @@ function updateBankReference() {
   $("bankPaymentReference").textContent =
     currentOrder ? getOrderReference() : "Loading...";
 }
-
-// ==================================================
-// SAVE ORDER NOTES AND STATUS
-// ==================================================
-
-async function saveOrder(showSuccess = true) {
-  if (!currentOrder) {
-    throw new Error("No order is currently loaded.");
-  }
-
-  const updates = {
-    investigation_notes: $("investigationNotes").value.trim(),
-    status: $("orderStatus").value,
-    updated_at: new Date().toISOString()
-  };
-
-  $("saveBtn").disabled = true;
-  $("saveBtn").textContent = "Saving...";
-
-  try {
-    const { data, error } = await supabaseClient
-      .from("orders")
-      .update(updates)
-      .eq("id", currentOrder.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    currentOrder = { ...currentOrder, ...data };
-
-    $("updatedAt").textContent = formatDate(data.updated_at);
-
-    updatePaymentPanel();
-
-    if (showSuccess) {
-      showMessage("Order notes and status saved successfully.");
-    }
-
-    return data;
-  } finally {
-    $("saveBtn").disabled = false;
-    $("saveBtn").textContent = "Save Order Notes & Status";
-  }
-}
-
-$("saveBtn").addEventListener("click", async () => {
-  try {
-    await saveOrder(true);
-  } catch (error) {
-    console.error(error);
-    showMessage(error.message || "Unable to save order.", "error");
-  }
-});
 
 // ==================================================
 // LOAD LATEST QUOTATION
@@ -1193,14 +2056,11 @@ async function loadLatestQuotation() {
   if (error) {
     console.error("Quotation status loading error:", error);
 
-    $("quotationStatus").textContent =
-      "Unable to retrieve quotation status";
-
+    $("quotationStatus").textContent = "Unable to retrieve quotation status";
     $("quotationResponseDetails").textContent = error.message;
 
     latestQuotation = null;
     updatePaymentPanel();
-
     return;
   }
 
@@ -1208,18 +2068,13 @@ async function loadLatestQuotation() {
 
   if (!latestQuotation) {
     $("quotationVersion").value = "No quotation issued";
-
     $("quotationStatus").textContent = "No quotation issued";
-
-    $("quotationResponseDetails").textContent =
-      "Prepare and issue the first customer quotation.";
-
+    $("quotationResponseDetails").textContent = "Prepare and issue the first customer quotation.";
     updatePaymentPanel();
     return;
   }
 
-  $("quotationVersion").value =
-    "Version " + latestQuotation.version;
+  $("quotationVersion").value = "Version " + latestQuotation.version;
 
   const response = Array.isArray(latestQuotation.quotation_responses)
     ? latestQuotation.quotation_responses[0]
@@ -1240,43 +2095,29 @@ async function loadLatestQuotation() {
 
   if (status === "accepted") {
     $("quotationStatus").textContent = "Customer accepted quotation";
-
     $("quotationResponseDetails").textContent = response
       ? "Accepted " + formatDate(response.responded_at) +
         " | Accepted amount: " + formatKES(response.accepted_amount)
       : "Accepted response recorded.";
-
   } else if (status === "declined") {
     $("quotationStatus").textContent = "Customer declined quotation";
-
     $("quotationResponseDetails").textContent = response
       ? "Declined " + formatDate(response.responded_at)
       : "Customer declined this quotation.";
-
   } else if (status === "expired") {
     $("quotationStatus").textContent = "Quotation expired";
-
-    $("quotationResponseDetails").textContent =
-      "Expired " + formatDate(latestQuotation.expires_at);
-
+    $("quotationResponseDetails").textContent = "Expired " + formatDate(latestQuotation.expires_at);
   } else if (status === "replaced") {
     $("quotationStatus").textContent = "Quotation replaced";
-
-    $("quotationResponseDetails").textContent =
-      "A newer quotation version exists.";
-
+    $("quotationResponseDetails").textContent = "A newer quotation version exists.";
   } else if (status === "sent") {
     $("quotationStatus").textContent = "Awaiting customer response";
-
     $("quotationResponseDetails").textContent =
       "Sent " + formatDate(latestQuotation.sent_at) +
       " | Expires " + formatDate(latestQuotation.expires_at);
-
   } else {
     $("quotationStatus").textContent = status || "Unknown status";
-
-    $("quotationResponseDetails").textContent =
-      "Quotation version " + latestQuotation.version;
+    $("quotationResponseDetails").textContent = "Quotation version " + latestQuotation.version;
   }
 
   updatePaymentPanel();
@@ -1292,20 +2133,17 @@ $("refreshQuotationBtn").addEventListener("click", async () => {
 // ==================================================
 
 async function createQuotation() {
-  if (!currentOrder) {
-    throw new Error("No order is currently loaded.");
+  if (!currentOrder) throw new Error("No order is currently loaded.");
+
+  if (currentOrder.product_selection_status !== "approved") {
+    throw new Error("The customer's product selection must be approved first.");
   }
 
   const productName = $("offeredProductName").value.trim();
   const description = $("offeredDescription").value.trim();
 
-  if (!productName) {
-    throw new Error("Enter the name of the product being offered.");
-  }
-
-  if (!description) {
-    throw new Error("Enter a description of the product being offered.");
-  }
+  if (!productName) throw new Error("Enter the name of the product being offered.");
+  if (!description) throw new Error("Enter a description of the product being offered.");
 
   const quote = getQuotation();
 
@@ -1314,10 +2152,7 @@ async function createQuotation() {
   }
 
   const expiryValue = $("offerExpiresAt").value;
-
-  if (!expiryValue) {
-    throw new Error("Please set a quotation expiry date.");
-  }
+  if (!expiryValue) throw new Error("Please set a quotation expiry date.");
 
   const expiryDate = new Date(expiryValue);
 
@@ -1353,27 +2188,20 @@ async function createQuotation() {
   );
 
   if (error) {
-    console.error("Quotation function error:", error);
-
     let detail = error.message || "Unable to create quotation.";
 
     if (error.context) {
       try {
         const responseBody = await error.context.json();
-
-        if (responseBody.error) {
-          detail = responseBody.error;
-        }
-      } catch (parseError) {}
+        if (responseBody.error) detail = responseBody.error;
+      } catch (e) {}
     }
 
     throw new Error(detail);
   }
 
   if (!data || !data.success) {
-    throw new Error(
-      data?.error || "The quotation function did not confirm creation."
-    );
+    throw new Error(data?.error || "The quotation function did not confirm creation.");
   }
 
   const quotationUrl = data.quotation_url || data.url;
@@ -1413,6 +2241,8 @@ async function refreshOrderFromDatabase() {
   $("updatedAt").textContent = formatDate(data.updated_at);
 
   updatePaymentPanel();
+  updateSelectionStatusBadge();
+  updateQuotationGate();
 }
 
 // ==================================================
@@ -1422,25 +2252,27 @@ async function refreshOrderFromDatabase() {
 $("issueQuoteBtn").addEventListener("click", async () => {
   if (quotationRequestInProgress) return;
 
+  if (currentOrder?.product_selection_status !== "approved") {
+    showMessage("Approve the customer's product selection before generating a quotation.", "error");
+    return;
+  }
+
   const confirmed = window.confirm(
     "Generate a new quotation version for this customer?\n\nAny previous unanswered quotation will be replaced."
   );
 
   if (!confirmed) return;
 
-  // Open before asynchronous operations to avoid popup blocking.
   const whatsappTab = openWhatsAppTab();
 
   quotationRequestInProgress = true;
+  updateQuotationGate();
 
   const button = $("issueQuoteBtn");
-
-  button.disabled = true;
   button.textContent = "Generating secure quotation...";
 
   try {
     const quotationUrl = await createQuotation();
-
     const phone = normalizePhone(currentOrder.whatsapp);
 
     if (!phone || !/^254[71]\d{8}$/.test(phone)) {
@@ -1450,12 +2282,10 @@ $("issueQuoteBtn").addEventListener("click", async () => {
         "Quotation created, but this customer has no valid WhatsApp number. Copy the link and contact them manually.",
         "info"
       );
-
       return;
     }
 
     const quote = getQuotation();
-    const reference = getOrderReference();
 
     const message =
 `Hello ${currentOrder.customer_name || "there"},
@@ -1464,7 +2294,7 @@ Thank you for choosing R-Buy!
 
 We have reviewed your request and prepared your quotation.
 
-ORDER REFERENCE: ${reference}
+ORDER REFERENCE: ${getOrderReference()}
 
 PRODUCT: ${$("offeredProductName").value.trim()}
 QUANTITY: ${currentOrder.quantity}
@@ -1487,26 +2317,19 @@ You can buy anything.`;
 
     showMessage(
       opened
-        ? "Quotation generated successfully. WhatsApp is ready with the quotation message. Review it and press Send."
-        : "Quotation created successfully, but the browser blocked WhatsApp. Copy the quotation link and send it manually.",
+        ? "Quotation generated successfully. WhatsApp is ready. Review the message and press Send."
+        : "Quotation created successfully, but WhatsApp was blocked. Copy the quotation link and send it manually.",
       opened ? "success" : "info"
     );
 
   } catch (error) {
-    console.error("Quotation creation error:", error);
-
+    console.error(error);
     closeWhatsAppTab(whatsappTab);
-
-    showMessage(
-      error.message || "Unable to create quotation.",
-      "error"
-    );
-
+    showMessage(error.message || "Unable to create quotation.", "error");
   } finally {
     quotationRequestInProgress = false;
-
-    button.disabled = false;
     button.textContent = "Generate & Send Secure Quotation";
+    updateQuotationGate();
   }
 });
 
@@ -1521,15 +2344,10 @@ $("copyQuoteBtn").addEventListener("click", async () => {
   }
 
   try {
-    await navigator.clipboard.writeText(activeQuotationUrl);
-
+    await copyText(activeQuotationUrl);
     showMessage("Secure quotation link copied successfully.");
-
   } catch (error) {
-    showMessage(
-      "Unable to copy link. Select and copy the link displayed in the quotation panel.",
-      "error"
-    );
+    showMessage("Unable to copy link.", "error");
   }
 });
 
@@ -1542,11 +2360,8 @@ function updatePaymentPanel() {
 
   const phone = normalizePhone(currentOrder.whatsapp);
 
-  $("paymentCustomerName").textContent =
-    currentOrder.customer_name || "Not provided";
-
-  $("paymentPhone").textContent =
-    phone || "Invalid or missing phone number";
+  $("paymentCustomerName").textContent = currentOrder.customer_name || "Not provided";
+  $("paymentPhone").textContent = phone || "Invalid or missing phone number";
 
   const mpesaButton = $("sendMpesaBtn");
   const bankButton = $("sendBankDetailsBtn");
@@ -1556,19 +2371,15 @@ function updatePaymentPanel() {
 
   if (!latestQuotation) {
     reason = "A quotation must be issued before payment can be requested.";
-
   } else if (latestQuotation.status !== "accepted") {
     reason = "The latest quotation has not been accepted by the customer.";
-
   } else if (currentOrder.status !== "awaiting_payment") {
     reason = "The quotation is accepted, but the order status is not Awaiting payment.";
-
   } else if (
     latestQuotation.expires_at &&
     new Date(latestQuotation.expires_at).getTime() <= Date.now()
   ) {
     reason = "The accepted quotation has expired. A new quotation is required.";
-
   } else if (
     currentOrder.payment_status === "paid" ||
     currentOrder.payment_status === "refunded"
@@ -1579,10 +2390,8 @@ function updatePaymentPanel() {
   if (reason) {
     readiness.textContent = reason;
     readiness.className = "text-sm text-yellow-700";
-
     mpesaButton.disabled = true;
     bankButton.disabled = true;
-
   } else {
     readiness.textContent =
       "Customer accepted the latest quotation. Payment methods are ready.";
@@ -1617,10 +2426,7 @@ $("sendMpesaBtn").addEventListener("click", async () => {
   await loadLatestQuotation();
 
   if (!latestQuotation || latestQuotation.status !== "accepted") {
-    showPaymentResult(
-      "Payment cannot proceed because the latest quotation has not been accepted.",
-      "error"
-    );
+    showPaymentResult("The latest quotation has not been accepted.", "error");
     return;
   }
 
@@ -1636,7 +2442,6 @@ $("sendMpesaBtn").addEventListener("click", async () => {
   paymentRequestInProgress = true;
 
   const button = $("sendMpesaBtn");
-
   button.disabled = true;
   button.textContent = "Preparing payment request...";
 
@@ -1646,9 +2451,7 @@ $("sendMpesaBtn").addEventListener("click", async () => {
     const savedOrder = await saveOrder(false);
 
     if (savedOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "The order must be marked Awaiting payment before sending an STK Push."
-      );
+      throw new Error("The order must be marked Awaiting payment before sending an STK Push.");
     }
 
     if (
@@ -1669,33 +2472,24 @@ $("sendMpesaBtn").addEventListener("click", async () => {
 
     const { data, error } = await supabaseClient.functions.invoke(
       PAYMENT_FUNCTION,
-      {
-        body: { order_id: currentOrder.id }
-      }
+      { body: { order_id: currentOrder.id } }
     );
 
     if (error) {
-      console.error("Payment function error:", error);
-
       let detail = error.message || "The payment request could not be completed.";
 
       if (error.context) {
         try {
           const responseBody = await error.context.json();
-
-          if (responseBody.error) {
-            detail = responseBody.error;
-          }
-        } catch (parseError) {}
+          if (responseBody.error) detail = responseBody.error;
+        } catch (e) {}
       }
 
       throw new Error(detail);
     }
 
     if (!data || !data.success) {
-      throw new Error(
-        data?.error || "IntaSend did not confirm the payment request."
-      );
+      throw new Error(data?.error || "IntaSend did not confirm the payment request.");
     }
 
     showPaymentResult(
@@ -1711,30 +2505,20 @@ $("sendMpesaBtn").addEventListener("click", async () => {
     $("paymentStatus").value = "pending";
     currentOrder.payment_status = "pending";
 
-    showMessage(
-      "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
-      "success"
-    );
+    showMessage("M-Pesa payment prompt initiated. Awaiting payment confirmation.", "success");
 
   } catch (error) {
-    console.error("STK Push error:", error);
-
-    showPaymentResult(
-      error.message || "Unable to initiate the M-Pesa payment request.",
-      "error"
-    );
-
+    console.error(error);
+    showPaymentResult(error.message || "Unable to initiate payment.", "error");
   } finally {
     paymentRequestInProgress = false;
-
     button.textContent = "Send M-Pesa STK Push";
-
     updatePaymentPanel();
   }
 });
 
 // ==================================================
-// SEND BANK DETAILS THROUGH WHATSAPP
+// BANK TRANSFER INSTRUCTIONS
 // ==================================================
 
 $("sendBankDetailsBtn").addEventListener("click", async () => {
@@ -1745,7 +2529,6 @@ $("sendBankDetailsBtn").addEventListener("click", async () => {
     return;
   }
 
-  // Open the blank tab immediately within the click event.
   const tab = openWhatsAppTab();
 
   bankRequestInProgress = true;
@@ -1755,15 +2538,11 @@ $("sendBankDetailsBtn").addEventListener("click", async () => {
     await loadLatestQuotation();
 
     if (!latestQuotation || latestQuotation.status !== "accepted") {
-      throw new Error(
-        "The customer must accept the latest quotation before payment instructions can be sent."
-      );
+      throw new Error("The customer must accept the latest quotation before payment instructions can be sent.");
     }
 
     if (currentOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "Change the order status to Awaiting payment before sending bank details."
-      );
+      throw new Error("Change the order status to Awaiting payment before sending bank details.");
     }
 
     if (
@@ -1830,25 +2609,15 @@ You can buy anything.`;
 
     const opened = redirectWhatsAppTab(tab, whatsappUrl);
 
-    if (opened) {
-      showMessage(
-        "Bank transfer instructions prepared in WhatsApp. Review the details and press Send.",
-        "success"
-      );
-    } else {
-      throw new Error(
-        "The browser blocked WhatsApp. Please contact the customer manually."
-      );
+    if (!opened) {
+      throw new Error("The browser blocked WhatsApp. Please contact the customer manually.");
     }
+
+    showMessage("Bank transfer instructions prepared in WhatsApp. Review the details and press Send.");
 
   } catch (error) {
     closeWhatsAppTab(tab);
-
-    showMessage(
-      error.message || "Unable to prepare bank transfer instructions.",
-      "error"
-    );
-
+    showMessage(error.message || "Unable to prepare bank transfer instructions.", "error");
   } finally {
     bankRequestInProgress = false;
     updatePaymentPanel();
@@ -1862,22 +2631,18 @@ You can buy anything.`;
 async function initializePage() {
   try {
     const authorized = await checkAdmin();
-
     if (!authorized) return;
 
     await loadOrder();
 
   } catch (error) {
     console.error("Page initialization error:", error);
-
-    loadingState.textContent =
-      "An unexpected error occurred while loading this order.";
+    loadingState.textContent = "An unexpected error occurred while loading this order.";
   }
 }
 
 initializePage();
 
 </script>
-
 </body>
 </html>
