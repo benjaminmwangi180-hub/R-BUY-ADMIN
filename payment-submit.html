@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f3ed">
+  <meta name="description" content="Secure R-BUY payment submission and verification.">
+  <title>Submit Payment | R-BUY</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: light; }
+    body { background: #f5f3ed; color: #20201e; }
+    .paper { background: rgba(255,255,255,.88); border: 1px solid #e7e3da; }
+    .mono { font-variant-numeric: tabular-nums; }
+    .field { width:100%; border:1px solid #d8d4ca; background:#fff; border-radius:12px; padding:13px 14px; outline:none; }
+    .field:focus { border-color:#292923; box-shadow:0 0 0 3px rgba(41,41,35,.08); }
+    .btn { background:#24241f; color:white; border-radius:12px; padding:14px 18px; font-weight:700; }
+    .btn:disabled { opacity:.55; cursor:not-allowed; }
+    .muted { color:#77756d; }
+    .hidden-force { display:none !important; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <header class="border-b border-stone-200 bg-[#f5f3ed]/90">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
+      <a href="https://benjaminmwangi180-hub.github.io/R-BUY-ORDER/" class="text-xl font-black tracking-tight">R-BUY<span class="text-stone-400">.</span></a>
+      <span class="text-xs font-semibold uppercase tracking-[.18em] text-stone-500">Secure payment submission</span>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-3xl px-5 py-10 md:py-14">
+    <div class="mb-8">
+      <p class="mb-3 text-xs font-bold uppercase tracking-[.2em] text-stone-500">Order payment</p>
+      <h1 class="text-3xl font-black tracking-tight md:text-4xl">Submit your payment</h1>
+      <p class="mt-3 max-w-xl leading-7 text-stone-600">Make your payment using the method shown below, then submit the transaction details. Your order will only proceed after R-BUY verifies the funds.</p>
+    </div>
+
+    <section id="loadingPanel" class="paper rounded-3xl p-7">
+      <div class="flex items-center gap-3">
+        <div class="h-5 w-5 animate-spin rounded-full border-2 border-stone-300 border-t-stone-800"></div>
+        <p class="font-semibold">Loading secure payment details…</p>
+      </div>
+    </section>
+
+    <section id="errorPanel" class="paper hidden-force rounded-3xl p-7">
+      <div class="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">LINK UNAVAILABLE</div>
+      <h2 class="text-xl font-bold">We couldn't open this payment link.</h2>
+      <p id="errorMessage" class="mt-2 leading-6 text-stone-600">The link may have expired or already been used. Contact R-BUY for a fresh payment link.</p>
+    </section>
+
+    <section id="paymentPanel" class="hidden-force space-y-5">
+      <div class="paper rounded-3xl p-6 md:p-7">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[.16em] text-stone-500">Order reference</p>
+            <p id="orderReference" class="mono mt-1 text-2xl font-black">—</p>
+            <p id="customerName" class="mt-1 text-sm text-stone-500"></p>
+          </div>
+          <span class="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">Awaiting payment</span>
+        </div>
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+          <div class="rounded-2xl bg-stone-100 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Quotation total</p>
+            <p id="quotationTotal" class="mono mt-1 text-xl font-bold">KES —</p>
+          </div>
+          <div class="rounded-2xl bg-stone-900 p-4 text-white">
+            <p class="text-xs font-semibold uppercase tracking-wider text-stone-300">Outstanding balance</p>
+            <p id="outstandingAmount" class="mono mt-1 text-2xl font-black">KES —</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="paper rounded-3xl p-6 md:p-7">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[.16em] text-stone-500">Payment method</p>
+            <h2 id="methodTitle" class="mt-1 text-xl font-black">—</h2>
+          </div>
+          <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-600">KES</span>
+        </div>
+
+        <div id="mpesaInstructions" class="hidden-force mt-5 rounded-2xl border border-stone-200 p-5">
+          <p class="font-bold">M-Pesa Pochi la Biashara</p>
+          <p class="mt-2 text-sm leading-6 text-stone-600">Open M-Pesa and send your payment to the Pochi number below. Confirm the recipient details on your M-Pesa screen before completing the transaction.</p>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-stone-100 p-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Pochi number</p>
+              <p class="mono mt-1 text-2xl font-black">0719402804</p>
+            </div>
+            <button type="button" class="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-bold" onclick="copyText('0719402804', this)">Copy number</button>
+          </div>
+        </div>
+
+        <div id="bankInstructions" class="hidden-force mt-5 rounded-2xl border border-stone-200 p-5">
+          <p class="font-bold">Co-operative Bank of Kenya</p>
+          <p class="mt-2 text-sm leading-6 text-stone-600">Use the bank details below to make your transfer. Enter the order reference as the payment narration or account reference where supported.</p>
+          <div class="mt-4 space-y-3 text-sm">
+            <div class="flex justify-between gap-4 border-b border-stone-100 pb-3"><span class="muted">Account name</span><strong id="bankAccountName" class="text-right">—</strong></div>
+            <div class="flex justify-between gap-4 border-b border-stone-100 pb-3"><span class="muted">Paybill</span><strong id="bankPaybill" class="mono text-right">—</strong></div>
+            <div class="flex justify-between gap-4"><span class="muted">Account number</span><strong id="bankAccountNumber" class="mono text-right">—</strong></div>
+          </div>
+          <button type="button" class="mt-4 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-bold" onclick="copyText('01101509803001', this)">Copy account number</button>
+        </div>
+
+        <p class="mt-4 text-xs leading-5 text-stone-500">Only pay the outstanding amount shown above. R-BUY will verify the transaction against the receiving account. A submitted reference is not proof of payment.</p>
+      </div>
+
+      <form id="paymentForm" class="paper rounded-3xl p-6 md:p-7">
+        <h2 class="text-xl font-black">Submit transaction details</h2>
+        <p class="mt-2 text-sm leading-6 text-stone-600">Enter the exact transaction reference from your M-Pesa or bank confirmation message.</p>
+
+        <div class="mt-5 space-y-4">
+          <div>
+            <label for="transactionReference" class="mb-2 block text-sm font-bold">Transaction reference</label>
+            <input id="transactionReference" class="field mono uppercase" type="text" maxlength="80" minlength="5" placeholder="e.g. QHX123ABC" autocomplete="off" required>
+            <p class="mt-1 text-xs text-stone-500">Do not enter your phone number or account number here.</p>
+          </div>
+          <div>
+            <label for="paymentAmount" class="mb-2 block text-sm font-bold">Amount paid (KES)</label>
+            <input id="paymentAmount" class="field mono" type="number" min="1" step="0.01" inputmode="decimal" placeholder="Enter amount paid" required>
+            <p class="mt-1 text-xs text-stone-500">You may submit a partial payment, but the remaining balance will still be due.</p>
+          </div>
+          <label class="flex items-start gap-3 rounded-xl bg-stone-100 p-4 text-sm leading-6">
+            <input id="accuracyConfirm" type="checkbox" class="mt-1 h-4 w-4 accent-stone-900" required>
+            <span>I confirm that I have made this payment and that the transaction reference and amount entered above are accurate.</span>
+          </label>
+          <div id="formError" class="hidden-force rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert"></div>
+          <button id="submitButton" class="btn w-full" type="submit">Submit payment for verification</button>
+          <p class="text-center text-xs leading-5 text-stone-500">Never share your M-Pesa PIN, bank password, or one-time password with anyone.</p>
+        </div>
+      </form>
+    </section>
+
+    <section id="successPanel" class="paper hidden-force rounded-3xl p-7 md:p-9">
+      <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-800">✓</div>
+      <p class="text-xs font-bold uppercase tracking-[.18em] text-emerald-700">Submission received</p>
+      <h2 class="mt-2 text-2xl font-black">Your payment is awaiting verification.</h2>
+      <p class="mt-3 leading-7 text-stone-600">Thank you. R-BUY has received your transaction details. Your order will not move to procurement or dispatch until an administrator confirms that the funds have been received.</p>
+      <div class="mt-6 rounded-2xl bg-stone-100 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">Order reference</p>
+        <p id="successOrderReference" class="mono mt-1 text-xl font-black">—</p>
+        <p class="mt-3 text-xs text-stone-500">Keep your original M-Pesa or bank confirmation message until verification is complete.</p>
+      </div>
+    </section>
+
+    <footer class="mt-8 text-center text-xs leading-6 text-stone-500">
+      R-BUY · You can buy anything.<br>
+      This is a secure payment-detail submission page. It does not collect or process your M-Pesa PIN or bank login credentials.
+    </footer>
+  </main>
+
+<script>
+(() => {
+  "use strict";
+
+  const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
+  const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/manual-payment`;
+
+  const $ = (id) => document.getElementById(id);
+  let paymentToken = "";
+  let paymentDetails = null;
+
+  function show(id) { $(id).classList.remove("hidden-force"); }
+  function hide(id) { $(id).classList.add("hidden-force"); }
+
+  function money(value) {
+    return new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: "KES",
+      minimumFractionDigits: 2
+    }).format(Number(value || 0));
+  }
+
+  function showError(message) {
+    $("errorMessage").textContent = message;
+    hide("loadingPanel");
+    hide("paymentPanel");
+    show("errorPanel");
+  }
+
+  async function callFunction(payload) {
+    const response = await fetch(FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_PUBLISHABLE_KEY,
+        "Authorization": `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.success === false) {
+      throw new Error(result.error || "The request could not be completed. Please try again.");
+    }
+    return result;
+  }
+
+  function renderDetails(data) {
+    paymentDetails = data;
+    $("orderReference").textContent = data.order_reference || "—";
+    $("customerName").textContent = data.customer_name ? `Prepared for ${data.customer_name}` : "";
+    $("quotationTotal").textContent = money(data.quotation_total);
+    $("outstandingAmount").textContent = money(data.outstanding_amount);
+    $("paymentAmount").max = String(data.outstanding_amount);
+
+    if (data.payment_method === "mpesa") {
+      $("methodTitle").textContent = "M-Pesa Pochi";
+      show("mpesaInstructions");
+      hide("bankInstructions");
+    } else if (data.payment_method === "bank_transfer") {
+      $("methodTitle").textContent = "Bank transfer";
+      $("bankAccountName").textContent = data.bank?.account_name || "—";
+      $("bankPaybill").textContent = data.bank?.paybill || "—";
+      $("bankAccountNumber").textContent = data.bank?.account_number || "—";
+      show("bankInstructions");
+      hide("mpesaInstructions");
+    } else {
+      throw new Error("The payment method on this link is not supported.");
+    }
+
+    hide("loadingPanel");
+    show("paymentPanel");
+  }
+
+  async function loadPaymentDetails() {
+    const params = new URLSearchParams(window.location.search);
+    paymentToken = params.get("token") || "";
+
+    if (!/^[A-Za-z0-9_-]{40,50}$/.test(paymentToken)) {
+      throw new Error("This payment link is incomplete. Please use the full link sent by R-BUY.");
+    }
+
+    const result = await callFunction({
+      action: "get_payment_details",
+      token: paymentToken
+    });
+    renderDetails(result);
+  }
+
+  $("paymentForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    hide("formError");
+
+    const reference = $("transactionReference").value.trim().toUpperCase();
+    const amount = Number($("paymentAmount").value);
+    const confirmed = $("accuracyConfirm").checked;
+    const button = $("submitButton");
+
+    if (!/^[A-Z0-9-]{5,80}$/.test(reference)) {
+      $("formError").textContent = "Enter a valid transaction reference using 5 to 80 letters, numbers, or hyphens.";
+      show("formError");
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0 || amount > Number(paymentDetails?.outstanding_amount || 0) + 0.009) {
+      $("formError").textContent = "Enter a valid amount that does not exceed the outstanding balance.";
+      show("formError");
+      return;
+    }
+
+    if (!confirmed) {
+      $("formError").textContent = "Please confirm that the payment details are accurate.";
+      show("formError");
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Submitting…";
+
+    try {
+      const result = await callFunction({
+        action: "submit_payment",
+        token: paymentToken,
+        transaction_reference: reference,
+        amount
+      });
+
+      $("successOrderReference").textContent = result.order_reference || paymentDetails.order_reference;
+      hide("paymentPanel");
+      show("successPanel");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      $("formError").textContent = error.message || "Submission failed. Please try again.";
+      show("formError");
+      button.disabled = false;
+      button.textContent = "Submit payment for verification";
+    }
+  });
+
+  window.copyText = async (value, button) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      const original = button.textContent;
+      button.textContent = "Copied";
+      setTimeout(() => button.textContent = original, 1500);
+    } catch {
+      button.textContent = "Copy unavailable";
+    }
+  };
+
+  loadPaymentDetails().catch((error) => showError(error.message));
+})();
+</script>
+</body>
+</html>
