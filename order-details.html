@@ -663,23 +663,24 @@ Condition: Brand new"></textarea>
 
     <div class="soft-panel p-5">
       <div class="flex justify-between items-center mb-5">
-        <h4 class="font-bold text-lg">M-Pesa</h4>
-        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">STK Push</span>
+        <h4 class="font-bold text-lg">M-Pesa Pochi</h4>
+        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">Pay directly</span>
       </div>
 
       <p class="label">Customer</p>
       <p id="paymentCustomerName" class="font-semibold"></p>
 
-      <p class="label mt-4">M-Pesa phone number</p>
-      <p id="paymentPhone" class="text-lg font-bold text-green-700"></p>
+      <p class="label mt-4">Pay to Pochi number</p>
+      <p class="text-2xl font-bold text-green-700">0719 402 804</p>
+      <p class="text-xs mt-1" style="color:var(--muted)">M-Pesa Pochi la Biashara</p>
 
       <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
         <p class="label">Accepted quotation amount</p>
         <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</p>
       </div>
 
-      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send M-Pesa STK Push</button>
-      <p class="text-xs mt-3" style="color:var(--muted)">The customer receives a payment prompt on their phone.</p>
+      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send Pochi Payment Instructions</button>
+      <p class="text-xs mt-3" style="color:var(--muted)">The customer pays directly, then submits the M-Pesa transaction code through a secure R-BUY link.</p>
     </div>
 
     <div class="soft-panel p-5">
@@ -721,8 +722,7 @@ Condition: Brand new"></textarea>
   <div id="paymentResult" class="hidden mt-5 p-4 rounded-xl text-sm"></div>
 
   <p class="text-xs mt-4" style="color:var(--muted)">
-    An STK Push or bank transfer instruction is not proof of payment.
-    Bank transfers must be checked against the actual bank transaction before marking an order as paid.
+    Payment instructions and customer-submitted transaction references are not proof of payment. Admin must verify funds in the receiving account before marking an order as paid or allowing dispatch.
   </p>
 </section>
 
@@ -749,7 +749,8 @@ Condition: Brand new"></textarea>
 const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
 const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
 
-const PAYMENT_FUNCTION = "payment-script";
+const PAYMENT_FUNCTION = "payment-script"; // Retained for legacy compatibility; manual payments do not call it.
+const MANUAL_PAYMENT_FUNCTION = "manual-payment"; // Must be deployed with create_submission_link before using these buttons.
 const QUOTATION_FUNCTION = "quotation-response";
 const PRODUCT_FUNCTION = "product-selection";
 const IMAGE_BUCKET = "r-buy-product-images";
@@ -2484,7 +2485,7 @@ function updatePaymentPanel() {
     bankButton.disabled = true;
   } else {
     readiness.textContent =
-      "Customer accepted the latest quotation. Payment methods are ready.";
+      "Customer accepted the latest quotation. Manual M-Pesa Pochi and bank payment instructions are ready.";
 
     readiness.className = "text-sm text-green-700";
 
@@ -2501,155 +2502,140 @@ function updatePaymentPanel() {
   }
 }
 // ==================================================
-// M-PESA STK PUSH
+// MANUAL PAYMENT LINK GENERATION
+// ==================================================
+
+async function createManualPaymentLink(paymentMethod) {
+  if (!currentOrder || !isAcceptedQuotationValid()) {
+    throw new Error("A valid accepted quotation is required before payment instructions can be sent.");
+  }
+
+  const { data: sessionData, error: sessionError } =
+    await supabaseClient.auth.getSession();
+
+  if (sessionError || !sessionData.session) {
+    throw new Error("Your admin session has expired. Please log in again.");
+  }
+
+  const { data, error } = await supabaseClient.functions.invoke(
+    MANUAL_PAYMENT_FUNCTION,
+    {
+      body: {
+        action: "create_submission_link",
+        order_id: currentOrder.id,
+        payment_method: paymentMethod
+      }
+    }
+  );
+
+  if (error) {
+    let detail = error.message || "Could not generate the secure payment submission link.";
+    if (error.context) {
+      try {
+        const responseBody = await error.context.json();
+        if (responseBody.error) detail = responseBody.error;
+      } catch (e) {}
+    }
+    throw new Error(detail);
+  }
+
+  if (!data || !data.success || !data.submission_url) {
+    throw new Error(data?.error || "The payment service did not return a secure submission link.");
+  }
+
+  // The backend must generate and store the token hash. Never generate this token in the browser.
+  return data;
+}
+
+// ==================================================
+// M-PESA POCHI PAYMENT INSTRUCTIONS
 // ==================================================
 
 $("sendMpesaBtn").addEventListener("click", async () => {
   if (paymentRequestInProgress) return;
-
   if (!currentOrder) {
     showPaymentResult("No order is loaded.", "error");
     return;
   }
 
+  const tab = openWhatsAppTab();
   paymentRequestInProgress = true;
   updatePaymentPanel();
-
   const button = $("sendMpesaBtn");
-  button.textContent = "Checking payment readiness...";
+  button.textContent = "Generating secure submission link...";
 
   try {
     await refreshOrderFromDatabase();
     await loadLatestQuotation();
 
     if (!isAcceptedQuotationValid()) {
-      throw new Error(
-        "The latest quotation has not been accepted or is no longer valid."
-      );
+      throw new Error("The latest quotation has not been accepted or is no longer valid.");
     }
-
     if (currentOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "The order must be marked Awaiting payment before sending an STK Push."
-      );
+      throw new Error("The order must be Awaiting payment before payment instructions can be sent.");
     }
-
-    if (
-      currentOrder.payment_status === "paid" ||
-      currentOrder.payment_status === "refunded"
-    ) {
-      throw new Error(
-        "This order is already marked as paid or refunded."
-      );
+    if (["paid", "refunded"].includes(currentOrder.payment_status)) {
+      throw new Error("This order is already marked as paid or refunded.");
     }
 
     const phone = normalizePhone(currentOrder.whatsapp);
-
     if (!phone || !/^254[71]\d{8}$/.test(phone)) {
-      throw new Error("The customer's M-Pesa phone number is invalid.");
+      throw new Error("The customer's WhatsApp number is invalid.");
     }
 
     const amount = Number(latestQuotation.total_amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error("The accepted quotation amount is invalid.");
+    }
 
     const confirmed = window.confirm(
-      "Send an M-Pesa STK Push to " +
-      currentOrder.whatsapp +
-      " for the accepted quotation?\n\nAmount: " +
-      formatKES(amount)
+      "Prepare M-Pesa Pochi payment instructions for " +
+      (currentOrder.customer_name || "this customer") +
+      "?\n\nAmount: " + formatKES(amount) +
+      "\nPochi number: 0719402804"
     );
-
-    if (!confirmed) return;
-
-    button.textContent = "Preparing payment request...";
-
-    // Save the current investigation notes and order status.
-    const savedOrder = await saveOrder(false);
-
-    if (savedOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "The order must be marked Awaiting payment before sending an STK Push."
-      );
+    if (!confirmed) {
+      closeWhatsAppTab(tab);
+      return;
     }
 
-    if (
-      savedOrder.payment_status === "paid" ||
-      savedOrder.payment_status === "refunded"
-    ) {
-      throw new Error(
-        "This order is already marked as paid or refunded."
-      );
-    }
+    const linkData = await createManualPaymentLink("mpesa");
+    const message =
+`Hello ${currentOrder.customer_name || "there"},
 
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
+Thank you for choosing R-BUY!
 
-    if (sessionError || !sessionData.session) {
-      throw new Error(
-        "Your admin session has expired. Please log in again."
-      );
-    }
+Your quotation has been accepted. Please pay the exact amount below using M-Pesa Pochi la Biashara.
 
-    button.textContent = "Contacting IntaSend...";
+ORDER REFERENCE: ${getOrderReference()}
+AMOUNT: ${formatKES(amount)}
+PAYMENT METHOD: M-Pesa Pochi la Biashara
+POCHI NUMBER: 0719402804
 
-    const { data, error } = await supabaseClient.functions.invoke(
-      PAYMENT_FUNCTION,
-      {
-        body: {
-          order_id: currentOrder.id
-        }
-      }
+After paying, open this secure R-BUY link and submit your M-Pesa transaction code and amount:
+${linkData.submission_url}
+
+Your order will only proceed after our admin verifies that the funds have been received. Do not share your M-Pesa PIN or password.
+
+Thank you for choosing R-BUY.
+You can buy anything.`;
+
+    const opened = redirectWhatsAppTab(
+      tab,
+      "https://wa.me/" + phone + "?text=" + encodeURIComponent(message)
     );
-
-    if (error) {
-      let detail = error.message ||
-        "The payment request could not be completed.";
-
-      if (error.context) {
-        try {
-          const responseBody = await error.context.json();
-          if (responseBody.error) detail = responseBody.error;
-        } catch (e) {}
-      }
-
-      throw new Error(detail);
-    }
-
-    if (!data || !data.success) {
-      throw new Error(
-        data?.error ||
-        "IntaSend did not confirm the payment request."
-      );
-    }
+    if (!opened) throw new Error("The browser blocked WhatsApp. Please contact the customer manually.");
 
     showPaymentResult(
-      "STK Push request successfully initiated.\n\n" +
-      "Order: RBUY-" + String(data.order_number) +
-      "\nAmount: " + formatKES(data.amount) +
-      "\nPhone: " + data.phone +
-      "\nInvoice reference: " + data.invoice_id +
-      "\n\nThe customer should check their phone and enter their M-Pesa PIN if they wish to pay. Payment is still awaiting provider confirmation.",
+      "M-Pesa Pochi instructions and secure payment-submission link are ready in WhatsApp. Review the message and press Send.",
       "success"
     );
-
-    $("paymentStatus").value = "pending";
-    currentOrder.payment_status = "pending";
-
-    showMessage(
-      "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
-      "success"
-    );
-
   } catch (error) {
-    console.error("M-Pesa payment error:", error);
-
-    showPaymentResult(
-      error.message || "Unable to initiate payment.",
-      "error"
-    );
-
+    closeWhatsAppTab(tab);
+    showPaymentResult(error.message || "Unable to prepare M-Pesa payment instructions.", "error");
   } finally {
     paymentRequestInProgress = false;
-    button.textContent = "Send M-Pesa STK Push";
+    button.textContent = "Send Pochi Payment Instructions";
     updatePaymentPanel();
   }
 });
@@ -2723,6 +2709,9 @@ $("sendBankDetailsBtn").addEventListener("click", async () => {
       return;
     }
 
+    button.textContent = "Generating secure submission link...";
+    const linkData = await createManualPaymentLink("bank_transfer");
+
     const message =
 `Hello ${currentOrder.customer_name || "there"},
 
@@ -2744,9 +2733,10 @@ PAYMENT REFERENCE: ${getOrderReference()}
 
 Please use the payment reference above when making your transfer so we can identify your payment.
 
-Once you have completed the transfer, kindly share your transaction confirmation/reference with us.
+Once you have completed the transfer, open this secure R-BUY link and submit your transaction reference and amount:
+${linkData.submission_url}
 
-Your order will proceed once the payment has been verified.
+Your order will proceed only after our admin verifies that the funds have been received. Do not share your banking PIN or password.
 
 Thank you for choosing R-Buy.
 You can buy anything.`;
