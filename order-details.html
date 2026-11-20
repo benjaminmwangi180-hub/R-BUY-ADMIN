@@ -280,7 +280,13 @@ body {
 
       <div>
         <label class="label">Payment status</label>
-        <input id="paymentStatus" class="field min-w-40" disabled>
+        <select id="paymentStatus" class="field min-w-40">
+          <option value="unpaid">Unpaid</option>
+          <option value="pending">Awaiting payment</option>
+          <option value="paid">Paid</option>
+          <option value="refunded">Refunded</option>
+        </select>
+        <button id="savePaymentStatusBtn" class="btn btn-secondary mt-2 w-full" type="button">Save Payment Status</button>
       </div>
     </div>
   </div>
@@ -689,7 +695,7 @@ Condition: Brand new"></textarea>
   <div class="accent-line"></div>
   <h3 class="section-heading">Payment Centre</h3>
   <p class="text-sm mt-1 mb-6" style="color:var(--muted)">
-    Select a payment method after the customer accepts the quotation.
+    Send payment instructions after the customer accepts the quotation. Payments are received and verified manually by R-BUY.
   </p>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -697,22 +703,23 @@ Condition: Brand new"></textarea>
     <div class="soft-panel p-5">
       <div class="flex justify-between items-center mb-5">
         <h4 class="font-bold text-lg">M-Pesa</h4>
-        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">STK Push</span>
+        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">Manual payment</span>
       </div>
 
       <p class="label">Customer</p>
       <p id="paymentCustomerName" class="font-semibold"></p>
 
-      <p class="label mt-4">M-Pesa phone number</p>
-      <p id="paymentPhone" class="text-lg font-bold text-green-700"></p>
+      <p class="label mt-4">Send money to this M-Pesa number</p>
+      <p id="mpesaReceivingNumber" class="text-2xl font-bold text-green-700">0719402804</p>
+      <p class="text-xs mt-1" style="color:var(--muted)">Use M-Pesa Send Money to pay this number.</p>
 
       <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
         <p class="label">Accepted quotation amount</p>
         <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</p>
       </div>
 
-      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send M-Pesa STK Push</button>
-      <p class="text-xs mt-3" style="color:var(--muted)">The customer receives a payment prompt on their phone.</p>
+      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" type="button" disabled>Send M-Pesa Details via WhatsApp</button>
+      <p class="text-xs mt-3" style="color:var(--muted)">Prepares a message with your M-Pesa number, the accepted amount and the order reference. No STK Push is sent.</p>
     </div>
 
     <div class="soft-panel p-5">
@@ -738,10 +745,8 @@ Condition: Brand new"></textarea>
       <p class="label mt-4">Payment reference</p>
       <p id="bankPaymentReference" class="font-bold text-sm break-all">Loading...</p>
 
-      <button id="sendBankDetailsBtn" class="btn btn-bank w-full mt-5" disabled>Send Bank Details via WhatsApp</button>
-      <p class="text-xs mt-3" style="color:var(--muted)">
-        Prepares payment instructions with the exact accepted amount and order reference.
-      </p>
+      <button id="sendBankDetailsBtn" class="btn btn-bank w-full mt-5" type="button" disabled>Send Bank Details via WhatsApp</button>
+      <p class="text-xs mt-3" style="color:var(--muted)">Prepares a WhatsApp message with the complete bank instructions and exact accepted amount.</p>
     </div>
 
   </div>
@@ -754,8 +759,7 @@ Condition: Brand new"></textarea>
   <div id="paymentResult" class="hidden mt-5 p-4 rounded-xl text-sm"></div>
 
   <p class="text-xs mt-4" style="color:var(--muted)">
-    An STK Push or bank transfer instruction is not proof of payment.
-    Bank transfers must be checked against the actual bank transaction before marking an order as paid.
+    Sending payment instructions does not confirm payment. Check the actual M-Pesa or bank transaction yourself, then manually update the payment status above.
   </p>
 </section>
 
@@ -782,9 +786,9 @@ Condition: Brand new"></textarea>
 const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
 const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
 
-const PAYMENT_FUNCTION = "payment-script";
 const QUOTATION_FUNCTION = "quotation-response";
 const PRODUCT_FUNCTION = "product-selection";
+const MPESA_RECEIVING_NUMBER = "0719402804";
 const IMAGE_BUCKET = "r-buy-product-images";
 
 const BANK_DETAILS = {
@@ -815,9 +819,7 @@ let pendingSelection = null;
 let selectedOptionForReview = null;
 let editingImageUrls = [];
 
-let paymentRequestInProgress = false;
 let quotationRequestInProgress = false;
-let bankRequestInProgress = false;
 let productRequestInProgress = false;
 let selectionReviewInProgress = false;
 let trackingAuthorizationInProgress = false;
@@ -2574,34 +2576,32 @@ function isAcceptedQuotationValid() {
   return Number.isFinite(amount) && amount > 0;
 }
 
+function getAcceptedPaymentAmount() {
+  return isAcceptedQuotationValid()
+    ? Number(latestQuotation.total_amount)
+    : 0;
+}
+
 function updatePaymentPanel() {
   if (!currentOrder) return;
 
-  const phone = normalizePhone(currentOrder.whatsapp);
+  const customerPhone = normalizePhone(currentOrder.whatsapp);
+  const validCustomerPhone = /^254[71]\d{8}$/.test(customerPhone);
+  const acceptedAmount = getAcceptedPaymentAmount();
 
   $("paymentCustomerName").textContent =
     currentOrder.customer_name || "Not provided";
-
-  $("paymentPhone").textContent =
-    phone || "Invalid or missing phone number";
+  $("mpesaReceivingNumber").textContent = MPESA_RECEIVING_NUMBER;
+  $("paymentAmount").textContent = formatKES(acceptedAmount);
+  $("bankPaymentAmount").textContent = formatKES(acceptedAmount);
 
   const mpesaButton = $("sendMpesaBtn");
   const bankButton = $("sendBankDetailsBtn");
   const readiness = $("paymentReadiness");
 
-  const acceptedAmount = isAcceptedQuotationValid()
-    ? Number(latestQuotation.total_amount)
-    : 0;
-
-  // Always display the accepted quotation amount here.
-  // The editable quotation builder must never change the payment amount.
-  $("paymentAmount").textContent = formatKES(acceptedAmount);
-  $("bankPaymentAmount").textContent = formatKES(acceptedAmount);
-
   let reason = "";
-
   if (!latestQuotation) {
-    reason = "A quotation must be issued before payment can be requested.";
+    reason = "A quotation must be issued before payment instructions can be sent.";
   } else if (latestQuotation.status !== "accepted") {
     reason = "The latest quotation has not been accepted by the customer.";
   } else if (
@@ -2612,12 +2612,14 @@ function updatePaymentPanel() {
   } else if (!acceptedAmount) {
     reason = "The accepted quotation amount is invalid.";
   } else if (currentOrder.status !== "awaiting_payment") {
-    reason = "The quotation is accepted, but the order status is not Awaiting payment.";
+    reason = "Change the order status to Awaiting payment before sending payment instructions.";
   } else if (
     currentOrder.payment_status === "paid" ||
     currentOrder.payment_status === "refunded"
   ) {
     reason = "This order is already marked as paid or refunded.";
+  } else if (!validCustomerPhone) {
+    reason = "The customer's WhatsApp number is missing or invalid.";
   }
 
   if (reason) {
@@ -2627,301 +2629,205 @@ function updatePaymentPanel() {
     bankButton.disabled = true;
   } else {
     readiness.textContent =
-      "Customer accepted the latest quotation. Payment methods are ready.";
-
+      "Customer accepted the latest quotation. You can send either manual payment instruction.";
     readiness.className = "text-sm text-green-700";
-
-    mpesaButton.disabled =
-      paymentRequestInProgress || !/^254[71]\d{8}$/.test(phone);
-
-    bankButton.disabled =
-      paymentRequestInProgress || bankRequestInProgress;
-  }
-
-  if (paymentRequestInProgress || bankRequestInProgress) {
-    mpesaButton.disabled = true;
-    bankButton.disabled = true;
+    mpesaButton.disabled = false;
+    bankButton.disabled = false;
   }
 }
+
 // ==================================================
-// M-PESA STK PUSH
+// MANUAL PAYMENT STATUS UPDATE
 // ==================================================
 
-$("sendMpesaBtn").addEventListener("click", async () => {
-  if (paymentRequestInProgress) return;
+async function savePaymentStatus() {
+  if (!currentOrder) throw new Error("No order is currently loaded.");
 
-  if (!currentOrder) {
-    showPaymentResult("No order is loaded.", "error");
+  const button = $("savePaymentStatusBtn");
+  const selectedStatus = $("paymentStatus").value;
+  const allowedStatuses = ["unpaid", "pending", "paid", "refunded"];
+
+  if (!allowedStatuses.includes(selectedStatus)) {
+    throw new Error("Select a valid payment status.");
+  }
+
+  const confirmed = window.confirm(
+    "Manually change this order's payment status to: " +
+    selectedStatus.replace("_", " ").toUpperCase() + "?\n\nOnly do this after checking the actual payment record."
+  );
+  if (!confirmed) {
+    $("paymentStatus").value = currentOrder.payment_status || "unpaid";
     return;
   }
 
-  paymentRequestInProgress = true;
-  updatePaymentPanel();
-
-  const button = $("sendMpesaBtn");
-  button.textContent = "Checking payment readiness...";
+  button.disabled = true;
+  button.textContent = "Saving payment status...";
 
   try {
-    await refreshOrderFromDatabase();
-    await loadLatestQuotation();
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .update({
+        payment_status: selectedStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", currentOrder.id)
+      .select("id, payment_status, updated_at")
+      .single();
 
-    if (!isAcceptedQuotationValid()) {
-      throw new Error(
-        "The latest quotation has not been accepted or is no longer valid."
-      );
-    }
+    if (error) throw error;
+    if (!data) throw new Error("The database did not confirm the payment status update.");
 
-    if (currentOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "The order must be marked Awaiting payment before sending an STK Push."
-      );
-    }
-
-    if (
-      currentOrder.payment_status === "paid" ||
-      currentOrder.payment_status === "refunded"
-    ) {
-      throw new Error(
-        "This order is already marked as paid or refunded."
-      );
-    }
-
-    const phone = normalizePhone(currentOrder.whatsapp);
-
-    if (!phone || !/^254[71]\d{8}$/.test(phone)) {
-      throw new Error("The customer's M-Pesa phone number is invalid.");
-    }
-
-    const amount = Number(latestQuotation.total_amount);
-
-    const confirmed = window.confirm(
-      "Send an M-Pesa STK Push to " +
-      currentOrder.whatsapp +
-      " for the accepted quotation?\n\nAmount: " +
-      formatKES(amount)
-    );
-
-    if (!confirmed) return;
-
-    button.textContent = "Preparing payment request...";
-
-    // Save the current investigation notes and order status.
-    const savedOrder = await saveOrder(false);
-
-    if (savedOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "The order must be marked Awaiting payment before sending an STK Push."
-      );
-    }
-
-    if (
-      savedOrder.payment_status === "paid" ||
-      savedOrder.payment_status === "refunded"
-    ) {
-      throw new Error(
-        "This order is already marked as paid or refunded."
-      );
-    }
-
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
-
-    if (sessionError || !sessionData.session) {
-      throw new Error(
-        "Your admin session has expired. Please log in again."
-      );
-    }
-
-    button.textContent = "Contacting IntaSend...";
-
-    const { data, error } = await supabaseClient.functions.invoke(
-      PAYMENT_FUNCTION,
-      {
-        body: {
-          order_id: currentOrder.id
-        }
-      }
-    );
-
-    if (error) {
-      let detail = error.message ||
-        "The payment request could not be completed.";
-
-      if (error.context) {
-        try {
-          const responseBody = await error.context.json();
-          if (responseBody.error) detail = responseBody.error;
-        } catch (e) {}
-      }
-
-      throw new Error(detail);
-    }
-
-    if (!data || !data.success) {
-      throw new Error(
-        data?.error ||
-        "IntaSend did not confirm the payment request."
-      );
-    }
-
-    showPaymentResult(
-      "STK Push request successfully initiated.\n\n" +
-      "Order: RBUY-" + String(data.order_number) +
-      "\nAmount: " + formatKES(data.amount) +
-      "\nPhone: " + data.phone +
-      "\nInvoice reference: " + data.invoice_id +
-      "\n\nThe customer should check their phone and enter their M-Pesa PIN if they wish to pay. Payment is still awaiting provider confirmation.",
-      "success"
-    );
-
-    $("paymentStatus").value = "pending";
-    currentOrder.payment_status = "pending";
+    currentOrder = { ...currentOrder, ...data };
+    $("paymentStatus").value = data.payment_status;
+    $("updatedAt").textContent = formatDate(data.updated_at);
+    updatePaymentPanel();
 
     showMessage(
-      "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
+      "Payment status manually updated to " + data.payment_status.replace("_", " ") + ".",
       "success"
     );
-
   } catch (error) {
-    console.error("M-Pesa payment error:", error);
-
-    showPaymentResult(
-      error.message || "Unable to initiate payment.",
-      "error"
-    );
-
+    $("paymentStatus").value = currentOrder.payment_status || "unpaid";
+    throw error;
   } finally {
-    paymentRequestInProgress = false;
-    button.textContent = "Send M-Pesa STK Push";
-    updatePaymentPanel();
+    button.disabled = false;
+    button.textContent = "Save Payment Status";
+  }
+}
+
+$("savePaymentStatusBtn").addEventListener("click", async () => {
+  try {
+    await savePaymentStatus();
+  } catch (error) {
+    showMessage(error.message || "Unable to update payment status.", "error");
   }
 });
 
 // ==================================================
-// BANK TRANSFER INSTRUCTIONS
+// PREPARE M-PESA PAYMENT INSTRUCTIONS
 // ==================================================
 
-$("sendBankDetailsBtn").addEventListener("click", async () => {
-  if (bankRequestInProgress) return;
-
+$("sendMpesaBtn").addEventListener("click", () => {
   if (!currentOrder) {
     showPaymentResult("No order is loaded.", "error");
     return;
   }
 
-  const tab = openWhatsAppTab();
+  if (!isAcceptedQuotationValid() || currentOrder.status !== "awaiting_payment") {
+    showPaymentResult("The customer must accept a valid quotation and the order must be Awaiting payment before payment instructions can be sent.", "error");
+    return;
+  }
 
-  bankRequestInProgress = true;
-  updatePaymentPanel();
+  if (["paid", "refunded"].includes(currentOrder.payment_status)) {
+    showPaymentResult("This order is already marked as paid or refunded.", "error");
+    return;
+  }
 
-  const button = $("sendBankDetailsBtn");
-  button.textContent = "Checking payment readiness...";
+  const phone = normalizePhone(currentOrder.whatsapp);
+  if (!/^254[71]\d{8}$/.test(phone)) {
+    showPaymentResult("The customer's WhatsApp number is invalid.", "error");
+    return;
+  }
 
-  try {
-    await refreshOrderFromDatabase();
-    await loadLatestQuotation();
+  const amount = getAcceptedPaymentAmount();
+  const confirmed = window.confirm(
+    "Prepare M-Pesa Send Money instructions for " +
+    (currentOrder.customer_name || "this customer") + "?\n\nAmount: " +
+    formatKES(amount) + "\nSend to: " + MPESA_RECEIVING_NUMBER +
+    "\nReference: " + getOrderReference()
+  );
+  if (!confirmed) return;
 
-    if (!isAcceptedQuotationValid()) {
-      throw new Error(
-        "The customer must accept the latest valid quotation before payment instructions can be sent."
-      );
-    }
+  const message = `Hello ${currentOrder.customer_name || "there"},
 
-    if (currentOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "Change the order status to Awaiting payment before sending bank details."
-      );
-    }
+Thank you for choosing R-BUY!
 
-    if (
-      currentOrder.payment_status === "paid" ||
-      currentOrder.payment_status === "refunded"
-    ) {
-      throw new Error(
-        "This order is already marked as paid or refunded."
-      );
-    }
-
-    const phone = normalizePhone(currentOrder.whatsapp);
-
-    if (!phone || !/^254[71]\d{8}$/.test(phone)) {
-      throw new Error("The customer's WhatsApp number is invalid.");
-    }
-
-    const amount = Number(latestQuotation.total_amount);
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Error("The accepted quotation amount is invalid.");
-    }
-
-    const confirmed = window.confirm(
-      "Prepare Co-operative Bank payment details for " +
-      (currentOrder.customer_name || "this customer") +
-      "?\n\nAmount: " + formatKES(amount) +
-      "\nReference: " + getOrderReference()
-    );
-
-    if (!confirmed) {
-      closeWhatsAppTab(tab);
-      return;
-    }
-
-    const message =
-`Hello ${currentOrder.customer_name || "there"},
-
-Thank you for choosing R-Buy!
-
-Your quotation has been accepted. You can now complete payment using the bank transfer option below.
+Your quotation has been accepted. Please complete payment using M-Pesa Send Money with the details below.
 
 ORDER REFERENCE: ${getOrderReference()}
+AMOUNT: ${formatKES(amount)}
+M-PESA NUMBER: ${MPESA_RECEIVING_NUMBER}
 
-ACCEPTED QUOTATION AMOUNT: ${formatKES(amount)}
+Please use the order reference as your payment reference where possible. After sending the money, kindly share the M-Pesa transaction confirmation message with us.
+
+Your order will proceed once we have manually verified the payment.
+
+Thank you for choosing R-BUY.
+You can buy anything.`;
+
+  const whatsappUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+  const opened = window.open(whatsappUrl, "_blank");
+
+  if (opened) {
+    showPaymentResult("M-Pesa payment instructions are ready in WhatsApp. Review the message and press Send. No STK Push has been initiated.", "success");
+  } else {
+    showPaymentResult("Your browser blocked WhatsApp. Copy the M-Pesa number and send the payment instructions manually.", "error");
+  }
+});
+
+// ==================================================
+// PREPARE BANK TRANSFER INSTRUCTIONS
+// ==================================================
+
+$("sendBankDetailsBtn").addEventListener("click", () => {
+  if (!currentOrder) {
+    showPaymentResult("No order is loaded.", "error");
+    return;
+  }
+
+  if (!isAcceptedQuotationValid() || currentOrder.status !== "awaiting_payment") {
+    showPaymentResult("The customer must accept a valid quotation and the order must be Awaiting payment before payment instructions can be sent.", "error");
+    return;
+  }
+
+  if (["paid", "refunded"].includes(currentOrder.payment_status)) {
+    showPaymentResult("This order is already marked as paid or refunded.", "error");
+    return;
+  }
+
+  const phone = normalizePhone(currentOrder.whatsapp);
+  if (!/^254[71]\d{8}$/.test(phone)) {
+    showPaymentResult("The customer's WhatsApp number is invalid.", "error");
+    return;
+  }
+
+  const amount = getAcceptedPaymentAmount();
+  const confirmed = window.confirm(
+    "Prepare Co-operative Bank payment details for " +
+    (currentOrder.customer_name || "this customer") + "?\n\nAmount: " +
+    formatKES(amount) + "\nReference: " + getOrderReference()
+  );
+  if (!confirmed) return;
+
+  const message = `Hello ${currentOrder.customer_name || "there"},
+
+Thank you for choosing R-BUY!
+
+Your quotation has been accepted. Please complete payment using the Co-operative Bank details below.
+
+ORDER REFERENCE: ${getOrderReference()}
+ACCEPTED AMOUNT: ${formatKES(amount)}
 
 BANK: ${BANK_DETAILS.bankName}
 ACCOUNT NAME: ${BANK_DETAILS.accountName}
-
 PAYBILL: ${BANK_DETAILS.paybill}
 ACCOUNT NUMBER: ${BANK_DETAILS.accountNumber}
-
 PAYMENT REFERENCE: ${getOrderReference()}
 
-Please use the payment reference above when making your transfer so we can identify your payment.
+Please use the payment reference above when making your transfer so we can identify your payment. After completing the transfer, kindly share your transaction confirmation/reference with us.
 
-Once you have completed the transfer, kindly share your transaction confirmation/reference with us.
+Your order will proceed once we have manually verified the payment.
 
-Your order will proceed once the payment has been verified.
-
-Thank you for choosing R-Buy.
+Thank you for choosing R-BUY.
 You can buy anything.`;
 
-    const whatsappUrl =
-      "https://wa.me/" + phone +
-      "?text=" + encodeURIComponent(message);
+  const whatsappUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+  const opened = window.open(whatsappUrl, "_blank");
 
-    const opened = redirectWhatsAppTab(tab, whatsappUrl);
-
-    if (!opened) {
-      throw new Error(
-        "The browser blocked WhatsApp. Please contact the customer manually."
-      );
-    }
-
-    showMessage(
-      "Bank transfer instructions prepared in WhatsApp. Review the details and press Send."
-    );
-
-  } catch (error) {
-    closeWhatsAppTab(tab);
-
-    showMessage(
-      error.message || "Unable to prepare bank transfer instructions.",
-      "error"
-    );
-
-  } finally {
-    bankRequestInProgress = false;
-    button.textContent = "Send Bank Details via WhatsApp";
-    updatePaymentPanel();
+  if (opened) {
+    showPaymentResult("Co-operative Bank details are ready in WhatsApp. Review the complete message and press Send.", "success");
+  } else {
+    showPaymentResult("Your browser blocked WhatsApp. Copy the bank details and send them manually.", "error");
   }
 });
 
