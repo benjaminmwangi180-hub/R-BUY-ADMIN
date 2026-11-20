@@ -286,6 +286,39 @@ body {
   </div>
 </section>
 
+<!-- CUSTOMER TRACKING AUTHORIZATION -->
+<section class="panel p-5" id="trackingAuthorizationSection">
+  <div class="flex flex-wrap justify-between items-start gap-4">
+    <div>
+      <div class="accent-line"></div>
+      <p class="eyebrow">Customer access control</p>
+      <h3 class="section-heading mt-2">Order Tracking Authorization</h3>
+      <p class="text-sm mt-2 max-w-2xl" style="color:var(--muted)">
+        Authorize this customer to view their order progress through their private R-BUY tracking link.
+        Authorization is checked by the tracking service before order details or updates are returned.
+      </p>
+    </div>
+    <span id="trackingAuthorizationBadge" class="status-pill" style="background:#fff4df;color:#8a5a00">
+      Not authorized
+    </span>
+  </div>
+
+  <div class="soft-panel p-4 mt-5">
+    <p id="trackingAuthorizationStatus" class="font-semibold">Tracking access is currently disabled.</p>
+    <p id="trackingAuthorizationHelp" class="text-xs mt-2" style="color:var(--muted)">
+      The customer cannot view order details until an administrator authorizes tracking.
+    </p>
+  </div>
+
+  <div class="flex flex-wrap gap-3 mt-5">
+    <button id="authorizeTrackingBtn" class="btn btn-primary">Authorize Customer Tracking</button>
+    <button id="revokeTrackingBtn" class="btn btn-danger hidden">Revoke Tracking Access</button>
+  </div>
+  <p class="text-xs mt-3" style="color:var(--muted)">
+    This changes the order's tracking_authorized setting. It does not create or resend the customer's private tracking link.
+  </p>
+</section>
+
 <!-- CUSTOMER + PRODUCT -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -663,25 +696,23 @@ Condition: Brand new"></textarea>
 
     <div class="soft-panel p-5">
       <div class="flex justify-between items-center mb-5">
-        <h4 class="font-bold text-lg">M-Pesa Pochi</h4>
-        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">Pay directly</span>
+        <h4 class="font-bold text-lg">M-Pesa</h4>
+        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">STK Push</span>
       </div>
 
       <p class="label">Customer</p>
       <p id="paymentCustomerName" class="font-semibold"></p>
-      <p id="paymentPhone" class="text-xs mt-1" style="color:var(--muted)"></p>
 
-      <p class="label mt-4">Pay to Pochi number</p>
-      <p class="text-2xl font-bold text-green-700">0719 402 804</p>
-      <p class="text-xs mt-1" style="color:var(--muted)">M-Pesa Pochi la Biashara</p>
+      <p class="label mt-4">M-Pesa phone number</p>
+      <p id="paymentPhone" class="text-lg font-bold text-green-700"></p>
 
       <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
         <p class="label">Accepted quotation amount</p>
         <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</p>
       </div>
 
-      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send Pochi Payment Instructions</button>
-      <p class="text-xs mt-3" style="color:var(--muted)">The customer pays directly, then submits the M-Pesa transaction code through a secure R-BUY link.</p>
+      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send M-Pesa STK Push</button>
+      <p class="text-xs mt-3" style="color:var(--muted)">The customer receives a payment prompt on their phone.</p>
     </div>
 
     <div class="soft-panel p-5">
@@ -723,7 +754,8 @@ Condition: Brand new"></textarea>
   <div id="paymentResult" class="hidden mt-5 p-4 rounded-xl text-sm"></div>
 
   <p class="text-xs mt-4" style="color:var(--muted)">
-    Payment instructions and customer-submitted transaction references are not proof of payment. Admin must verify funds in the receiving account before marking an order as paid or allowing dispatch.
+    An STK Push or bank transfer instruction is not proof of payment.
+    Bank transfers must be checked against the actual bank transaction before marking an order as paid.
   </p>
 </section>
 
@@ -750,8 +782,7 @@ Condition: Brand new"></textarea>
 const SUPABASE_URL = "https://ixuohpgqpuvjdbigmhje.supabase.co";
 const SUPABASE_KEY = "sb_publishable_39FVpTmUPUsSqGAysBbP1A_xqF0nFaA";
 
-const PAYMENT_FUNCTION = "payment-script"; // Retained for legacy compatibility; manual payments do not call it.
-const MANUAL_PAYMENT_FUNCTION = "manual-payment"; // Must be deployed with create_submission_link before using these buttons.
+const PAYMENT_FUNCTION = "payment-script";
 const QUOTATION_FUNCTION = "quotation-response";
 const PRODUCT_FUNCTION = "product-selection";
 const IMAGE_BUCKET = "r-buy-product-images";
@@ -789,6 +820,7 @@ let quotationRequestInProgress = false;
 let bankRequestInProgress = false;
 let productRequestInProgress = false;
 let selectionReviewInProgress = false;
+let trackingAuthorizationInProgress = false;
 
 const $ = id => document.getElementById(id);
 
@@ -1167,7 +1199,115 @@ function renderOrder(order) {
   updateSelectionStatusBadge();
   updateQuotationGate();
   updatePaymentPanel();
+  updateTrackingAuthorizationUI();
 }
+
+// ==================================================
+// CUSTOMER TRACKING AUTHORIZATION
+// ==================================================
+
+function updateTrackingAuthorizationUI() {
+  const authorized = currentOrder?.tracking_authorized === true;
+  const badge = $("trackingAuthorizationBadge");
+  const status = $("trackingAuthorizationStatus");
+  const help = $("trackingAuthorizationHelp");
+  const authorizeButton = $("authorizeTrackingBtn");
+  const revokeButton = $("revokeTrackingBtn");
+
+  if (authorized) {
+    badge.textContent = "Authorized";
+    badge.style.background = "#e8f7ed";
+    badge.style.color = "#16834a";
+    status.textContent = "Customer tracking access is enabled.";
+    help.textContent = "The customer can view the order details and customer-visible progress events using their valid private tracking link.";
+    authorizeButton.classList.add("hidden");
+    revokeButton.classList.remove("hidden");
+  } else {
+    badge.textContent = "Not authorized";
+    badge.style.background = "#fff4df";
+    badge.style.color = "#8a5a00";
+    status.textContent = "Tracking access is currently disabled.";
+    help.textContent = "The customer cannot view order details until an administrator authorizes tracking.";
+    authorizeButton.classList.remove("hidden");
+    revokeButton.classList.add("hidden");
+  }
+
+  authorizeButton.disabled = trackingAuthorizationInProgress;
+  revokeButton.disabled = trackingAuthorizationInProgress;
+  authorizeButton.textContent = trackingAuthorizationInProgress
+    ? "Updating access..."
+    : "Authorize Customer Tracking";
+  revokeButton.textContent = trackingAuthorizationInProgress
+    ? "Updating access..."
+    : "Revoke Tracking Access";
+}
+
+async function setTrackingAuthorization(authorized) {
+  if (!currentOrder) {
+    showMessage("No order is currently loaded.", "error");
+    return;
+  }
+
+  if (trackingAuthorizationInProgress) return;
+
+  const currentValue = currentOrder.tracking_authorized === true;
+  if (currentValue === authorized) {
+    updateTrackingAuthorizationUI();
+    return;
+  }
+
+  const confirmation = authorized
+    ? "Authorize this customer to view their order through the private tracking link?"
+    : "Revoke this customer's tracking access? They will no longer be able to view order details or progress until access is authorized again.";
+
+  if (!window.confirm(confirmation)) return;
+
+  trackingAuthorizationInProgress = true;
+  updateTrackingAuthorizationUI();
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .update({
+        tracking_authorized: authorized,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", currentOrder.id)
+      .select("id, tracking_authorized, updated_at")
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error("The database did not confirm the tracking authorization change.");
+
+    currentOrder = { ...currentOrder, ...data };
+    $("updatedAt").textContent = formatDate(data.updated_at);
+    updateTrackingAuthorizationUI();
+
+    showMessage(
+      authorized
+        ? "Customer tracking authorized. Their valid private tracking link can now display order information."
+        : "Customer tracking access revoked. The tracking service will deny access to this order.",
+      "success"
+    );
+  } catch (error) {
+    console.error("Tracking authorization update error:", error);
+    showMessage(
+      error.message || "Unable to update customer tracking authorization.",
+      "error"
+    );
+  } finally {
+    trackingAuthorizationInProgress = false;
+    updateTrackingAuthorizationUI();
+  }
+}
+
+$("authorizeTrackingBtn").addEventListener("click", () => {
+  setTrackingAuthorization(true);
+});
+
+$("revokeTrackingBtn").addEventListener("click", () => {
+  setTrackingAuthorization(false);
+});
 
 // ==================================================
 // ORDER COMMUNICATION
@@ -2208,6 +2348,7 @@ async function refreshOrderFromDatabase() {
   updatePaymentPanel();
   updateSelectionStatusBadge();
   updateQuotationGate();
+  updateTrackingAuthorizationUI();
 
   return data;
 }
@@ -2486,7 +2627,7 @@ function updatePaymentPanel() {
     bankButton.disabled = true;
   } else {
     readiness.textContent =
-      "Customer accepted the latest quotation. Manual M-Pesa Pochi and bank payment instructions are ready.";
+      "Customer accepted the latest quotation. Payment methods are ready.";
 
     readiness.className = "text-sm text-green-700";
 
@@ -2503,140 +2644,155 @@ function updatePaymentPanel() {
   }
 }
 // ==================================================
-// MANUAL PAYMENT LINK GENERATION
-// ==================================================
-
-async function createManualPaymentLink(paymentMethod) {
-  if (!currentOrder || !isAcceptedQuotationValid()) {
-    throw new Error("A valid accepted quotation is required before payment instructions can be sent.");
-  }
-
-  const { data: sessionData, error: sessionError } =
-    await supabaseClient.auth.getSession();
-
-  if (sessionError || !sessionData.session) {
-    throw new Error("Your admin session has expired. Please log in again.");
-  }
-
-  const { data, error } = await supabaseClient.functions.invoke(
-    MANUAL_PAYMENT_FUNCTION,
-    {
-      body: {
-        action: "create_submission_link",
-        order_id: currentOrder.id,
-        payment_method: paymentMethod
-      }
-    }
-  );
-
-  if (error) {
-    let detail = error.message || "Could not generate the secure payment submission link.";
-    if (error.context) {
-      try {
-        const responseBody = await error.context.json();
-        if (responseBody.error) detail = responseBody.error;
-      } catch (e) {}
-    }
-    throw new Error(detail);
-  }
-
-  if (!data || !data.success || !data.submission_url) {
-    throw new Error(data?.error || "The payment service did not return a secure submission link.");
-  }
-
-  // The backend must generate and store the token hash. Never generate this token in the browser.
-  return data;
-}
-
-// ==================================================
-// M-PESA POCHI PAYMENT INSTRUCTIONS
+// M-PESA STK PUSH
 // ==================================================
 
 $("sendMpesaBtn").addEventListener("click", async () => {
   if (paymentRequestInProgress) return;
+
   if (!currentOrder) {
     showPaymentResult("No order is loaded.", "error");
     return;
   }
 
-  const tab = openWhatsAppTab();
   paymentRequestInProgress = true;
   updatePaymentPanel();
+
   const button = $("sendMpesaBtn");
-  button.textContent = "Generating secure submission link...";
+  button.textContent = "Checking payment readiness...";
 
   try {
     await refreshOrderFromDatabase();
     await loadLatestQuotation();
 
     if (!isAcceptedQuotationValid()) {
-      throw new Error("The latest quotation has not been accepted or is no longer valid.");
+      throw new Error(
+        "The latest quotation has not been accepted or is no longer valid."
+      );
     }
+
     if (currentOrder.status !== "awaiting_payment") {
-      throw new Error("The order must be Awaiting payment before payment instructions can be sent.");
+      throw new Error(
+        "The order must be marked Awaiting payment before sending an STK Push."
+      );
     }
-    if (["paid", "refunded"].includes(currentOrder.payment_status)) {
-      throw new Error("This order is already marked as paid or refunded.");
+
+    if (
+      currentOrder.payment_status === "paid" ||
+      currentOrder.payment_status === "refunded"
+    ) {
+      throw new Error(
+        "This order is already marked as paid or refunded."
+      );
     }
 
     const phone = normalizePhone(currentOrder.whatsapp);
+
     if (!phone || !/^254[71]\d{8}$/.test(phone)) {
-      throw new Error("The customer's WhatsApp number is invalid.");
+      throw new Error("The customer's M-Pesa phone number is invalid.");
     }
 
     const amount = Number(latestQuotation.total_amount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Error("The accepted quotation amount is invalid.");
-    }
 
     const confirmed = window.confirm(
-      "Prepare M-Pesa Pochi payment instructions for " +
-      (currentOrder.customer_name || "this customer") +
-      "?\n\nAmount: " + formatKES(amount) +
-      "\nPochi number: 0719402804"
+      "Send an M-Pesa STK Push to " +
+      currentOrder.whatsapp +
+      " for the accepted quotation?\n\nAmount: " +
+      formatKES(amount)
     );
-    if (!confirmed) {
-      closeWhatsAppTab(tab);
-      return;
+
+    if (!confirmed) return;
+
+    button.textContent = "Preparing payment request...";
+
+    // Save the current investigation notes and order status.
+    const savedOrder = await saveOrder(false);
+
+    if (savedOrder.status !== "awaiting_payment") {
+      throw new Error(
+        "The order must be marked Awaiting payment before sending an STK Push."
+      );
     }
 
-    const linkData = await createManualPaymentLink("mpesa");
-    const message =
-`Hello ${currentOrder.customer_name || "there"},
+    if (
+      savedOrder.payment_status === "paid" ||
+      savedOrder.payment_status === "refunded"
+    ) {
+      throw new Error(
+        "This order is already marked as paid or refunded."
+      );
+    }
 
-Thank you for choosing R-BUY!
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
 
-Your quotation has been accepted. Please pay the exact amount below using M-Pesa Pochi la Biashara.
+    if (sessionError || !sessionData.session) {
+      throw new Error(
+        "Your admin session has expired. Please log in again."
+      );
+    }
 
-ORDER REFERENCE: ${getOrderReference()}
-AMOUNT: ${formatKES(amount)}
-PAYMENT METHOD: M-Pesa Pochi la Biashara
-POCHI NUMBER: 0719402804
+    button.textContent = "Contacting IntaSend...";
 
-After paying, open this secure R-BUY link and submit your M-Pesa transaction code and amount:
-${linkData.submission_url}
-
-Your order will only proceed after our admin verifies that the funds have been received. Do not share your M-Pesa PIN or password.
-
-Thank you for choosing R-BUY.
-You can buy anything.`;
-
-    const opened = redirectWhatsAppTab(
-      tab,
-      "https://wa.me/" + phone + "?text=" + encodeURIComponent(message)
+    const { data, error } = await supabaseClient.functions.invoke(
+      PAYMENT_FUNCTION,
+      {
+        body: {
+          order_id: currentOrder.id
+        }
+      }
     );
-    if (!opened) throw new Error("The browser blocked WhatsApp. Please contact the customer manually.");
+
+    if (error) {
+      let detail = error.message ||
+        "The payment request could not be completed.";
+
+      if (error.context) {
+        try {
+          const responseBody = await error.context.json();
+          if (responseBody.error) detail = responseBody.error;
+        } catch (e) {}
+      }
+
+      throw new Error(detail);
+    }
+
+    if (!data || !data.success) {
+      throw new Error(
+        data?.error ||
+        "IntaSend did not confirm the payment request."
+      );
+    }
 
     showPaymentResult(
-      "M-Pesa Pochi instructions and secure payment-submission link are ready in WhatsApp. Review the message and press Send.",
+      "STK Push request successfully initiated.\n\n" +
+      "Order: RBUY-" + String(data.order_number) +
+      "\nAmount: " + formatKES(data.amount) +
+      "\nPhone: " + data.phone +
+      "\nInvoice reference: " + data.invoice_id +
+      "\n\nThe customer should check their phone and enter their M-Pesa PIN if they wish to pay. Payment is still awaiting provider confirmation.",
       "success"
     );
+
+    $("paymentStatus").value = "pending";
+    currentOrder.payment_status = "pending";
+
+    showMessage(
+      "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
+      "success"
+    );
+
   } catch (error) {
-    closeWhatsAppTab(tab);
-    showPaymentResult(error.message || "Unable to prepare M-Pesa payment instructions.", "error");
+    console.error("M-Pesa payment error:", error);
+
+    showPaymentResult(
+      error.message || "Unable to initiate payment.",
+      "error"
+    );
+
   } finally {
     paymentRequestInProgress = false;
-    button.textContent = "Send Pochi Payment Instructions";
+    button.textContent = "Send M-Pesa STK Push";
     updatePaymentPanel();
   }
 });
@@ -2710,9 +2866,6 @@ $("sendBankDetailsBtn").addEventListener("click", async () => {
       return;
     }
 
-    button.textContent = "Generating secure submission link...";
-    const linkData = await createManualPaymentLink("bank_transfer");
-
     const message =
 `Hello ${currentOrder.customer_name || "there"},
 
@@ -2734,10 +2887,9 @@ PAYMENT REFERENCE: ${getOrderReference()}
 
 Please use the payment reference above when making your transfer so we can identify your payment.
 
-Once you have completed the transfer, open this secure R-BUY link and submit your transaction reference and amount:
-${linkData.submission_url}
+Once you have completed the transfer, kindly share your transaction confirmation/reference with us.
 
-Your order will proceed only after our admin verifies that the funds have been received. Do not share your banking PIN or password.
+Your order will proceed once the payment has been verified.
 
 Thank you for choosing R-Buy.
 You can buy anything.`;
