@@ -763,6 +763,61 @@ async function restoreOrder(orderId) {
     await loadOrders();
 }
 
+// ADDED: PERMANENTLY DELETE AN ARCHIVED ORDER
+async function deleteArchivedOrder(orderId) {
+    const order = allOrders.find(item => item.id === orderId);
+
+    if (!order || !order.archived_at) {
+        showMessage("Only an archived order can be permanently deleted.", "error");
+        return;
+    }
+
+    const orderReference = reference(order.id);
+    const confirmed = confirm(
+        `PERMANENTLY DELETE ${orderReference}?\n\n` +
+        "This removes the order record and cannot be undone. " +
+        "Related records will only be removed automatically if their database foreign keys are configured to cascade."
+    );
+
+    if (!confirmed) return;
+
+    const typedReference = prompt(
+        `To confirm permanent deletion, type this order reference exactly:\n\n${orderReference}`
+    );
+
+    if (typedReference !== orderReference) {
+        if (typedReference !== null) {
+            showMessage("Deletion cancelled because the order reference did not match.", "error");
+        }
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("orders")
+        .delete()
+        .eq("id", orderId)
+        .not("archived_at", "is", null)
+        .select("id")
+        .maybeSingle();
+
+    if (error) {
+        console.error("R-BUY permanent order deletion:", error);
+        showMessage(
+            "Could not delete this order. Your database may block deletion because related records still reference it, or the admin DELETE policy is missing. No records were removed. Details: " + error.message,
+            "error"
+        );
+        return;
+    }
+
+    if (!data) {
+        showMessage("The order was not deleted. It may no longer be archived. Refresh and try again.", "error");
+        return;
+    }
+
+    showMessage(`${orderReference} has been permanently deleted from the orders table.`, "success");
+    await loadOrders();
+}
+
 // RENDER TABLE
 function renderOrders() {
     const search = document.getElementById("searchInput")
@@ -835,7 +890,8 @@ function renderOrders() {
             : "";
 
         const archiveAction = order.archived_at
-            ? `<button type="button" onclick="restoreOrder('${escapeHTML(order.id)}')" class="action-link bg-amber-50 text-amber-700 hover:bg-amber-100">↶ Restore</button>`
+            ? `<button type="button" onclick="restoreOrder('${escapeHTML(order.id)}')" class="action-link bg-amber-50 text-amber-700 hover:bg-amber-100">↶ Restore</button>
+               <button type="button" onclick="deleteArchivedOrder('${escapeHTML(order.id)}')" class="action-link bg-red-50 text-red-700 hover:bg-red-100">✕ Delete permanently</button>`
             : order.status === "completed"
                 ? `<button type="button" onclick="archiveOrder('${escapeHTML(order.id)}')" class="action-link bg-gray-100 text-gray-700 hover:bg-gray-200">Archive</button>`
                 : "";
