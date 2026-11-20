@@ -280,9 +280,17 @@ body {
 
       <div>
         <label class="label">Payment status</label>
-        <input id="paymentStatus" class="field min-w-40" disabled>
+        <select id="paymentStatus" class="field min-w-40">
+          <option value="unpaid">Unpaid</option>
+          <option value="pending">Pending</option>
+          <option value="paid">Paid</option>
+          <option value="refunded">Refunded</option>
+        </select>
       </div>
     </div>
+  </div>
+  <div class="flex flex-wrap gap-3 mt-4">
+    <button id="saveHeaderStatusBtn" class="btn btn-primary">Save Order Stage & Payment</button>
   </div>
 </section>
 
@@ -1415,6 +1423,49 @@ $("sendOrderEmailBtn").addEventListener("click", () => {
     "&body=" + encodeURIComponent(body);
 
   showMessage("Confirmation email prepared. Review it and press Send.", "info");
+});
+
+// ==================================================
+// SAVE HEADER ORDER STAGE AND PAYMENT STATUS
+// ==================================================
+
+$("saveHeaderStatusBtn").addEventListener("click", async () => {
+  if (!currentOrder) {
+    showMessage("No order is currently loaded.", "error");
+    return;
+  }
+
+  const button = $("saveHeaderStatusBtn");
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  try {
+    const updates = {
+      status: $("orderStatus").value,
+      payment_status: $("paymentStatus").value,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .update(updates)
+      .eq("id", currentOrder.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    currentOrder = { ...currentOrder, ...data };
+    $("updatedAt").textContent = formatDate(data.updated_at);
+    updatePaymentPanel();
+    showMessage("Order stage and payment status saved successfully.");
+  } catch (error) {
+    console.error("Header status save error:", error);
+    showMessage(error.message || "Unable to save order stage and payment status.", "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Save Order Stage & Payment";
+  }
 });
 
 // ==================================================
