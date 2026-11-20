@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -340,6 +339,14 @@ body {
             <p class="text-[11px] text-gray-400 mt-2">Successfully fulfilled</p>
         </div>
 
+        <!-- ADDED: ARCHIVED ORDER COUNT -->
+        <div class="stat-card" style="--accent:#f0f0ee;--accent-text:#666;">
+            <div class="stat-icon">▣</div>
+            <p class="text-gray-500 text-xs font-semibold mt-5">Archived</p>
+            <h3 id="archivedOrders" class="text-3xl font-extrabold mt-1 text-gray-700">—</h3>
+            <p class="text-[11px] text-gray-400 mt-2">Completed records preserved</p>
+        </div>
+
     </section>
 
     <!-- FILTERS -->
@@ -358,7 +365,7 @@ body {
             </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
 
             <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">⌕</span>
@@ -381,6 +388,13 @@ body {
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="unavailable">Unavailable</option>
+            </select>
+
+            <!-- ADDED: ARCHIVE VIEW FILTER -->
+            <select id="archiveFilter" class="field" onchange="renderOrders()">
+                <option value="active">Active orders</option>
+                <option value="archived">Archived orders</option>
+                <option value="all">All orders</option>
             </select>
 
             <button onclick="clearFilters()"
@@ -628,6 +642,10 @@ function updateSummary() {
 
     document.getElementById("completedOrders").textContent =
         allOrders.filter(o => o.status === "completed").length;
+
+    // ADDED: ARCHIVED COUNT
+    document.getElementById("archivedOrders").textContent =
+        allOrders.filter(o => !!o.archived_at).length;
 }
 
 // PAYMENT BADGE
@@ -651,6 +669,100 @@ function paymentBadge(status) {
     `;
 }
 
+// ADDED: ARCHIVE A COMPLETED ORDER
+async function archiveOrder(orderId) {
+    const order = allOrders.find(item => item.id === orderId);
+
+    if (!order) {
+        showMessage("Order could not be found. Refresh and try again.", "error");
+        return;
+    }
+
+    if (order.status !== "completed") {
+        showMessage("Only completed orders can be archived.", "error");
+        return;
+    }
+
+    if (order.archived_at) {
+        showMessage("This order is already archived.", "error");
+        return;
+    }
+
+    const confirmed = confirm(
+        `Archive ${reference(order.id)}?\n\n` +
+        "The order and its payment, quotation and tracking records will be preserved. " +
+        "You can find and restore it later."
+    );
+
+    if (!confirmed) return;
+
+    const { data, error } = await supabaseClient
+        .from("orders")
+        .update({
+            archived_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        })
+        .eq("id", orderId)
+        .eq("status", "completed")
+        .is("archived_at", null)
+        .select("id")
+        .maybeSingle();
+
+    if (error) {
+        showMessage("Could not archive order: " + error.message, "error");
+        return;
+    }
+
+    if (!data) {
+        showMessage("Order was not archived. It may have changed. Refresh and try again.", "error");
+        return;
+    }
+
+    showMessage(`${reference(order.id)} has been archived.`, "success");
+    await loadOrders();
+}
+
+// ADDED: RESTORE AN ARCHIVED ORDER
+async function restoreOrder(orderId) {
+    const order = allOrders.find(item => item.id === orderId);
+
+    if (!order || !order.archived_at) {
+        showMessage("Archived order could not be found. Refresh and try again.", "error");
+        return;
+    }
+
+    const confirmed = confirm(
+        `Restore ${reference(order.id)}?\n\n` +
+        "This order will return to the active orders list."
+    );
+
+    if (!confirmed) return;
+
+    const { data, error } = await supabaseClient
+        .from("orders")
+        .update({
+            archived_at: null,
+            updated_at: new Date().toISOString()
+        })
+        .eq("id", orderId)
+        .not("archived_at", "is", null)
+        .select("id")
+        .maybeSingle();
+
+    if (error) {
+        showMessage("Could not restore order: " + error.message, "error");
+        return;
+    }
+
+    if (!data) {
+        showMessage("Order was not restored. Refresh and try again.", "error");
+        return;
+    }
+
+    showMessage(`${reference(order.id)} has been restored.`, "success");
+    await loadOrders();
+}
+
 // RENDER TABLE
 function renderOrders() {
     const search = document.getElementById("searchInput")
@@ -658,8 +770,16 @@ function renderOrders() {
 
     const status = document.getElementById("statusFilter").value;
 
+    // ADDED: ACTIVE / ARCHIVED / ALL VIEW
+    const archiveView = document.getElementById("archiveFilter").value;
+
     const filtered = allOrders.filter(order => {
         const matchesStatus = !status || order.status === status;
+
+        const matchesArchiveView =
+            archiveView === "all" ||
+            (archiveView === "archived" && !!order.archived_at) ||
+            (archiveView === "active" && !order.archived_at);
 
         const ref = reference(order.id).toLowerCase();
 
@@ -676,7 +796,7 @@ function renderOrders() {
             String(value || "").toLowerCase().includes(search)
         );
 
-        return matchesStatus && matchesSearch;
+        return matchesStatus && matchesSearch && matchesArchiveView;
     });
 
     document.getElementById("resultCount").textContent =
@@ -709,6 +829,17 @@ function renderOrders() {
             ? `<span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded-md mt-1 inline-block">${escapeHTML(order.category)}</span>`
             : "";
 
+        // ADDED: ARCHIVE STATE AND CONTEXTUAL ACTION
+        const archiveBadge = order.archived_at
+            ? `<span class="status bg-gray-100 text-gray-600 mt-2">Archived · ${escapeHTML(formatDate(order.archived_at))}</span>`
+            : "";
+
+        const archiveAction = order.archived_at
+            ? `<button type="button" onclick="restoreOrder('${escapeHTML(order.id)}')" class="action-link bg-amber-50 text-amber-700 hover:bg-amber-100">↶ Restore</button>`
+            : order.status === "completed"
+                ? `<button type="button" onclick="archiveOrder('${escapeHTML(order.id)}')" class="action-link bg-gray-100 text-gray-700 hover:bg-gray-200">Archive</button>`
+                : "";
+
         return `
         <tr class="table-row">
 
@@ -718,6 +849,7 @@ function renderOrders() {
                    ${escapeHTML(ref)}
                 </a>
                 <p class="text-[10px] text-gray-400 mt-1">Order request</p>
+                ${archiveBadge}
             </td>
 
             <td class="px-5 py-4">
@@ -752,7 +884,7 @@ function renderOrders() {
             </td>
 
             <td class="px-5 py-4">
-                <div class="flex gap-2 items-center">
+                <div class="flex gap-2 items-center flex-wrap">
 
                     <a href="order-details.html?id=${encodeURIComponent(order.id)}"
                        class="action-link bg-blue-600 text-white hover:bg-blue-700">
@@ -768,6 +900,8 @@ function renderOrders() {
                        WhatsApp
                     </a>` : ""}
 
+                    ${archiveAction}
+
                 </div>
             </td>
 
@@ -779,6 +913,8 @@ function renderOrders() {
 function clearFilters() {
     document.getElementById("searchInput").value = "";
     document.getElementById("statusFilter").value = "";
+    // ADDED: RETURN TO ACTIVE ORDERS WHEN CLEARING FILTERS
+    document.getElementById("archiveFilter").value = "active";
     renderOrders();
 }
 
