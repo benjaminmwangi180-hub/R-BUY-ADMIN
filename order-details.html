@@ -276,6 +276,7 @@ body {
           <option value="cancelled">Cancelled</option>
           <option value="unavailable">Unavailable</option>
         </select>
+        <button id="saveOrderStatusBtn" class="btn btn-secondary mt-2 w-full" type="button">Save Order Status</button>
       </div>
 
       <div>
@@ -1398,6 +1399,64 @@ $("saveBtn").addEventListener("click", async () => {
     await saveOrder(true);
   } catch (error) {
     showMessage(error.message || "Unable to save order.", "error");
+  }
+});
+
+// Save only the order status selected in the Order Progress panel.
+// This is separate from saving investigation notes and payment status.
+async function saveOrderStatus() {
+  if (!currentOrder) throw new Error("No order is currently loaded.");
+
+  const button = $("saveOrderStatusBtn");
+  const selectedStatus = $("orderStatus").value;
+  const allowedStatuses = [
+    "pending_review",
+    "under_investigation",
+    "awaiting_customer",
+    "awaiting_payment",
+    "procurement",
+    "in_transit",
+    "completed",
+    "cancelled",
+    "unavailable"
+  ];
+
+  if (!allowedStatuses.includes(selectedStatus)) {
+    throw new Error("Please select a valid order status.");
+  }
+
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .update({
+        status: selectedStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", currentOrder.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    currentOrder = { ...currentOrder, ...data };
+    $("updatedAt").textContent = formatDate(data.updated_at);
+    updatePaymentPanel();
+    showMessage("Order status saved successfully.");
+    return data;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Save Order Status";
+  }
+}
+
+$("saveOrderStatusBtn").addEventListener("click", async () => {
+  try {
+    await saveOrderStatus();
+  } catch (error) {
+    showMessage(error.message || "Unable to save order status.", "error");
   }
 });
 
