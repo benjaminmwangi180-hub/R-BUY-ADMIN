@@ -239,10 +239,15 @@ body {
     </p>
   </div>
 
-  <span id="orderReference" class="text-sm px-4 py-3 rounded-xl font-semibold"
-    style="background:#e9edf9;color:var(--blue)">
-    Loading order...
-  </span>
+  <div class="flex flex-wrap items-center gap-3">
+    <span id="orderReference" class="text-sm px-4 py-3 rounded-xl font-semibold"
+      style="background:#e9edf9;color:var(--blue)">
+      Loading order...
+    </span>
+    <button id="saveAndReturnBtn" class="btn btn-primary" type="button" disabled>
+      Save Changes &amp; Return to Orders
+    </button>
+  </div>
 </div>
 
 <div id="messageBox" class="hidden mb-6 p-4 rounded-xl text-sm"></div>
@@ -1103,6 +1108,7 @@ async function loadOrder() {
   }
 
   currentOrder = data;
+  $("saveAndReturnBtn").disabled = false;
 
   renderOrder(data);
 
@@ -1351,6 +1357,93 @@ $("sendOrderEmailBtn").addEventListener("click", () => {
     "&body=" + encodeURIComponent(body);
 
   showMessage("Confirmation email prepared. Review it and press Send.", "info");
+});
+
+// ==================================================
+// SAVE ORDER CHANGES AND RETURN TO ORDERS
+// ==================================================
+
+async function saveChangesAndReturn() {
+  if (!currentOrder) throw new Error("No order is currently loaded.");
+
+  const button = $("saveAndReturnBtn");
+  const selectedOrderStatus = $("orderStatus").value;
+  const selectedPaymentStatus = $("paymentStatus").value;
+  const allowedOrderStatuses = [
+    "pending_review",
+    "under_investigation",
+    "awaiting_customer",
+    "awaiting_payment",
+    "procurement",
+    "in_transit",
+    "completed",
+    "cancelled",
+    "unavailable"
+  ];
+  const allowedPaymentStatuses = ["unpaid", "pending", "paid", "refunded"];
+
+  if (!allowedOrderStatuses.includes(selectedOrderStatus)) {
+    throw new Error("Please select a valid order status.");
+  }
+  if (!allowedPaymentStatuses.includes(selectedPaymentStatus)) {
+    throw new Error("Please select a valid payment status.");
+  }
+
+  const paymentStatusChanged =
+    selectedPaymentStatus !== (currentOrder.payment_status || "unpaid");
+
+  if (paymentStatusChanged) {
+    const confirmed = window.confirm(
+      "You are changing the payment status to " +
+      selectedPaymentStatus.replace("_", " ").toUpperCase() +
+      ".\n\nOnly mark an order as paid or refunded after verifying the transaction. Save these changes and return to Orders?"
+    );
+    if (!confirmed) return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Saving changes...";
+
+  try {
+    const updates = {
+      investigation_notes: $("investigationNotes").value.trim(),
+      status: selectedOrderStatus,
+      payment_status: selectedPaymentStatus,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .update(updates)
+      .eq("id", currentOrder.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error("The database did not confirm that the changes were saved.");
+
+    currentOrder = { ...currentOrder, ...data };
+    $("updatedAt").textContent = formatDate(data.updated_at);
+    $("orderStatus").value = data.status || "pending_review";
+    $("paymentStatus").value = data.payment_status || "unpaid";
+    updatePaymentPanel();
+
+    button.textContent = "Saved. Returning...";
+    showMessage("Order changes saved. Returning to the orders list...", "success");
+    window.location.href = "orders.html";
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = "Save Changes & Return to Orders";
+    throw error;
+  }
+}
+
+$("saveAndReturnBtn").addEventListener("click", async () => {
+  try {
+    await saveChangesAndReturn();
+  } catch (error) {
+    showMessage(error.message || "Unable to save order changes.", "error");
+  }
 });
 
 // ==================================================
