@@ -403,7 +403,10 @@ body {
   <textarea id="investigationNotes" rows="5" class="field"
     placeholder="Record suppliers contacted, product availability, quality, sourcing prices and other findings..."></textarea>
 
-  <button id="saveBtn" class="btn btn-secondary mt-5">Save Order Notes & Status</button>
+  <div class="flex flex-wrap gap-3 mt-5">
+  <button id="saveBtn" class="btn btn-secondary">Save Order Notes & Status</button>
+  <button id="saveReturnBtn" class="btn btn-primary">Save Changes & Return to Orders</button>
+</div>
 </section>
 
 <!-- PRODUCT DISCOVERY -->
@@ -709,23 +712,24 @@ Condition: Brand new"></textarea>
 
     <div class="soft-panel p-5">
       <div class="flex justify-between items-center mb-5">
-        <h4 class="font-bold text-lg">M-Pesa</h4>
-        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">STK Push</span>
+        <h4 class="font-bold text-lg">M-Pesa Send Money</h4>
+        <span class="text-xs px-3 py-2 rounded-lg bg-green-100 text-green-700">Manual payment</span>
       </div>
 
       <p class="label">Customer</p>
       <p id="paymentCustomerName" class="font-semibold"></p>
 
-      <p class="label mt-4">M-Pesa phone number</p>
-      <p id="paymentPhone" class="text-lg font-bold text-green-700"></p>
+      <p class="label mt-4">Send money to this number</p>
+      <p class="text-xl font-bold text-green-700">0719402804</p>
+      <p class="text-xs mt-2" style="color:var(--muted)">The customer sends the money directly using M-Pesa Send Money. No STK Push is used.</p>
 
       <div class="border-t mt-5 pt-4" style="border-color:var(--line)">
         <p class="label">Accepted quotation amount</p>
         <p id="paymentAmount" class="text-2xl font-bold" style="color:var(--blue)">KES 0.00</p>
       </div>
 
-      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send M-Pesa STK Push</button>
-      <p class="text-xs mt-3" style="color:var(--muted)">The customer receives a payment prompt on their phone.</p>
+      <button id="sendMpesaBtn" class="btn btn-mpesa w-full mt-5" disabled>Send M-Pesa Payment Instructions via WhatsApp</button>
+      <p class="text-xs mt-3" style="color:var(--muted)">Prepares a message with the amount and payment number. Review and send it manually.</p>
     </div>
 
     <div class="soft-panel p-5">
@@ -767,7 +771,7 @@ Condition: Brand new"></textarea>
   <div id="paymentResult" class="hidden mt-5 p-4 rounded-xl text-sm"></div>
 
   <p class="text-xs mt-4" style="color:var(--muted)">
-    An STK Push or bank transfer instruction is not proof of payment.
+    A payment instruction is not proof of payment. Verify the actual transaction before marking an order as paid.
     Bank transfers must be checked against the actual bank transaction before marking an order as paid.
   </p>
 </section>
@@ -1110,6 +1114,32 @@ async function loadOrder() {
       "Unable to load this order. Check the order ID and your admin permissions.";
     console.error("Order loading error:", error);
     return;
+  }
+
+  // Automatically cancel untouched orders after 4 days (96 hours).
+  // Only orders still at the initial Pending Review stage and not paid/refunded qualify.
+  const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
+  const isInitialStage = (data.status || "pending_review") === "pending_review";
+  const paymentStatus = (data.payment_status || "unpaid").toLowerCase();
+  const isUnpaid = paymentStatus === "unpaid" || paymentStatus === "pending";
+  const orderAge = Date.now() - new Date(data.created_at).getTime();
+
+  if (isInitialStage && isUnpaid && Number.isFinite(orderAge) && orderAge >= FOUR_DAYS_MS) {
+    const cancellationTime = new Date().toISOString();
+    const { data: cancelledOrder, error: cancellationError } = await supabaseClient
+      .from("orders")
+      .update({ status: "cancelled", updated_at: cancellationTime })
+      .eq("id", data.id)
+      .eq("status", "pending_review")
+      .select()
+      .single();
+
+    if (cancellationError) {
+      console.error("Automatic 4-day order cancellation error:", cancellationError);
+      // Continue loading the order normally if cancellation cannot be saved.
+    } else if (cancelledOrder) {
+      data = cancelledOrder;
+    }
   }
 
   currentOrder = data;
@@ -1478,6 +1508,7 @@ async function saveOrder(showSuccess = true) {
   const updates = {
     investigation_notes: $("investigationNotes").value.trim(),
     status: $("orderStatus").value,
+    payment_status: $("paymentStatus").value,
     updated_at: new Date().toISOString()
   };
 
@@ -1514,6 +1545,19 @@ $("saveBtn").addEventListener("click", async () => {
     await saveOrder(true);
   } catch (error) {
     showMessage(error.message || "Unable to save order.", "error");
+  }
+});
+
+$("saveReturnBtn").addEventListener("click", async () => {
+  const button = $("saveReturnBtn");
+  button.disabled = true; button.textContent = "Saving...";
+  try {
+    await saveOrder(false);
+    showMessage("Order details saved. Returning to Orders...", "success");
+    window.location.href = "orders.html";
+  } catch (error) {
+    showMessage(error.message || "Unable to save order changes.", "error");
+    button.disabled = false; button.textContent = "Save Changes & Return to Orders";
   }
 });
 
@@ -2673,246 +2717,61 @@ $("copyQuoteBtn").addEventListener("click", async () => {
 });
 
 // ==================================================
-// PAYMENT READINESS
+// PAYMENT READINESS AND DIRECT M-PESA INSTRUCTIONS
 // ==================================================
 
 function isAcceptedQuotationValid() {
-  if (!latestQuotation || latestQuotation.status !== "accepted") {
-    return false;
-  }
-
-  if (
-    latestQuotation.expires_at &&
-    new Date(latestQuotation.expires_at).getTime() <= Date.now()
-  ) {
-    return false;
-  }
-
+  if (!latestQuotation || latestQuotation.status !== "accepted") return false;
+  if (latestQuotation.expires_at && new Date(latestQuotation.expires_at).getTime() <= Date.now()) return false;
   const amount = Number(latestQuotation.total_amount || 0);
   return Number.isFinite(amount) && amount > 0;
 }
 
 function updatePaymentPanel() {
   if (!currentOrder) return;
-
   const phone = normalizePhone(currentOrder.whatsapp);
-
-  $("paymentCustomerName").textContent =
-    currentOrder.customer_name || "Not provided";
-
-  $("paymentPhone").textContent =
-    phone || "Invalid or missing phone number";
-
-  const mpesaButton = $("sendMpesaBtn");
-  const bankButton = $("sendBankDetailsBtn");
-  const readiness = $("paymentReadiness");
-
-  const acceptedAmount = isAcceptedQuotationValid()
-    ? Number(latestQuotation.total_amount)
-    : 0;
-
-  // Always display the accepted quotation amount here.
-  // The editable quotation builder must never change the payment amount.
+  $("paymentCustomerName").textContent = currentOrder.customer_name || "Not provided";
+  const acceptedAmount = isAcceptedQuotationValid() ? Number(latestQuotation.total_amount) : 0;
   $("paymentAmount").textContent = formatKES(acceptedAmount);
   $("bankPaymentAmount").textContent = formatKES(acceptedAmount);
-
   let reason = "";
-
-  if (!latestQuotation) {
-    reason = "A quotation must be issued before payment can be requested.";
-  } else if (latestQuotation.status !== "accepted") {
-    reason = "The latest quotation has not been accepted by the customer.";
-  } else if (
-    latestQuotation.expires_at &&
-    new Date(latestQuotation.expires_at).getTime() <= Date.now()
-  ) {
-    reason = "The accepted quotation has expired. A new quotation is required.";
-  } else if (!acceptedAmount) {
-    reason = "The accepted quotation amount is invalid.";
-  } else if (currentOrder.status !== "awaiting_payment") {
-    reason = "The quotation is accepted, but the order status is not Awaiting payment.";
-  } else if (
-    currentOrder.payment_status === "paid" ||
-    currentOrder.payment_status === "refunded"
-  ) {
-    reason = "This order is already marked as paid or refunded.";
-  }
-
+  if (!latestQuotation) reason = "A quotation must be issued before payment instructions can be sent.";
+  else if (latestQuotation.status !== "accepted") reason = "The latest quotation has not been accepted by the customer.";
+  else if (latestQuotation.expires_at && new Date(latestQuotation.expires_at).getTime() <= Date.now()) reason = "The accepted quotation has expired. A new quotation is required.";
+  else if (!acceptedAmount) reason = "The accepted quotation amount is invalid.";
+  else if (currentOrder.status !== "awaiting_payment") reason = "The quotation is accepted, but the order status is not Awaiting payment.";
+  else if (currentOrder.payment_status === "paid" || currentOrder.payment_status === "refunded") reason = "This order is already marked as paid or refunded.";
+  const readiness = $("paymentReadiness");
+  const mpesaButton = $("sendMpesaBtn");
+  const bankButton = $("sendBankDetailsBtn");
   if (reason) {
-    readiness.textContent = reason;
-    readiness.className = "text-sm text-yellow-700";
-    mpesaButton.disabled = true;
-    bankButton.disabled = true;
+    readiness.textContent = reason; readiness.className = "text-sm text-yellow-700";
+    mpesaButton.disabled = true; bankButton.disabled = true;
   } else {
-    readiness.textContent =
-      "Customer accepted the latest quotation. Payment methods are ready.";
-
+    readiness.textContent = "Customer accepted the latest quotation. Manual payment instructions are ready.";
     readiness.className = "text-sm text-green-700";
-
-    mpesaButton.disabled =
-      paymentRequestInProgress || !/^254[71]\d{8}$/.test(phone);
-
-    bankButton.disabled =
-      paymentRequestInProgress || bankRequestInProgress;
+    mpesaButton.disabled = paymentRequestInProgress; bankButton.disabled = bankRequestInProgress;
   }
-
-  if (paymentRequestInProgress || bankRequestInProgress) {
-    mpesaButton.disabled = true;
-    bankButton.disabled = true;
-  }
+  if (paymentRequestInProgress || bankRequestInProgress) { mpesaButton.disabled = true; bankButton.disabled = true; }
 }
-// ==================================================
-// M-PESA STK PUSH
-// ==================================================
 
 $("sendMpesaBtn").addEventListener("click", async () => {
-  if (paymentRequestInProgress) return;
-
-  if (!currentOrder) {
-    showPaymentResult("No order is loaded.", "error");
-    return;
-  }
-
-  paymentRequestInProgress = true;
-  updatePaymentPanel();
-
-  const button = $("sendMpesaBtn");
-  button.textContent = "Checking payment readiness...";
-
+  if (paymentRequestInProgress || !currentOrder) return;
+  paymentRequestInProgress = true; updatePaymentPanel();
+  const button = $("sendMpesaBtn"); button.textContent = "Preparing instructions...";
+  const tab = openWhatsAppTab();
   try {
-    await refreshOrderFromDatabase();
-    await loadLatestQuotation();
-
-    if (!isAcceptedQuotationValid()) {
-      throw new Error(
-        "The latest quotation has not been accepted or is no longer valid."
-      );
-    }
-
-    if (currentOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "The order must be marked Awaiting payment before sending an STK Push."
-      );
-    }
-
-    if (
-      currentOrder.payment_status === "paid" ||
-      currentOrder.payment_status === "refunded"
-    ) {
-      throw new Error(
-        "This order is already marked as paid or refunded."
-      );
-    }
-
-    const phone = normalizePhone(currentOrder.whatsapp);
-
-    if (!phone || !/^254[71]\d{8}$/.test(phone)) {
-      throw new Error("The customer's M-Pesa phone number is invalid.");
-    }
-
+    await refreshOrderFromDatabase(); await loadLatestQuotation();
+    if (!isAcceptedQuotationValid() || currentOrder.status !== "awaiting_payment" || ["paid", "refunded"].includes(currentOrder.payment_status)) throw new Error("The order must have a valid accepted quotation, Awaiting payment status and unpaid status.");
     const amount = Number(latestQuotation.total_amount);
-
-    const confirmed = window.confirm(
-      "Send an M-Pesa STK Push to " +
-      currentOrder.whatsapp +
-      " for the accepted quotation?\n\nAmount: " +
-      formatKES(amount)
-    );
-
-    if (!confirmed) return;
-
-    button.textContent = "Preparing payment request...";
-
-    // Save the current investigation notes and order status.
-    const savedOrder = await saveOrder(false);
-
-    if (savedOrder.status !== "awaiting_payment") {
-      throw new Error(
-        "The order must be marked Awaiting payment before sending an STK Push."
-      );
-    }
-
-    if (
-      savedOrder.payment_status === "paid" ||
-      savedOrder.payment_status === "refunded"
-    ) {
-      throw new Error(
-        "This order is already marked as paid or refunded."
-      );
-    }
-
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
-
-    if (sessionError || !sessionData.session) {
-      throw new Error(
-        "Your admin session has expired. Please log in again."
-      );
-    }
-
-    button.textContent = "Contacting IntaSend...";
-
-    const { data, error } = await supabaseClient.functions.invoke(
-      PAYMENT_FUNCTION,
-      {
-        body: {
-          order_id: currentOrder.id
-        }
-      }
-    );
-
-    if (error) {
-      let detail = error.message ||
-        "The payment request could not be completed.";
-
-      if (error.context) {
-        try {
-          const responseBody = await error.context.json();
-          if (responseBody.error) detail = responseBody.error;
-        } catch (e) {}
-      }
-
-      throw new Error(detail);
-    }
-
-    if (!data || !data.success) {
-      throw new Error(
-        data?.error ||
-        "IntaSend did not confirm the payment request."
-      );
-    }
-
-    showPaymentResult(
-      "STK Push request successfully initiated.\n\n" +
-      "Order: RBUY-" + String(data.order_number) +
-      "\nAmount: " + formatKES(data.amount) +
-      "\nPhone: " + data.phone +
-      "\nInvoice reference: " + data.invoice_id +
-      "\n\nThe customer should check their phone and enter their M-Pesa PIN if they wish to pay. Payment is still awaiting provider confirmation.",
-      "success"
-    );
-
-    $("paymentStatus").value = "pending";
-    currentOrder.payment_status = "pending";
-
-    showMessage(
-      "M-Pesa payment prompt initiated. Awaiting payment confirmation.",
-      "success"
-    );
-
-  } catch (error) {
-    console.error("M-Pesa payment error:", error);
-
-    showPaymentResult(
-      error.message || "Unable to initiate payment.",
-      "error"
-    );
-
-  } finally {
-    paymentRequestInProgress = false;
-    button.textContent = "Send M-Pesa STK Push";
-    updatePaymentPanel();
-  }
+    const message = `Hello ${currentOrder.customer_name || "there"},\n\nThank you for choosing R-BUY!\n\nYour quotation has been accepted. Please send your payment via M-Pesa Send Money using the details below.\n\nORDER REFERENCE: ${getOrderReference()}\nACCEPTED AMOUNT: ${formatKES(amount)}\nSEND MONEY TO: 0719402804\n\nPlease share your M-Pesa transaction confirmation after payment so we can verify it and proceed with your order.\n\nThank you for choosing R-BUY. You can buy anything.`;
+    const confirmed = window.confirm("Prepare direct M-Pesa Send Money instructions for " + (currentOrder.customer_name || "this customer") + "?\n\nAmount: " + formatKES(amount) + "\nNumber: 0719402804");
+    if (!confirmed) { closeWhatsAppTab(tab); return; }
+    const url = "https://wa.me/" + normalizePhone(currentOrder.whatsapp) + "?text=" + encodeURIComponent(message);
+    if (!redirectWhatsAppTab(tab, url)) throw new Error("WhatsApp could not be opened. Contact the customer manually.");
+    showMessage("Direct M-Pesa payment instructions prepared in WhatsApp. Review and send the message.");
+  } catch (error) { closeWhatsAppTab(tab); showMessage(error.message || "Unable to prepare M-Pesa instructions.", "error"); }
+  finally { paymentRequestInProgress = false; button.textContent = "Send M-Pesa Payment Instructions via WhatsApp"; updatePaymentPanel(); }
 });
 
 // ==================================================
