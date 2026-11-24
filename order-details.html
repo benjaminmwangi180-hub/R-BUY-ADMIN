@@ -295,10 +295,10 @@ body {
 </section>
 
 <!-- FOUR-DAY ORDER CANCELLATION -->
-<section class="panel p-5 hidden" id="fourDayCancellationSection">
+<section class="panel p-5" id="fourDayCancellationSection">
   <p class="eyebrow">Order expiry</p>
   <h3 class="section-heading mt-2">Pending Order Cancellation</h3>
-  <p class="text-sm mt-2" style="color:var(--muted)">This order has remained at Pending Review for more than four days without payment. Cancel the order and prepare a WhatsApp notification for the customer.</p>
+  <p class="text-sm mt-2" style="color:var(--muted)">Use this button whenever you decide an order should be cancelled. It is not restricted by order age, stage or payment status.</p>
   <div class="flex flex-wrap gap-3 mt-4">
     <button id="cancelFourDayOrderBtn" class="btn btn-danger">Cancel Order & Notify Customer</button>
   </div>
@@ -1149,12 +1149,9 @@ async function loadOrder() {
 // ==================================================
 
 function updateFourDayCancellationUI(order) {
+  // Cancellation control is always available to the admin; admin decides when to cancel.
   const section = $("fourDayCancellationSection");
-  const status = (order?.status || "pending_review").toLowerCase();
-  const payment = (order?.payment_status || "unpaid").toLowerCase();
-  const age = Date.now() - new Date(order?.created_at || "").getTime();
-  const eligible = status === "pending_review" && (payment === "unpaid" || payment === "pending") && Number.isFinite(age) && age >= 4 * 24 * 60 * 60 * 1000;
-  section.classList.toggle("hidden", !eligible);
+  if (section) section.classList.remove("hidden");
 }
 
 function renderOrder(order) {
@@ -1416,14 +1413,13 @@ $("cancelFourDayOrderBtn").addEventListener("click", async () => {
     showMessage("Please correct the customer's WhatsApp number before cancellation.", "error");
     return;
   }
-  if (!confirm("Cancel this order because it has exceeded four days at Pending Review, and prepare a WhatsApp cancellation message?")) return;
+  if (!confirm("Cancel this order and prepare a WhatsApp cancellation message? You decide when cancellation is appropriate.")) return;
 
   const cancelledAt = new Date().toISOString();
   const { data, error } = await supabaseClient
     .from("orders")
     .update({ status: "cancelled", updated_at: cancelledAt })
     .eq("id", currentOrder.id)
-    .eq("status", "pending_review")
     .select("*")
     .single();
 
@@ -1436,7 +1432,7 @@ $("cancelFourDayOrderBtn").addEventListener("click", async () => {
   currentOrder = data;
   renderOrder(data);
   const ref = getOrderReference();
-  const message = `Hello ${data.customer_name || "there"},\n\nWe regret to inform you that your R-BUY order (${ref}) has been cancelled because it remained unconfirmed for more than four days from the date it was placed. If you still need this item, you are welcome to submit a new order.\n\nThank you for considering R-BUY.\nRETAIL WITHOUT LIMITS.`;
+  const message = `Hello ${data.customer_name || "there"},\n\nWe regret to inform you that your R-BUY order (${ref}) has been cancelled as part of our order management process. If you still need this item, you are welcome to submit a new order.\n\nThank you for considering R-BUY.\nRETAIL WITHOUT LIMITS.`;
   const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
   const tab = window.open(url, "_blank");
   showMessage(tab ? "Order cancelled. The cancellation message is ready in WhatsApp for you to send." : "Order cancelled, but WhatsApp was blocked by your browser. Open the customer WhatsApp chat to send the cancellation message.", tab ? "success" : "error");
