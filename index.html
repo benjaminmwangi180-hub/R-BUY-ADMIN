@@ -827,6 +827,59 @@
         </section>
 
 
+
+        <!-- EXTENDED BUSINESS ANALYTICS -->
+        <section class="mb-8 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+                <div>
+                    <p class="text-blue-600 text-[10px] mono tracking-[.2em] mb-1">BUSINESS INTELLIGENCE</p>
+                    <h2 class="text-xl font-bold">Business analytics</h2>
+                    <p class="text-xs text-gray-400 mt-1">Insights calculated from your live order records</p>
+                </div>
+                <span id="analyticsUpdated" class="text-xs text-gray-400 mono">WAITING FOR DATA</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div class="stat-card"><p class="text-sm text-gray-500 font-medium">Active Orders</p><p id="activeOrders" class="text-3xl font-extrabold mt-3 text-blue-600">—</p><p class="text-xs text-gray-400 mt-3">Currently being processed</p></div>
+                <div class="stat-card"><p class="text-sm text-gray-500 font-medium">Cancelled Orders</p><p id="cancelledOrders" class="text-3xl font-extrabold mt-3 text-red-500">—</p><p class="text-xs text-gray-400 mt-3">Requests marked cancelled</p></div>
+                <div class="stat-card"><p class="text-sm text-gray-500 font-medium">Paid Orders</p><p id="paidOrders" class="text-3xl font-extrabold mt-3 text-green-600">—</p><p class="text-xs text-gray-400 mt-3">Payment status marked paid</p></div>
+                <div class="stat-card"><p class="text-sm text-gray-500 font-medium">Awaiting Payment</p><p id="unpaidOrders" class="text-3xl font-extrabold mt-3 text-amber-600">—</p><p class="text-xs text-gray-400 mt-3">Payment not marked paid</p></div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div class="panel p-6">
+                    <div class="flex justify-between items-start mb-6"><div><h3 class="font-bold text-lg">Order trend</h3><p class="text-xs text-gray-400 mt-1">Orders created in the last six calendar months</p></div><span class="text-xs mono text-gray-400">6 MONTHS</span></div>
+                    <div id="monthlyTrend" class="space-y-4"><p class="text-sm text-gray-400">Loading trend...</p></div>
+                </div>
+                <div class="panel p-6">
+                    <div class="mb-6"><h3 class="font-bold text-lg">Most requested products</h3><p class="text-xs text-gray-400 mt-1">Ranked by product name in recorded orders</p></div>
+                    <div id="topProducts" class="space-y-4"><p class="text-sm text-gray-400">Loading product demand...</p></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div class="panel p-6">
+                    <div class="mb-5"><h3 class="font-bold text-lg">Category demand</h3><p class="text-xs text-gray-400 mt-1">Customer interest by recorded category</p></div>
+                    <div id="categoryDemand" class="space-y-4"><p class="text-sm text-gray-400">Loading categories...</p></div>
+                </div>
+                <div class="panel p-6">
+                    <div class="mb-5"><h3 class="font-bold text-lg">Payment overview</h3><p class="text-xs text-gray-400 mt-1">Order counts by recorded payment status</p></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="rounded-xl bg-green-50 p-4"><p class="text-xs text-green-700">Paid</p><p id="paymentPaid" class="text-2xl font-extrabold text-green-700 mt-2">—</p></div>
+                        <div class="rounded-xl bg-amber-50 p-4"><p class="text-xs text-amber-700">Pending</p><p id="paymentPending" class="text-2xl font-extrabold text-amber-700 mt-2">—</p></div>
+                        <div class="rounded-xl bg-gray-50 p-4"><p class="text-xs text-gray-600">Unpaid</p><p id="paymentUnpaid" class="text-2xl font-extrabold text-gray-700 mt-2">—</p></div>
+                        <div class="rounded-xl bg-purple-50 p-4"><p class="text-xs text-purple-700">Refunded</p><p id="paymentRefunded" class="text-2xl font-extrabold text-purple-700 mt-2">—</p></div>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-4">These are payment-status counts, not verified cash totals.</p>
+                </div>
+            </div>
+
+            <div class="panel p-5 md:p-6 flex gap-3 items-start">
+                <div class="w-9 h-9 shrink-0 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">i</div>
+                <div><h3 class="text-sm font-bold text-gray-800">Financial reporting is not yet connected</h3><p class="text-xs text-gray-500 mt-1 leading-relaxed">This dashboard currently has reliable order and payment-status information, but the available page source does not establish verified payment amounts, procurement expenses, or refund amounts. Revenue, outstanding balances, and actual profit will only be shown after those financial fields and records are connected.</p></div>
+            </div>
+        </section>
+
         <!-- RECENT ORDERS -->
         <section class="panel overflow-hidden">
 
@@ -1365,85 +1418,108 @@ async function loadRecentOrders() {
 // DASHBOARD DATA
 // =========================================
 
-async function loadDashboard() {
-
-    try {
-
-        const [
-            total,
-            pending,
-            investigating,
-            completed
-        ] = await Promise.all([
-
-            getOrderCount(),
-
-            getOrderCount("pending_review"),
-
-            getOrderCount("under_investigation"),
-
-            getOrderCount("completed")
-
-        ]);
-
-
-        // Update statistics
-        document.getElementById("totalOrders")
-            .textContent = total;
-
-        document.getElementById("pendingOrders")
-            .textContent = pending;
-
-        document.getElementById("investigatingOrders")
-            .textContent = investigating;
-
-        document.getElementById("completedOrders")
-            .textContent = completed;
-
-
-        // Update activity visualization
-        updateActivity(
-            total,
-            pending,
-            investigating,
-            completed
-        );
-
-
-        // Load recent orders
-        await loadRecentOrders();
-
-
-        document.getElementById("loadingOrders")
-            .classList.add("hidden");
-
-
-        if (total > 0 || document.getElementById("ordersTable").children.length > 0) {
-
-            document.getElementById("ordersContainer")
-                .classList.remove("hidden");
-
-        }
-
-    } catch (error) {
-
-        console.error("Dashboard error:", error);
-
-        document.getElementById("loadingOrders")
-            .classList.add("hidden");
-
-        const errorBox =
-            document.getElementById("dashboardError");
-
-        errorBox.textContent =
-            "Could not load dashboard data: " + error.message;
-
-        errorBox.classList.remove("hidden");
-
-    }
-
+function countByStatus(orders, status) {
+    return orders.filter(order => order.status === status).length;
 }
 
+function renderRankedBars(containerId, entries, emptyText) {
+    const container = document.getElementById(containerId);
+    if (!entries.length) {
+        container.innerHTML = `<p class="text-sm text-gray-400">${emptyText}</p>`;
+        return;
+    }
+    const max = Math.max(...entries.map(item => item.count), 1);
+    container.innerHTML = entries.map(item => `
+        <div>
+            <div class="flex justify-between gap-3 text-sm mb-2">
+                <span class="text-gray-600 font-medium truncate">${escapeHTML(item.label)}</span>
+                <span class="font-bold text-gray-800 shrink-0">${item.count}</span>
+            </div>
+            <div class="activity-track"><div class="activity-fill bg-blue-500" style="width:${(item.count / max) * 100}%"></div></div>
+        </div>
+    `).join("");
+}
+
+function renderMonthlyTrend(orders) {
+    const months = [];
+    const now = new Date();
+    for (let offset = 5; offset >= 0; offset--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+        months.push({ key: `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`, label: date.toLocaleDateString("en-KE", { month: "short", year: "2-digit" }), count: 0 });
+    }
+    orders.forEach(order => {
+        if (!order.created_at) return;
+        const date = new Date(order.created_at);
+        const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
+        const month = months.find(item => item.key === key);
+        if (month) month.count++;
+    });
+    renderRankedBars("monthlyTrend", months.map(({label,count}) => ({label,count})), "No order records found for this period.");
+}
+
+function renderDemand(orders, field, target, emptyText) {
+    const counts = new Map();
+    orders.forEach(order => {
+        const raw = (order[field] || "").trim();
+        if (!raw) return;
+        counts.set(raw, (counts.get(raw) || 0) + 1);
+    });
+    const entries = [...counts.entries()].map(([label,count]) => ({label,count})).sort((a,b) => b.count-a.count).slice(0,5);
+    renderRankedBars(target, entries, emptyText);
+}
+
+async function loadDashboard() {
+    try {
+        const { data: orders, error } = await supabaseClient
+            .from("orders")
+            .select("*")
+            .order("created_at", { ascending: false });
+        if (error) throw error;
+
+        const records = orders || [];
+        const total = records.length;
+        const pending = countByStatus(records, "pending_review");
+        const investigating = countByStatus(records, "under_investigation");
+        const completed = countByStatus(records, "completed");
+        const activeStatuses = ["under_investigation", "awaiting_customer", "awaiting_payment", "procurement", "in_transit"];
+        const active = records.filter(order => activeStatuses.includes(order.status)).length;
+        const cancelled = countByStatus(records, "cancelled");
+        const paid = records.filter(order => order.payment_status === "paid").length;
+        const paymentPending = records.filter(order => order.payment_status === "pending").length;
+        const refunded = records.filter(order => order.payment_status === "refunded").length;
+        const unpaid = records.filter(order => !order.payment_status || order.payment_status === "unpaid").length;
+
+        document.getElementById("totalOrders").textContent = total;
+        document.getElementById("pendingOrders").textContent = pending;
+        document.getElementById("investigatingOrders").textContent = investigating;
+        document.getElementById("completedOrders").textContent = completed;
+        document.getElementById("activeOrders").textContent = active;
+        document.getElementById("cancelledOrders").textContent = cancelled;
+        document.getElementById("paidOrders").textContent = paid;
+        document.getElementById("unpaidOrders").textContent = unpaid;
+        document.getElementById("paymentPaid").textContent = paid;
+        document.getElementById("paymentPending").textContent = paymentPending;
+        document.getElementById("paymentUnpaid").textContent = unpaid;
+        document.getElementById("paymentRefunded").textContent = refunded;
+
+        updateActivity(total, pending, investigating, completed);
+        renderMonthlyTrend(records);
+        renderDemand(records, "product_name", "topProducts", "No product names recorded yet.");
+        renderDemand(records, "category", "categoryDemand", "No categories recorded yet.");
+        document.getElementById("analyticsUpdated").textContent = "UPDATED " + new Date().toLocaleTimeString("en-KE", {hour:"2-digit", minute:"2-digit"});
+
+        await loadRecentOrders();
+        document.getElementById("loadingOrders").classList.add("hidden");
+        if (total > 0) document.getElementById("ordersContainer").classList.remove("hidden");
+        else document.getElementById("emptyOrders").classList.remove("hidden");
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        document.getElementById("loadingOrders").classList.add("hidden");
+        const errorBox = document.getElementById("dashboardError");
+        errorBox.textContent = "Could not load dashboard data: " + error.message;
+        errorBox.classList.remove("hidden");
+    }
+}
 
 // =========================================
 // LOGOUT
