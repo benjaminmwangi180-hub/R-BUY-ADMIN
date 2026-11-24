@@ -294,6 +294,16 @@ body {
   </div>
 </section>
 
+<!-- FOUR-DAY ORDER CANCELLATION -->
+<section class="panel p-5 hidden" id="fourDayCancellationSection">
+  <p class="eyebrow">Order expiry</p>
+  <h3 class="section-heading mt-2">Pending Order Cancellation</h3>
+  <p class="text-sm mt-2" style="color:var(--muted)">This order has remained at Pending Review for more than four days without payment. Cancel the order and prepare a WhatsApp notification for the customer.</p>
+  <div class="flex flex-wrap gap-3 mt-4">
+    <button id="cancelFourDayOrderBtn" class="btn btn-danger">Cancel Order & Notify Customer</button>
+  </div>
+</section>
+
 <!-- CUSTOMER TRACKING AUTHORIZATION -->
 <section class="panel p-5" id="trackingAuthorizationSection">
   <div class="flex flex-wrap justify-between items-start gap-4">
@@ -1116,31 +1126,6 @@ async function loadOrder() {
     return;
   }
 
-  // Automatically cancel untouched orders after 4 days (96 hours).
-  // Only orders still at the initial Pending Review stage and not paid/refunded qualify.
-  const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
-  const isInitialStage = (data.status || "pending_review") === "pending_review";
-  const paymentStatus = (data.payment_status || "unpaid").toLowerCase();
-  const isUnpaid = paymentStatus === "unpaid" || paymentStatus === "pending";
-  const orderAge = Date.now() - new Date(data.created_at).getTime();
-
-  if (isInitialStage && isUnpaid && Number.isFinite(orderAge) && orderAge >= FOUR_DAYS_MS) {
-    const cancellationTime = new Date().toISOString();
-    const { data: cancelledOrder, error: cancellationError } = await supabaseClient
-      .from("orders")
-      .update({ status: "cancelled", updated_at: cancellationTime })
-      .eq("id", data.id)
-      .eq("status", "pending_review")
-      .select()
-      .single();
-
-    if (cancellationError) {
-      console.error("Automatic 4-day order cancellation error:", cancellationError);
-      // Continue loading the order normally if cancellation cannot be saved.
-    } else if (cancelledOrder) {
-      data = cancelledOrder;
-    }
-  }
 
   currentOrder = data;
 
@@ -1162,6 +1147,15 @@ async function loadOrder() {
 // ==================================================
 // DISPLAY ORDER
 // ==================================================
+
+function updateFourDayCancellationUI(order) {
+  const section = $("fourDayCancellationSection");
+  const status = (order?.status || "pending_review").toLowerCase();
+  const payment = (order?.payment_status || "unpaid").toLowerCase();
+  const age = Date.now() - new Date(order?.created_at || "").getTime();
+  const eligible = status === "pending_review" && (payment === "unpaid" || payment === "pending") && Number.isFinite(age) && age >= 4 * 24 * 60 * 60 * 1000;
+  section.classList.toggle("hidden", !eligible);
+}
 
 function renderOrder(order) {
   $("orderReference").textContent = getOrderReference();
@@ -1243,6 +1237,7 @@ function renderOrder(order) {
   updateQuotationGate();
   updatePaymentPanel();
   updateTrackingAuthorizationUI();
+  updateFourDayCancellationUI(order);
 }
 
 // ==================================================
@@ -1412,6 +1407,39 @@ $("authorizeTrackingBtn").addEventListener("click", () => {
 
 $("revokeTrackingBtn").addEventListener("click", () => {
   setTrackingAuthorization(false);
+});
+
+$("cancelFourDayOrderBtn").addEventListener("click", async () => {
+  if (!currentOrder) return;
+  const phone = normalizePhone(currentOrder.whatsapp);
+  if (!phone || !/^254[71]\d{8}$/.test(phone)) {
+    showMessage("Please correct the customer's WhatsApp number before cancellation.", "error");
+    return;
+  }
+  if (!confirm("Cancel this order because it has exceeded four days at Pending Review, and prepare a WhatsApp cancellation message?")) return;
+
+  const cancelledAt = new Date().toISOString();
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .update({ status: "cancelled", updated_at: cancelledAt })
+    .eq("id", currentOrder.id)
+    .eq("status", "pending_review")
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    console.error("Order cancellation error:", error);
+    showMessage(error?.message || "Could not cancel this order. Refresh and try again.", "error");
+    return;
+  }
+
+  currentOrder = data;
+  renderOrder(data);
+  const ref = getOrderReference();
+  const message = `Hello ${data.customer_name || "there"},\n\nWe regret to inform you that your R-BUY order (${ref}) has been cancelled because it remained unconfirmed for more than four days from the date it was placed. If you still need this item, you are welcome to submit a new order.\n\nThank you for considering R-BUY.\nRETAIL WITHOUT LIMITS.`;
+  const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+  const tab = window.open(url, "_blank");
+  showMessage(tab ? "Order cancelled. The cancellation message is ready in WhatsApp for you to send." : "Order cancelled, but WhatsApp was blocked by your browser. Open the customer WhatsApp chat to send the cancellation message.", tab ? "success" : "error");
 });
 
 // ==================================================
